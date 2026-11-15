@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Heliograph/Heliograph.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Heliograph.Tests/Heliograph.Tests.csproj" />
+  </Folder>
+</Solution>
