@@ -53,7 +53,7 @@ public class AwkwardPlacementTests
     [Fact]
     public void A_field_name_typed_with_a_non_breaking_space_is_still_found()
     {
-        TestDocx.Paragraphs(Render(TestDocx.With("Dear ((Applicant name)),"))).Should().Equal("Dear Alex Applicant,");
+        TestDocx.Paragraphs(Render(TestDocx.With("Dear ((Applicant\u00A0name)),"))).Should().Equal("Dear Alex Applicant,");
     }
 
     [Fact]

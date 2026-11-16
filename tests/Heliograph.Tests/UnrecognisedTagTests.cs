@@ -27,8 +27,8 @@ public class UnrecognisedTagTests
     [InlineData("((Member’s start - end))")]
     [InlineData("((Member‘s start – end))")]
     [InlineData("((Member's start \u2014 end))")]
-    [InlineData("((Mem­ber's start​ - end))")]
-    [InlineData("((﻿Member's start - end⁠))")]
+    [InlineData("((Mem\u00ADber's start\u200B - end))")]
+    [InlineData("((\uFEFFMember's start - end\u2060))")]
     public void A_name_the_editor_has_restyled_or_that_was_pasted_with_invisible_characters_is_still_found(string tag)
     {
         var compilation = Compile(TestDocx.With(tag));

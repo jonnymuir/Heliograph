@@ -76,6 +76,23 @@ public class ConditionInSentenceTests
     }
 
     [Fact]
+    public void A_paragraph_left_empty_goes_whichever_order_its_conditions_come_in()
+    {
+        string[] sentences =
+        [
+            "((if Owes money))A((end if))((if Is a member))((end if))",
+            "((if Is a member))((end if))((if Owes money))A((end if))",
+            "((if Is a member))((if Owes money))A((end if))((end if)) ",
+        ];
+
+        foreach (var sentence in sentences)
+        {
+            Paragraphs(TestDocx.With("Before.", sentence, "After."), """{ "owesMoney": false, "isAMember": true }""")
+                .Should().Equal(["Before.", "After."], sentence);
+        }
+    }
+
+    [Fact]
     public void A_table_cell_whose_whole_content_is_hidden_is_still_a_cell()
     {
         var docx = new TestDocx().RawParagraph(

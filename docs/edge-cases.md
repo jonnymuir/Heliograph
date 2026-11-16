@@ -33,7 +33,7 @@ Each case below is handled by one of these. "Compile" means the author is told a
 | S7 | **Rehearse every outcome.** The compiler renders the template for every combination of its conditions, with the most awkward values each field's type allows, and checks each result. A template that would fail for some recipient fails here instead. | Compile |
 | S8 | **Mend what is always safe to mend.** Where the format demands something trivial, such as a paragraph in an emptied table cell, the renderer adds it. | Render, proved by S7 |
 | S9 | **Strip what must never travel.** Names of people recorded in the file are emptied. | Compile |
-| S10 | **Check the checker.** In the tests, every rendered file is validated against the format's schema by an independent validator and reopened in LibreOffice, and templates are chopped and rearranged at random. | Tests |
+| S10 | **Check the checker.** In the tests, independent judges look at what the engine produces. See [How the register is tested](#how-the-register-is-tested). | Tests |
 
 ## Status
 
@@ -105,6 +105,7 @@ the template is not stopped, because the text may be what they meant.
 | A condition hides everything in a table cell | The cell keeps an empty paragraph | S8 | Mended |
 | A condition hides everything in a header, a footer, a text box or a footnote | The format requires a paragraph there | S8 | Planned |
 | A sentence that was all condition is hidden | Its paragraph is removed, leaving no gap | | Works |
+| A sentence holds several conditions and ends up empty | Its paragraph is removed, whichever order the conditions come in | | Works |
 | A condition opens in one table cell or row and closes in another, or opens in a table and closes outside | Refused | S6 | Refused |
 | A condition opens inside a link and closes outside it | Refused | S6 | Refused |
 | A condition opens inside a content control and closes outside it | Refused, with a message that mentions a link | S6 | Refused |
@@ -163,6 +164,22 @@ Not built. These are the cases the list work must answer.
 | Hidden text | Pointed out, as a warning. Sent, still hidden | S3 | Works |
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
 | An embedded file or object | Refused | S5 | Refused |
+
+## How the register is tested
+
+A case in the register is one somebody thought of. These tests do not depend on that.
+
+| Judge | What it does | What it cannot see |
+|---|---|---|
+| **A model of the letter** | Hundreds of templates are built at random: paragraphs and tables, conditions around and inside them to any depth, values everywhere, text chopped into runs. The generator works out from its own plan what each letter should say for each recipient, and that is compared with what the engine printed. A third of the templates are given one misplaced condition tag and must be refused. | Anything the generator does not build: links, fields, footnotes, pictures, lists |
+| **Chopping** | Each benchmark letter is chopped into runs at random points, with random formatting, and must read the same. | Structure, which chopping does not change |
+| **The format's schema** | Every rendered file is validated with Microsoft's Open XML validator, and must have no problem the template did not have. | Rules Word enforces beyond the schema. It accepts a table cell with no paragraph, which Word reports as an unreadable file |
+| **Word's stricter rules** | Written by hand in the tests, apart from the engine: a cell ends with a paragraph, a table has rows, a header, footer, note or text box is not empty, a field that begins also ends, and nothing of the compiler's is left in the file. | Any rule nobody has written down. No copy of Word has checked them |
+| **LibreOffice** | Opens and saves benchmark letters and rendered files. | It is more forgiving than Word |
+
+A failure names a seed, so the document that caused it can be built again:
+`new RandomTemplate(seed)`. The first run of the model found the case above about a sentence
+with several conditions.
 
 ## What can only be known at render time
 
