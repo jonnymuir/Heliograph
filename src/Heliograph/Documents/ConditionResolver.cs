@@ -16,12 +16,14 @@ internal static class ConditionResolver
     /// Works outermost first. It runs before any value is filled in, so a field used only in removed content needs
     /// no value.
     /// </summary>
-    public static void Resolve(XDocument part, Func<string, bool> isYes)
+    public static void Resolve(XDocument part, Func<XElement, bool> isYes, bool insideRepeatedRows)
     {
         var sentences = new HashSet<XElement>();
-        while (part.Descendants(Conditions.Element).FirstOrDefault() is { } condition)
+        // A condition in a row that repeats is decided for each item, so it waits until the row has been copied.
+        bool Ready(XElement condition) => insideRepeatedRows || !condition.Ancestors(Repeats.Each).Any();
+        while (part.Descendants(Conditions.Element).FirstOrDefault(Ready) is { } condition)
         {
-            if (isYes((string)condition.Attribute("key")!))
+            if (isYes(condition))
             {
                 condition.ReplaceWith(condition.Nodes());
                 continue;
@@ -42,7 +44,6 @@ internal static class ConditionResolver
             paragraph.Remove();
         }
 
-        DocumentMender.Mend(part);
     }
 
     /// <summary>Whether a paragraph shows nothing: no text, no picture, no break, and no section break to carry.</summary>

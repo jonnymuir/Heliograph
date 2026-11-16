@@ -85,7 +85,7 @@ internal static class InlineConditions
         }
 
         between.ForEach(node => node.Remove());
-        start.ReplaceWith(new XElement(Conditions.Element, start.Attribute("key"), new XAttribute("inline", true), between));
+        start.ReplaceWith(new XElement(Conditions.Element, start.Attributes(), new XAttribute("inline", true), between));
         end.Remove();
         return null;
     }

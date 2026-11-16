@@ -15,7 +15,7 @@ internal sealed class NearMiss
 
     public NearMiss(FieldDictionary dictionary)
     {
-        _patterns = [.. dictionary.Fields.Select(field => (field, Pattern(field)))];
+        _patterns = [.. dictionary.AllFields.Select(field => (field, Pattern(field)))];
     }
 
     /// <summary>The first field whose name appears beside a bracket in text that holds no recognised tag.</summary>

@@ -23,7 +23,7 @@ internal static class WordStructure
 
     private static string? Table(List<XElement> elements)
     {
-        if (elements.Any(e => e.Name == Word + "tc" && e.Elements().LastOrDefault()?.Name != Word + "p"))
+        if (elements.Any(e => e.Name == Word + "tc" && e.Elements().LastOrDefault(IsBlock)?.Name != Word + "p"))
         {
             return "a table cell does not end with a paragraph";
         }
@@ -35,6 +35,8 @@ internal static class WordStructure
 
         return elements.Any(e => e.Name == Word + "tr" && !e.Elements(Word + "tc").Any()) ? "a table row has no cells" : null;
     }
+
+    private static bool IsBlock(XElement element) => element.Name == Word + "p" || element.Name == Word + "tbl";
 
     private static string? Story(List<XElement> elements) => elements
         .Where(e => e.Name.Namespace == Word && Stories.Contains(e.Name.LocalName))

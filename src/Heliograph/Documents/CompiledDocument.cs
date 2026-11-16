@@ -8,24 +8,25 @@ public sealed class CompiledDocument
 {
     private readonly DocxPackage _package;
     private readonly IReadOnlyDictionary<string, XDocument> _parts;
+    private readonly FieldDictionary _dictionary;
     private readonly Dictionary<string, Field> _fields;
 
     internal CompiledDocument(DocxPackage package, IReadOnlyDictionary<string, XDocument> parts, FieldDictionary dictionary)
     {
         _package = package;
         _parts = parts;
+        _dictionary = dictionary;
         _fields = dictionary.Fields.ToDictionary(field => field.Key);
     }
 
-    /// <summary>Every field in the dictionary the template was compiled against.</summary>
-    internal IReadOnlyCollection<Field> Fields => _fields.Values;
+    /// <summary>The dictionary the template was compiled against.</summary>
+    internal FieldDictionary Dictionary => _dictionary;
 
     /// <summary>The yes or no fields the template's conditions depend on, each once.</summary>
     internal IReadOnlyList<Field> ConditionFields => [.. _parts.Values
         .SelectMany(part => part.Descendants(Conditions.Element))
-        .Select(condition => (string)condition.Attribute("key")!)
-        .Distinct()
-        .Select(key => _fields[key])];
+        .Select(FieldOf)
+        .Distinct()];
 
     /// <summary>
     /// Fills the template in for one recipient. The data is a JSON object keyed by the dictionary's keys. When
@@ -35,7 +36,7 @@ public sealed class CompiledDocument
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        var recipient = new RecipientData(data, settings);
+        var recipient = new RecipientData(data, settings, _dictionary);
         var rendered = RenderParts(recipient);
         return recipient.Diagnostics.Count == 0
             ? new DocumentRender(_package.Save(rendered), [])
@@ -50,10 +51,16 @@ public sealed class CompiledDocument
         {
             // A copy, so the compiled template is never changed and can be shared.
             var part = new XDocument(template);
-            ConditionResolver.Resolve(part, key => recipient.IsYes(_fields[key]));
+            bool IsYes(XElement condition) => recipient.IsYes(FieldOf(condition), condition);
+
+            // Conditions outside repeated rows go first, so that a list inside hidden content needs no value.
+            ConditionResolver.Resolve(part, IsYes, insideRepeatedRows: false);
+            Repeats.Expand(part, key => _fields[key], recipient);
+            ConditionResolver.Resolve(part, IsYes, insideRepeatedRows: true);
+            DocumentMender.Mend(part);
             foreach (var slot in part.Descendants(TagScanner.Value).ToList())
             {
-                if (recipient.Paragraphs(_fields[(string)slot.Attribute("key")!]) is { } paragraphs)
+                if (recipient.Paragraphs(FieldOf(slot), slot) is { } paragraphs)
                 {
                     ValueWriter.Write(slot, paragraphs);
                 }
@@ -63,6 +70,13 @@ public sealed class CompiledDocument
         }
 
         return rendered;
+    }
+
+    /// <summary>The field a stand-in is for. One that belongs to a list is found through the list, where its key is unique.</summary>
+    private Field FieldOf(XElement standIn)
+    {
+        var key = (string)standIn.Attribute("key")!;
+        return (string?)standIn.Attribute("list") is { } list ? _fields[list].Fields!.First(field => field.Key == key) : _fields[key];
     }
 }
 

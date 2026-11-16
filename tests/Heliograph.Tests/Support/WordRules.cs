@@ -42,7 +42,7 @@ internal static class WordRules
 
     private static IEnumerable<string> Tables(List<XElement> elements)
     {
-        foreach (var cell in elements.Where(e => e.Name == W + "tc" && e.Elements().LastOrDefault()?.Name != W + "p"))
+        foreach (var cell in elements.Where(e => e.Name == W + "tc" && e.Elements().LastOrDefault(b => b.Name == W + "p" || b.Name == W + "tbl")?.Name != W + "p"))
         {
             yield return $"a table cell does not end with a paragraph: {Excerpt(cell.Parent!)}";
         }

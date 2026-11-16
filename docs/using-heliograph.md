@@ -38,9 +38,27 @@ under, and a type.
 | `money` | a number | Printed to two decimal places with no currency sign. The author writes the sign |
 | `address` | an array of strings | One line each |
 | `yesNo` | `true` or `false` | Never printed. Templates show or hide content on it. A string such as `"yes"` is refused |
+| `list` | an array of objects | Never printed itself. It has `fields` of its own, and a table row that uses them is repeated for each item |
 
-A template can only ask for a value, show content on a yes or no field, or (not yet built)
-repeat content over a list. It cannot calculate or compare. Work out totals, and anything a
+A list's fields are declared inside it, and each item in the data is an object with those keys:
+
+```json
+{ "name": "Contributions", "key": "contributions", "type": "list", "fields": [
+    { "name": "Date", "key": "date", "type": "date" },
+    { "name": "Amount", "key": "amount", "type": "money" } ] }
+```
+
+```json
+{ "contributions": [ { "date": "2026-01-02", "amount": 12.5 }, { "date": "2026-02-02", "amount": 12.5 } ] }
+```
+
+Names are unique across the whole dictionary, lists included, so that an author never has to say
+which "Date" they mean. Keys only need to be unique where the data holds them. A list cannot hold
+another list. A problem with one item names it: "no value for "Amount" in item 2 of
+"Contributions"".
+
+A template can only ask for a value, show content on a yes or no field, or repeat a table row
+over a list. It cannot calculate or compare. Work out totals, and anything a
 letter should show "when not", in your system, and supply them as fields.
 
 ## Compile, then render
@@ -53,7 +71,7 @@ var compilation = DocumentTemplate.Compile(template, dictionary);
 ```
 
 `Compile` reads the file, refuses anything unsafe, finds every tag, and rehearses the template
-for every outcome of its conditions. It returns:
+for every outcome of its conditions, with lists that are empty, of one item and of several. It returns:
 
 - `Document`: a `CompiledDocument`, or null when any diagnostic is an error.
 - `Diagnostics`: everything found. A template that compiled may still carry warnings.

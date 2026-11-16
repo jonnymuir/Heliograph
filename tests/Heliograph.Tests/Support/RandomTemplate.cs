@@ -21,6 +21,12 @@ internal sealed class RandomTemplate
         new Field("Notes", "notes", FieldType.Text),
         new Field("Amount owed", "amountOwed", FieldType.Money),
         new Field("Applicant address", "applicantAddress", FieldType.Address),
+        new Field("Items", "items", FieldType.List,
+        [
+            new Field("Item name", "itemName", FieldType.Text),
+            new Field("Item cost", "itemCost", FieldType.Money),
+            new Field("Item is urgent", "itemIsUrgent", FieldType.YesNo),
+        ]),
     ]);
 
     private const char NewParagraph = (char)0x2029;
@@ -70,9 +76,16 @@ internal sealed class RandomTemplate
           "owesMoney": {{(Yes(answers, "Owes money") ? "true" : "false")}}, "isAMember": {{(Yes(answers, "Is a member") ? "true" : "false")}},
           "hasAFireAct": {{(Yes(answers, "Has a fire act") ? "true" : "false")}},
           "applicantName": "Alex Applicant", "notes": "First paragraph.\n\nSecond paragraph.\nSame paragraph.",
-          "amountOwed": 12.5, "applicantAddress": ["12 Tumble Lane", "Clubtown", "ZZ1 1ZZ"]
+          "amountOwed": 12.5, "applicantAddress": ["12 Tumble Lane", "Clubtown", "ZZ1 1ZZ"],
+          "items": [{{string.Join(", ", Enumerable.Range(1, ItemCount(answers)).Select(Item))}}]
         }
         """);
+
+    /// <summary>How many items the list has for a recipient: none, one, two or three, so that every length is tried.</summary>
+    private static int ItemCount(int answers) => answers % 4;
+
+    private static string Item(int number) => string.Create(CultureInfo.InvariantCulture,
+        $$"""{ "itemName": "Item {{number}}", "itemCost": {{number * 2.5m}}, "itemIsUrgent": {{(number % 2 == 1 ? "true" : "false")}} }""");
 
     public byte[] Docx() => new TestDocx().RawParagraph(string.Concat(_blocks.Select(block => block.Xml(ParagraphXml)))).Build().ToArray();
 
@@ -125,7 +138,8 @@ internal sealed class RandomTemplate
             {
                 _ when Mistake() => BlockMistake(depth),
                 < 10 when depth < 3 => new Condition(Pick(YesNoFields), Blocks(depth + 1)),
-                < 14 when depth < 2 => NewTable(depth),
+                < 13 when depth < 2 => NewTable(depth),
+                < 15 => new ItemTable(),
                 < 17 => new PageLine(),
 
                 // A bookmark's two halves are dropped wherever the generator happens to be, so a condition or a
@@ -147,11 +161,12 @@ internal sealed class RandomTemplate
 
     /// <summary>
     /// A condition tag on a line of its own with no partner, a pair that opens inside a table and closes after it,
-    /// or a pair that ends in the middle of a field.
+    /// a pair that ends in the middle of a field, or a list's field used outside any table row.
     /// </summary>
-    private Block BlockMistake(int depth) => _random.Next(4) switch
+    private Block BlockMistake(int depth) => _random.Next(5) switch
     {
         0 => new Paragraph([new Stray($"((if {Pick(YesNoFields)}))")]),
+        4 => new Paragraph([new Stray("£((Item cost))")]),
         1 => new Paragraph([new Stray("((end if))")]),
         2 => new CutField(Pick(YesNoFields)),
         _ => new Straddle(Pick(YesNoFields), NewTable(Math.Max(depth, 1))),
@@ -261,6 +276,12 @@ internal sealed class RandomTemplate
         public abstract string Xml(Func<string, string> paragraph);
 
         public abstract IEnumerable<string> Expected(int answers);
+
+        /// <summary>
+        /// Whether the last thing the block leaves in the letter is a table. Null when it leaves no paragraph or
+        /// table at all. A table cell that ends with a table is given an empty paragraph after it.
+        /// </summary>
+        public virtual bool? EndsWithTable(int answers) => Expected(answers).Any() ? false : null;
     }
 
     private sealed record Paragraph(List<Token> Tokens) : Block
@@ -288,6 +309,9 @@ internal sealed class RandomTemplate
 
         public override IEnumerable<string> Expected(int answers) =>
             Yes(answers, Field) ? Blocks.SelectMany(block => block.Expected(answers)) : [];
+
+        public override bool? EndsWithTable(int answers) =>
+            Yes(answers, Field) ? Blocks.Select(block => block.EndsWithTable(answers)).LastOrDefault(ends => ends is not null) : null;
     }
 
     /// <summary>A line with a whole page-number field in it, which a condition may show or hide but must not cut.</summary>
@@ -297,6 +321,36 @@ internal sealed class RandomTemplate
             $"<w:p><w:r><w:t xml:space=\"preserve\">Page </w:t></w:r>{FieldStart}<w:r><w:t>1</w:t></w:r>{FieldEnd}<w:r><w:t xml:space=\"preserve\"> of this letter.</w:t></w:r></w:p>";
 
         public override IEnumerable<string> Expected(int answers) => ["Page 1 of this letter."];
+    }
+
+    /// <summary>
+    /// A table with a heading row, a row that repeats for each item with a condition decided item by item, and a
+    /// last row that does not repeat.
+    /// </summary>
+    private sealed record ItemTable : Block
+    {
+        private const string Start = "<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>";
+
+        public override string Xml(Func<string, string> paragraph) => Start
+            + Row(paragraph("Item"), paragraph("Cost"))
+            + Row(paragraph("((Item name))((if Item is urgent)) urgent((end if))"), paragraph("£((Item cost))"))
+            + Row(paragraph("For"), paragraph("((Applicant name))")) + "</w:tbl>";
+
+        public override IEnumerable<string> Expected(int answers) =>
+        [
+            "Item", "Cost",
+            .. Enumerable.Range(1, ItemCount(answers)).SelectMany(number => new[]
+            {
+                $"Item {number}" + (number % 2 == 1 ? " urgent" : ""),
+                string.Create(CultureInfo.InvariantCulture, $"£{number * 2.5m:0.00}"),
+            }),
+            "For", "Alex Applicant",
+        ];
+
+        public override bool? EndsWithTable(int answers) => true;
+
+        private static string Row(params string[] cells) => "<w:tr>" + string.Concat(cells.Select(cell =>
+            "<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>" + cell + "</w:tc>")) + "</w:tr>";
     }
 
     /// <summary>One half of a bookmark, sitting between paragraphs. It prints nothing.</summary>
@@ -334,8 +388,14 @@ internal sealed class RandomTemplate
         public override string Xml(Func<string, string> paragraph) => Start + string.Concat(Rows.Select(row =>
             "<w:tr>" + string.Concat(row.Select(cell => CellStart + string.Concat(cell.Select(block => block.Xml(paragraph))) + "</w:tc>")) + "</w:tr>")) + "</w:tbl>";
 
-        // A cell always keeps one paragraph, empty if everything in it was hidden.
+        // A cell always ends with a paragraph: an empty one if everything in it was hidden, or if it ends with a table.
         public override IEnumerable<string> Expected(int answers) => Rows.SelectMany(row => row.SelectMany(cell =>
-            cell.SelectMany(block => block.Expected(answers)).DefaultIfEmpty("")));
+        {
+            var last = cell.Select(block => block.EndsWithTable(answers)).LastOrDefault(ends => ends is not null);
+            var paragraphs = cell.SelectMany(block => block.Expected(answers));
+            return last == false ? paragraphs : paragraphs.Append("");
+        }));
+
+        public override bool? EndsWithTable(int answers) => true;
     }
 }

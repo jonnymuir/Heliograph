@@ -50,6 +50,9 @@ public static class DiagnosticCodes
     public const string ConditionCutsThroughField = "HG1011";
     public const string ConditionHoldsSectionBreak = "HG1012";
     public const string WouldRenderBrokenDocument = "HG1013";
+    public const string ListFieldOutsideRow = "HG1014";
+    public const string RowMixesLists = "HG1015";
+    public const string RowCannotRepeat = "HG1016";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

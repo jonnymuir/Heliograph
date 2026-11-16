@@ -28,6 +28,8 @@ internal static class TagScanner
             scan.Paragraph(paragraphs[index], index + 1);
         }
 
+        // Rows first: a condition's tag lines are replaced when it is wrapped, and a row is found from them.
+        Repeats.Mark(scan.ListUses, diagnostics);
         Conditions.Wrap(scan.Markers, diagnostics);
     }
 
@@ -37,6 +39,9 @@ internal static class TagScanner
         private bool _hiddenTextReported;
 
         public List<ConditionMarker> Markers { get; } = [];
+
+        /// <summary>Every place a field that belongs to a list is used, so the row it is in can be made to repeat.</summary>
+        public List<ListUse> ListUses { get; } = [];
 
         public void Paragraph(XElement paragraph, int number)
         {
@@ -56,12 +61,13 @@ internal static class TagScanner
             if (IsConditionAloneOnItsLine(tags, joined))
             {
                 // Alone on its line, the tag marks a boundary between paragraphs.
-                Markers.Add(new ConditionMarker(paragraph, tags[0], location, Reported: diagnostics.Errors() > before));
+                Markers.Add(new ConditionMarker(paragraph, tags[0], ListOf(tags[0]), location, Reported: diagnostics.Errors() > before));
+                NoteListUse(paragraph, tags[0], location);
                 return;
             }
 
             Markers.AddRange(InlineConditions.Unpaired(tags, location, diagnostics)
-                .Select(tag => new ConditionMarker(paragraph, tag, location, Reported: true)));
+                .Select(tag => new ConditionMarker(paragraph, tag, ListOf(tag), location, Reported: true)));
             if (diagnostics.Errors() > before)
             {
                 return;
@@ -70,9 +76,26 @@ internal static class TagScanner
             LooksLikeATag(Without(joined, tags), location);
 
             // Last first, so replacing one tag does not move the text before it.
-            tags.AsEnumerable().Reverse().ToList().ForEach(tag => Replace(texts, tag));
+            foreach (var tag in tags.AsEnumerable().Reverse())
+            {
+                Replace(texts, tag, Standing(tag, ListOf(tag)));
+
+                // Noted against the paragraph, which stays where it is. A stand-in may be moved when a condition is wrapped.
+                NoteListUse(paragraph, tag, location);
+            }
+
             texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
             InlineConditions.Wrap(paragraph, location, diagnostics);
+        }
+
+        private Field? ListOf(Tag tag) => tag.Field is null ? null : settings.Dictionary.ListOf(tag.Field);
+
+        private void NoteListUse(XElement element, Tag tag, DiagnosticLocation location)
+        {
+            if (ListOf(tag) is { } list)
+            {
+                ListUses.Add(new ListUse(element, tag.Field!, list, location));
+            }
         }
 
         private void LooksLikeATag(string text, DiagnosticLocation location)
@@ -126,7 +149,7 @@ internal static class TagScanner
     /// Puts a stand-in where the tag starts, in the run that holds its first character, so a value takes that run's
     /// formatting. The tag's own characters are removed from every piece of text they were spread across.
     /// </summary>
-    private static void Replace(List<XElement> texts, Tag tag)
+    private static void Replace(List<XElement> texts, Tag tag, XElement standIn)
     {
         var offset = 0;
         var placed = false;
@@ -149,7 +172,7 @@ internal static class TagScanner
 
             placed = true;
             Keep(text, value[..from]);
-            var slot = Standing(tag);
+            var slot = standIn;
             text.AddAfterSelf(slot);
             if (to < value.Length)
             {
@@ -162,11 +185,11 @@ internal static class TagScanner
         tags is [{ Kind: not TagKind.Value } only] && paragraphText.Trim().Length == only.End - only.Start;
 
     /// <summary>The element that stands in for a tag until the template is rendered.</summary>
-    private static XElement Standing(Tag tag) => tag.Kind switch
+    private static XElement Standing(Tag tag, Field? list) => tag.Kind switch
     {
-        TagKind.If => new XElement(InlineConditions.Start, new XAttribute("key", tag.Field!.Key)),
+        TagKind.If => new XElement(InlineConditions.Start, WordXml.FieldAttributes(tag.Field!, list)),
         TagKind.EndIf => new XElement(InlineConditions.End),
-        _ => new XElement(Value, new XAttribute("key", tag.Field!.Key)),
+        _ => new XElement(Value, WordXml.FieldAttributes(tag.Field!, list)),
     };
 
     private static XElement Keep(XElement text, string value)

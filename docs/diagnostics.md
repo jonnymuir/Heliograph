@@ -45,6 +45,9 @@ paragraph's text.
 | `HG1011` | A condition starts or ends in the middle of a field, such as a page number, a cross-reference or a table of contents. Hiding it would leave half a field. | Move the tags so the whole field is inside the condition, or outside it. |
 | `HG1012` | A condition contains a section break, or one of its tags is on the line that carries one. Hiding it would merge two sections, changing page size, margins, headers and footers. | Move the section break outside the condition, and off the tags' lines. |
 | `HG1013` | The compiler rehearsed the template for every outcome of its conditions, and one would produce a document that cannot be opened. The message says which outcome and what is wrong. This is a fault in Heliograph, caught before any letter is made. | Report it with the template. Moving the nearest condition may work round it. |
+| `HG1014` | A field that belongs to a list is used outside a table row, or a list itself is used as a value. A list's fields can only go in a row of a table, which is repeated for each item. | Put the field in a table row. |
+| `HG1015` | A table row uses fields from two different lists. A row can repeat for one list only. | Give each list a row, or a table, of its own. |
+| `HG1016` | A row that would repeat cannot: it is marked as a heading row, one of its cells is merged with a cell above or below, or it holds a footnote or an endnote. | Use an ordinary row for the list's fields. |
 | `HG1010` | Warning. The document has hidden text, which is sent to every recipient inside the file. Reported once for each part. | Delete it if recipients should not have it. |
 
 ## Data that is wrong for one recipient (HG2)

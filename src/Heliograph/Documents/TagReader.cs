@@ -88,7 +88,7 @@ internal sealed class TagReader(FieldDictionary dictionary, DiagnosticLocation l
             return field;
         }
 
-        var nearest = FieldName.Nearest(name, dictionary.Fields.Select(f => f.Name));
+        var nearest = FieldName.Nearest(name, dictionary.AllFields.Select(f => f.Name));
         var suggestion = isCondition ? $"(({IfWord} {nearest}))" : $"(({nearest}))";
         diagnostics.Add(new Diagnostic(DiagnosticCodes.UnknownField,
             $"The dictionary has no field called \"{name}\".",
@@ -105,6 +105,15 @@ internal sealed class TagReader(FieldDictionary dictionary, DiagnosticLocation l
             diagnostics.Add(new Diagnostic(DiagnosticCodes.ConditionNeedsYesNo,
                 $"\"{field.Name}\" is not a yes or no field, so content cannot be shown or hidden on it.",
                 "Use a yes or no field from the dictionary after \"if\".", location));
+            return false;
+        }
+
+        if (!isCondition && field.Type == FieldType.List)
+        {
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.ListFieldOutsideRow,
+                $"\"{field.Name}\" is a list, which cannot be printed.",
+                $"Put its fields, such as (({field.Fields![0].Name})), in a row of a table. The row is repeated for each item.",
+                location));
             return false;
         }
 
