@@ -56,71 +56,87 @@ internal sealed class TextTemplate
     /// <summary>The message for one recipient, as lines, each a list of pieces.</summary>
     public List<List<TextPiece>> Render(RecipientData recipient)
     {
-        var lines = new List<List<TextPiece>>();
-        Render(_blocks, recipient, lines);
-        return lines;
+        var writer = new Writer(recipient, _dictionary);
+        writer.Blocks(_blocks);
+        return writer.Lines;
     }
 
-    private void Render(List<TextBlock> blocks, RecipientData recipient, List<List<TextPiece>> lines)
+    /// <summary>Writes the lines of one recipient's message.</summary>
+    private sealed class Writer(RecipientData recipient, FieldDictionary dictionary)
     {
-        foreach (var block in blocks)
+        public List<List<TextPiece>> Lines { get; } = [];
+
+        public void Blocks(List<TextBlock> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                Block(block);
+            }
+        }
+
+        private void Block(TextBlock block)
         {
             if (block is TextCondition condition)
             {
                 if (recipient.IsYes(condition.Field, null))
                 {
-                    Render(condition.Blocks, recipient, lines);
+                    Blocks(condition.Blocks);
                 }
+
+                return;
             }
-            else if (block is TextLine { RepeatsOver: null } line)
+
+            var line = (TextLine)block;
+            if (line.RepeatsOver is not { } list)
             {
-                AddLine(line.Nodes, null, recipient, lines);
+                Line(line.Nodes, null);
+                return;
             }
-            else if (block is TextLine repeated)
+
+            var items = recipient.Items(list) ?? [];
+            for (var number = 1; number <= items.Count; number++)
             {
-                var items = recipient.Items(repeated.RepeatsOver!) ?? [];
-                for (var number = 1; number <= items.Count; number++)
+                Line(line.Nodes, new ItemScope(list, items[number - 1], number));
+            }
+        }
+
+        private void Line(List<TextNode> nodes, ItemScope? item)
+        {
+            var pieces = new List<TextPiece>();
+
+            // A line that was all condition leaves no blank line behind once a condition in it is hidden.
+            if (!Evaluate(nodes, item, pieces) || pieces.Any(piece => !string.IsNullOrWhiteSpace(piece.Text)))
+            {
+                Lines.Add(pieces);
+            }
+        }
+
+        /// <summary>Adds what the nodes print to <paramref name="pieces"/>. True when a condition among them was hidden.</summary>
+        private bool Evaluate(List<TextNode> nodes, ItemScope? item, List<TextPiece> pieces)
+        {
+            var hidSomething = false;
+            foreach (var node in nodes)
+            {
+                switch (node)
                 {
-                    AddLine(repeated.Nodes, new ItemScope(repeated.RepeatsOver!, items[number - 1], number), recipient, lines);
+                    case Literal literal:
+                        pieces.Add(new TextPiece(literal.Text, IsData: false));
+                        break;
+                    case ValueNode value when recipient.Paragraphs(value.Field, Scope(value.Field, item)) is { } paragraphs:
+                        pieces.Add(new TextPiece(string.Join("\n\n", paragraphs.Select(lines => string.Join('\n', lines))), IsData: true));
+                        break;
+                    case IfNode condition when recipient.IsYes(condition.Field, Scope(condition.Field, item)):
+                        hidSomething |= Evaluate(condition.Nodes, item, pieces);
+                        break;
+                    case IfNode:
+                        hidSomething = true;
+                        break;
                 }
             }
+
+            return hidSomething;
         }
+
+        private ItemScope? Scope(Field field, ItemScope? item) => dictionary.ListOf(field) is null ? null : item;
     }
-
-    private void AddLine(List<TextNode> nodes, ItemScope? item, RecipientData recipient, List<List<TextPiece>> lines)
-    {
-        var pieces = new List<TextPiece>();
-        var hidSomething = false;
-        Evaluate(nodes, item, recipient, pieces, ref hidSomething);
-
-        // A line that was all condition leaves no blank line behind once a condition in it is hidden.
-        if (!hidSomething || pieces.Any(piece => !string.IsNullOrWhiteSpace(piece.Text)))
-        {
-            lines.Add(pieces);
-        }
-    }
-
-    private void Evaluate(List<TextNode> nodes, ItemScope? item, RecipientData recipient, List<TextPiece> pieces, ref bool hidSomething)
-    {
-        foreach (var node in nodes)
-        {
-            switch (node)
-            {
-                case Literal literal:
-                    pieces.Add(new TextPiece(literal.Text, IsData: false));
-                    break;
-                case ValueNode value when recipient.Paragraphs(value.Field, Scope(value.Field, item)) is { } paragraphs:
-                    pieces.Add(new TextPiece(string.Join("\n\n", paragraphs.Select(lines => string.Join('\n', lines))), IsData: true));
-                    break;
-                case IfNode condition when recipient.IsYes(condition.Field, Scope(condition.Field, item)):
-                    Evaluate(condition.Nodes, item, recipient, pieces, ref hidSomething);
-                    break;
-                case IfNode:
-                    hidSomething = true;
-                    break;
-            }
-        }
-    }
-
-    private ItemScope? Scope(Field field, ItemScope? item) => _dictionary.ListOf(field) is null ? null : item;
 }

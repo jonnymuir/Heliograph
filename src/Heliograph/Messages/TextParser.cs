@@ -31,7 +31,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
         }
 
         var position = 0;
-        var nodes = Nodes(text, tags, ref position, text.Length, new Queue<Tag>(tags));
+        var nodes = Nodes(text, ref position, new Queue<Tag>(tags));
         _wording.Add((number, string.Concat(Literals(nodes))));
         var lists = Fields(nodes).Select(dictionary.ListOf).OfType<Field>().Distinct().ToList();
         if (lists.Count > 1)
@@ -84,7 +84,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
     }
 
     /// <summary>Turns a line and its tags into pieces, each condition holding what lies between its two tags.</summary>
-    private static List<TextNode> Nodes(string text, List<Tag> all, ref int position, int end, Queue<Tag> tags)
+    private static List<TextNode> Nodes(string text, ref int position, Queue<Tag> tags)
     {
         var nodes = new List<TextNode>();
         while (tags.TryPeek(out var tag) && tag.Kind != TagKind.EndIf)
@@ -98,7 +98,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
                 continue;
             }
 
-            var inner = Nodes(text, all, ref position, end, tags);
+            var inner = Nodes(text, ref position, tags);
             var close = tags.Dequeue();
             Add(inner, text[position..close.Start]);
             position = close.End;
@@ -107,8 +107,8 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
 
         if (tags.Count == 0)
         {
-            Add(nodes, text[position..end]);
-            position = end;
+            Add(nodes, text[position..]);
+            position = text.Length;
         }
 
         return nodes;
