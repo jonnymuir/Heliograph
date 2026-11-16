@@ -12,8 +12,13 @@ It deliberately does **not** deliver anything. Sending, retries, delivery receip
 adapters (Notify, Twilio, SES and so on), scheduling and recipient preferences belong to the host.
 Heliograph's output is the rendered artefact plus the metadata a sender needs.
 
+It follows the Wayfinder model: content designers author templates as data in an editor, an
+engine renders them, a reference host proves it standalone, and
+[Heliograph.Umbraco](https://github.com/jonnymuir/Heliograph.Umbraco) hosts it in Umbraco.
+
 The design is still being set. [docs/brief.md](docs/brief.md) holds the need, the measures of
-success and the open decisions. Read it before proposing structure, and don't settle an open
+success and the open decisions; [docs/architecture.md](docs/architecture.md) draws the system
+context and the planned packages. Read both before proposing structure, and don't settle an open
 decision without the maintainer.
 
 Engineering standards (security, simplicity, testing, change flow, docs, writing style) are in
@@ -47,6 +52,9 @@ to publish.
 - **The core takes no framework dependency.** No ASP.NET Core, no Umbraco, no Wayfinder reference
   in `src/Heliograph`. Integrations go in their own projects or in the host repo, so the library
   stays usable on its own.
+- **A template is data, not code.** No Razor, no compiled templates, nothing a content designer
+  needs a developer to deploy. A template is validated before it is saved and names the data it
+  needs.
 - **Rendering never sends.** No network calls, no provider SDKs, no queues. If a feature needs to
   talk to the outside world, it belongs in the host.
 - **Rendering is deterministic.** The same definition and data produce the same output. No clock,

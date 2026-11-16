@@ -1,7 +1,7 @@
 # Design brief
 
 Draft. The maintainer owns every decision listed under [Open decisions](#open-decisions); agents
-recommend, with the trade-off, and wait.
+recommend, with the trade-off, and wait. [architecture.md](architecture.md) draws the design.
 
 ## The need
 
@@ -58,17 +58,28 @@ Proposed, to be agreed:
 - The [GOV.UK Design System](https://design-system.service.gov.uk/) and the GDS guidance on
   writing for users, which Wayfinder already follows.
 
+## Decided
+
+- **Scope:** Heliograph composes and renders. Delivery belongs to the host.
+- **Who authors:** content designers and service designers, at design time, in an editor. A
+  template is data, not code, in the way a Wayfinder blueprint is.
+- **Shape:** the Wayfinder model. An engine that runs on its own with a reference host, and
+  [Heliograph.Umbraco](https://github.com/jonnymuir/Heliograph.Umbraco) to host it in Umbraco.
+  Wayfinder starts a render at run time by calling Heliograph as a support system; a batch job
+  can do the same. See [architecture.md](architecture.md).
+
 ## Open decisions
 
-1. **Who authors correspondence?** Developers in code, content designers in a CMS such as the
-   Umbraco backoffice, or both. This decides most of the rest.
-2. **The content model.** Structured blocks (heading, paragraph, list, address, table, call to
-   action) rendered per channel, or a template language (Liquid, Razor, a Notify-style markdown).
-3. **Channels for the first release**, and which are first-class versus derived (is SMS written
+1. **The content model.** Structured blocks (heading, paragraph, list, address, table, call to
+   action) rendered per channel, or a plain formatting language in the style of GOV.UK Notify.
+   Either way it is data a content designer can author.
+2. **Channels for the first release**, and which are first-class versus derived (is SMS written
    separately, or cut down from the email?).
-4. **PDF engine**, chosen with its licence and its PDF/UA support in view.
-5. **The data contract**: what shape data arrives in, and whether conditions and calculations
-   reuse Wayfinder's expression language or stay independent of it.
-6. **Languages**, including bilingual correspondence (English and Welsh in the same letter).
-7. **Package split**: one core package, or a core plus one package per heavy renderer (PDF) so
-   hosts only take what they use.
+3. **PDF engine**, chosen with its licence and its PDF/UA support in view.
+4. **The data contract**: how a template declares the data it needs, and whether conditions and
+   calculations reuse Wayfinder's expression language or stay independent of it.
+5. **Languages**, including bilingual correspondence (English and Welsh in the same letter).
+6. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+   support-system capability per template, or one capability that takes the template as an input.
+7. **Versioning**: how a template changes while journeys that will use it are already running,
+   and how a host records which version a person was sent.
