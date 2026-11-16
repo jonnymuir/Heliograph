@@ -124,6 +124,15 @@ public class SmsTests
     }
 
     [Fact]
+    public void Text_that_looks_like_a_tag_is_pointed_out_in_a_message_too()
+    {
+        var compilation = SmsTemplate.Compile("Hello [[Member name]].", Dictionary);
+
+        compilation.Succeeded.Should().BeTrue();
+        compilation.Diagnostics.Should().ContainSingle().Which.Code.Should().Be(DiagnosticCodes.LooksLikeATag);
+    }
+
+    [Fact]
     public void A_problem_says_which_line_of_the_message_it_is_on()
     {
         var diagnostic = SmsTemplate.Compile("Hello.\nDear ((Membr name)),", Dictionary).Diagnostics.Should().ContainSingle().Subject;

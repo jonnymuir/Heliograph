@@ -61,7 +61,22 @@ A template can only ask for a value, show content on a yes or no field, or repea
 over a list. It cannot calculate or compare. Work out totals, and anything a
 letter should show "when not", in your system, and supply them as fields.
 
-## Compile, then render
+## A whole correspondence
+
+A correspondence is one thing with a part for each channel: a document, an email and a text
+message. Supply the parts you use. `Correspondence.Compile` compiles them together, and one
+`Render` produces them all. This is the call to use unless you only ever need one part.
+
+- A mistake in any part stops the whole correspondence. Every part's problems come back
+  together, each saying which part it is in.
+- When a recipient's data is wrong for any part, no part is produced, so nobody gets the text
+  without the letter it refers to. A value missing from several parts is reported once.
+
+The full example, which a test compiles and runs, is in the
+[README](https://github.com/jonnymuir/Heliograph#in-code). The sections below describe each part
+on its own.
+
+## Compile, then render: the document part
 
 ```csharp
 var dictionary = FieldDictionary.Parse(File.ReadAllText(dictionaryPath));
@@ -85,9 +100,6 @@ var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultur
 
 `Render` returns `Docx`, the finished file as bytes, or null with `Diagnostics` saying what is
 wrong with the data. Only fields the template uses for this recipient are checked.
-
-The full example, which a test compiles and runs, is in the
-[README](https://github.com/jonnymuir/Heliograph#in-code).
 
 ## Emails
 
