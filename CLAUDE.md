@@ -32,7 +32,7 @@ Follow them; this file adds only what is specific to this repo.
 
 | Project | Purpose |
 |---|---|
-| `src/Heliograph` | The core library: the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template and renders it. No package dependencies. |
+| `src/Heliograph` | The core library: the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values and conditions) and renders it. No package dependencies. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 

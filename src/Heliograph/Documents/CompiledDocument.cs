@@ -25,16 +25,16 @@ public sealed class CompiledDocument
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        var diagnostics = new Dictionary<string, Diagnostic>();
+        var recipient = new RecipientData(data, settings);
         var rendered = new Dictionary<string, XDocument>();
         foreach (var (name, template) in _parts)
         {
             // A copy, so the compiled template is never changed and can be shared.
             var part = new XDocument(template);
+            ResolveConditions(part, recipient);
             foreach (var slot in part.Descendants(TagScanner.Slot + "value").ToList())
             {
-                var field = _fields[(string)slot.Attribute("key")!];
-                if (Lines(field, data, settings, diagnostics) is { } lines)
+                if (recipient.Lines(_fields[(string)slot.Attribute("key")!]) is { } lines)
                 {
                     slot.ReplaceWith(ValueWriter.Elements(lines));
                 }
@@ -43,38 +43,29 @@ public sealed class CompiledDocument
             rendered[name] = part;
         }
 
-        return diagnostics.Count == 0
+        return recipient.Diagnostics.Count == 0
             ? new DocumentRender(_package.Save(rendered), [])
-            : new DocumentRender(null, [.. diagnostics.Values]);
+            : new DocumentRender(null, recipient.Diagnostics);
     }
 
-    private static IReadOnlyList<string>? Lines(
-        Field field, JsonElement data, RenderSettings settings, Dictionary<string, Diagnostic> diagnostics)
+    /// <summary>
+    /// Keeps or removes the content each condition governs, outermost first. It runs before any value is filled in,
+    /// so a field used only in removed content needs no value.
+    /// </summary>
+    private void ResolveConditions(XDocument part, RecipientData recipient)
     {
-        if (data.ValueKind != JsonValueKind.Object || !data.TryGetProperty(field.Key, out var value)
-                                                   || value.ValueKind == JsonValueKind.Null)
+        while (part.Descendants(Conditions.Element).FirstOrDefault() is { } condition)
         {
-            diagnostics.TryAdd(field.Key, new Diagnostic(DiagnosticCodes.ValueMissing,
-                $"The data has no value for \"{field.Name}\".", $"Supply {field.Key} in the data."));
-            return null;
+            if (recipient.IsYes(_fields[(string)condition.Attribute("key")!]))
+            {
+                condition.ReplaceWith(condition.Nodes());
+            }
+            else
+            {
+                condition.Remove();
+            }
         }
-
-        var lines = ValueWriter.Lines(field, value, settings);
-        if (lines is null)
-        {
-            diagnostics.TryAdd(field.Key, new Diagnostic(DiagnosticCodes.ValueWrongType,
-                $"The value for \"{field.Name}\" is not {Described(field.Type)}.", ValueWriter.Expected(field)));
-        }
-
-        return lines;
     }
-
-    private static string Described(FieldType type) => type switch
-    {
-        FieldType.Date => "a date",
-        FieldType.Address => "an address",
-        _ => "text",
-    };
 }
 
 /// <summary>The result of a render: a finished .docx, or what is wrong with the data.</summary>

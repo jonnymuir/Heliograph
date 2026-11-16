@@ -79,4 +79,13 @@ public enum FieldType
 
     /// <summary>A postal address, supplied as a list of lines and printed one line under another.</summary>
     Address,
+
+    /// <summary>A number, supplied as a number and printed with the thousands separated (12,500).</summary>
+    Number,
+
+    /// <summary>An amount of money, supplied as a number and printed with its currency and two decimal places (£45.00).</summary>
+    Money,
+
+    /// <summary>Yes or no, supplied as true or false. It is never printed: a template shows or hides content on it.</summary>
+    YesNo,
 }

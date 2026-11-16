@@ -27,13 +27,19 @@ Found when a template is compiled. Each has a location: the part (`document`, `h
 | `HG1001` | A tag names a field the dictionary does not have. The fix names the nearest field when one is close. | Use a field from the dictionary. |
 | `HG1002` | A tag is opened with `((` and not closed in the same paragraph. | Add `))` after the field's name. |
 | `HG1003` | A tag has nothing between `((` and `))`. | Put a field's name between the brackets. |
+| `HG1004` | A condition, `((if Field))`, has no `((end if))` after it, or its `((end if))` is somewhere else, such as outside the table cell it starts in. | Put `((end if))` on a line of its own after the content, in the same part of the document. |
+| `HG1005` | An `((end if))` has no `((if ...))` before it to end. | Remove it, or add the `((if ...))` it belongs to. |
+| `HG1006` | An `((if ...))` or `((end if))` tag shares its paragraph with other text or tags. | Put each on a line of its own. |
+| `HG1007` | A condition names a field that is not a yes or no field. | Use a yes or no field after `if`. |
+| `HG1008` | A yes or no field is used as a value. It cannot be printed. | Wrap the content in `((if Field))` and `((end if))`. |
 
 ## Data that is wrong for one recipient (HG2)
 
 Found when a compiled template is rendered. No document is produced. Only fields the template
-uses are checked.
+uses are checked, and a field used only inside a condition that is no for this recipient is not
+needed.
 
 | Code | Meaning | What to do |
 |---|---|---|
 | `HG2001` | The data has no value, or a null value, for a field the template uses. | Supply the value under the field's key. |
-| `HG2002` | The value is not of the field's type: text that is not a string, a date that is not an ISO date (`2027-06-19`), an address that is not a list of text lines. | Supply the value in the form the fix describes. |
+| `HG2002` | The value is not of the field's type: text that is not a string, a date that is not an ISO date (`2027-06-19`), an address that is not a list of text lines, a number or an amount of money that is not a number, a yes or no that is not `true` or `false`. | Supply the value in the form the fix describes. |
