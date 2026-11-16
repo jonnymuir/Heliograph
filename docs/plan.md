@@ -20,27 +20,20 @@ Two things keep this honest:
 
 - **LibreOffice is the reference editor.** It runs on a developer's machine and on the CI runner,
   so the round trip and the PDF are checked on every change.
-- **Word and Microsoft 365 cannot be driven from a script here.** They are covered by fixtures: a
-  person saves each benchmark letter once in Word on the desktop and once in Microsoft 365, the
-  files are committed under a name that says which editor saved them, and the same tests run
-  over them. When a fixture is replaced, the PR says which editor version saved it.
+- **Word cannot be driven from a script here.** Microsoft 365 is covered by fixtures: a person
+  saves each benchmark letter once in Word in the browser, the file is committed under a name
+  that says which editor saved it, and the same tests run over it. Word on the desktop gets the
+  same treatment when someone with Word can supply the files; until then it is unproven.
 
 ## Steps
 
 ### 1. Settle the decisions that block code
 
-By trying, not by argument. Output: the choices recorded in the brief, and the benchmark letters
-in the repo.
-
-1. Write the three [benchmark letters](../benchmarks/README.md) as content: the words, the
-   dictionary each one needs, and sample data. Fictional people and organisations only.
-2. Spike each way of marking a field (tags in the text, merge fields, content controls) on the
-   statement letter, the hardest one. For each: can it be inserted without typing from memory,
-   does it survive a LibreOffice save, a Word save and a Microsoft 365 save, and can it express a
-   repeat and a condition. The spike is thrown away.
-3. Decide: field marking, how the dictionary reaches an author, where diagnostics appear, and the
-   dictionary's format.
-4. Check that LibreOffice produces a tagged, accessible PDF from the statement letter.
+Done. The [benchmark letters](../benchmarks/README.md) are written, and a spike put three ways of
+marking a field through LibreOffice and Microsoft 365. The choices are recorded in the
+[brief](brief.md#decided). LibreOffice's PDF export carries headings, table structure, the
+language and the PDF/UA marker; it has not been run through a PDF/UA validator, which belongs to
+step 4.
 
 ### 2. The core, one letter at a time
 
@@ -80,5 +73,4 @@ started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
-The benchmark letters are written as content (step 1.1). Step 1.2, the field-marking spike on the
-annual statement, is next.
+Step 1 is done. Step 2.1, the acknowledgement letter through the core, is next.
