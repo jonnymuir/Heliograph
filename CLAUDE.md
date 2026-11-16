@@ -22,6 +22,7 @@ The design is still being set. [docs/brief.md](docs/brief.md) holds the need, th
 the constraints, the measures of success and the open decisions;
 [docs/architecture.md](docs/architecture.md) draws the system context and the planned packages.
 Read both before proposing structure, and don't settle an open decision without the maintainer.
+[docs/plan.md](docs/plan.md) gives the order of work, how each step is tested, and where we are.
 
 Engineering standards (security, simplicity, testing, change flow, docs, writing style) are in
 [jonnymuir/engineering-standards](https://github.com/jonnymuir/engineering-standards/blob/main/STANDARDS.md).
