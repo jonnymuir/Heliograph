@@ -64,11 +64,11 @@ nothing up.
 >
 > *Only when [Has contributions]:*
 >
-> > | Date | Description | Amount | Running total |
+> > | Date | Description | Amount (£) | Running total (£) |
 > > |---|---|---:|---:|
 > > | *For each [Contributions]:* **[Date]** | **[Description]** | **[Amount]** | **[Running total]** |
-> > | | **Total paid** | | **[Total paid]** |
-> > | | **Amount due for the year** | | **[Amount due for the year]** |
+> > | | **Total paid** | | £**[Total paid]** |
+> > | | **Amount due for the year** | | £**[Amount due for the year]** |
 >
 > *Only when [No contributions]:*
 >
@@ -76,9 +76,9 @@ nothing up.
 >
 > *Only when [Owes money]:*
 >
-> > ## You owe **[Amount owed]**
+> > ## You owe £**[Amount owed]**
 > >
-> > Pay **[Amount owed]** by **[Payment due date]** to keep your membership. Quote your member
+> > Pay £**[Amount owed]** by **[Payment due date]** to keep your membership. Quote your member
 > > reference, **[Member reference]**.
 >
 > ## If something looks wrong
@@ -100,12 +100,12 @@ Subject: Your NJF contributions statement
 >
 > Your contributions statement for **[Statement start]** to **[Statement end]** is attached.
 >
-> - Total paid: **[Total paid]**
-> - Amount due for the year: **[Amount due for the year]**
+> - Total paid: £**[Total paid]**
+> - Amount due for the year: £**[Amount due for the year]**
 >
 > *Only when [Owes money]:*
 >
-> > You owe **[Amount owed]**. Pay by **[Payment due date]** to keep your membership.
+> > You owe £**[Amount owed]**. Pay by **[Payment due date]** to keep your membership.
 >
 > Contributions Team
 > National Juggling Federation
@@ -113,7 +113,7 @@ Subject: Your NJF contributions statement
 ## SMS
 
 > NJF: your yearly contributions statement is on its way. *Only when [Owes money]:* You owe
-> **[Amount owed]**, due by **[Payment due date]**.
+> £**[Amount owed]**, due by **[Payment due date]**.
 
 ## What makes it hard
 
@@ -122,8 +122,8 @@ Subject: Your NJF contributions statement
 - The table runs over several pages (`samples/weekly-payer.json` has 60 rows). The heading row
   repeats on each page and a row never splits across pages. Both are the word processor's own
   table settings, not something Heliograph adds.
-- Money is right-aligned, shows two decimal places, and a refund prints as "-£12.50" from the
-  number -12.5.
+- Money is right-aligned and shows two decimal places. The author writes the currency: in the
+  column headings of the table, so a refund prints as "-12.50", and as a £ sign before a total.
 - An empty list shows a sentence, not an empty table.
 - The letterhead and footer change with a value, and live in the page header and footer, not
   the body.

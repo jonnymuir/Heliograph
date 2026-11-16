@@ -92,7 +92,52 @@ public class RenderDataTests
     }
 
     [Fact]
-    public void Paragraphs_in_supplied_text_become_line_breaks()
+    public void A_blank_line_in_supplied_text_starts_a_new_paragraph()
+    {
+        Paragraphs("((Notes))", """{ "notes": "One.\n\nTwo.\r\n\r\n \r\nThree, first line.\nThree, second line." }""")
+            .Should().Equal("One.", "Two.", "Three, first line.\nThree, second line.");
+    }
+
+    [Fact]
+    public void Text_around_the_tag_stays_with_the_first_and_last_of_the_new_paragraphs()
+    {
+        Paragraphs("Reason: ((Notes)) Thank you, ((Applicant name)).",
+                """{ "notes": "One.\n\nTwo.\n\nThree.", "applicantName": "Alex" }""")
+            .Should().Equal("Reason: One.", "Two.", "Three. Thank you, Alex.");
+    }
+
+    [Fact]
+    public void Text_after_the_tag_in_its_own_piece_of_formatting_moves_to_the_last_new_paragraph()
+    {
+        using var stream = new TestDocx().Paragraph("Reason: ", "((Notes))", " Thank you.", " Goodbye.").Build();
+        var document = DocumentTemplate.Compile(stream, Dictionary).Document!;
+
+        var docx = document.Render(Benchmark.Data("""{ "notes": "One.\n\nTwo." }"""), Benchmark.British).Docx!;
+
+        TestDocx.Paragraphs(docx).Should().Equal("Reason: One.", "Two. Thank you. Goodbye.");
+    }
+
+    [Fact]
+    public void New_paragraphs_take_the_style_of_the_paragraph_the_tag_is_in()
+    {
+        using var stream = new TestDocx().RawParagraph(
+            "<w:p><w:pPr><w:pStyle w:val=\"Quote\"/></w:pPr><w:r><w:rPr><w:i/></w:rPr><w:t>((Notes))</w:t></w:r></w:p>").Build();
+        var document = DocumentTemplate.Compile(stream, Dictionary).Document!;
+
+        var docx = document.Render(Benchmark.Data("""{ "notes": "One.\n\nTwo." }"""), Benchmark.British).Docx!;
+
+        TestDocx.ParagraphStyles(docx).Should().Equal("Quote", "Quote");
+        TestDocx.ItalicText(docx).Should().Be("One.Two.");
+    }
+
+    [Fact]
+    public void Blank_lines_at_the_start_and_end_of_supplied_text_add_no_paragraphs()
+    {
+        Paragraphs("((Notes))", """{ "notes": "\n\nOne.\n\n" }""").Should().Equal("One.");
+    }
+
+    [Fact]
+    public void A_single_line_break_in_supplied_text_stays_a_line_break()
     {
         Paragraphs("((Notes))", """{ "notes": "First line.\nSecond line.\r\nThird line." }""")
             .Should().Equal("First line.\nSecond line.\nThird line.");

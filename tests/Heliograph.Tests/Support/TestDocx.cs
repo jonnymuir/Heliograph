@@ -173,6 +173,30 @@ internal sealed class TestDocx
                 .Select(e => e.Name == w + "br" ? "\n" : e.Value))).ToList();
     }
 
+    /// <summary>The style of each paragraph in the document body, or null where a paragraph names none.</summary>
+    public static IReadOnlyList<string?> ParagraphStyles(byte[] docx)
+    {
+        XNamespace w = Word;
+        return Body(docx).Descendants(w + "p")
+            .Select(p => (string?)p.Element(w + "pPr")?.Element(w + "pStyle")?.Attribute(w + "val")).ToList();
+    }
+
+    /// <summary>All the text in the document body that is set in italics.</summary>
+    public static string ItalicText(byte[] docx)
+    {
+        XNamespace w = Word;
+        return string.Concat(Body(docx).Descendants(w + "r")
+            .Where(run => run.Element(w + "rPr")?.Element(w + "i") is not null)
+            .SelectMany(run => run.Elements(w + "t")).Select(text => text.Value));
+    }
+
+    private static XDocument Body(byte[] docx)
+    {
+        using var zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
+        using var part = zip.GetEntry("word/document.xml")!.Open();
+        return XDocument.Load(part);
+    }
+
     /// <summary>The text of one of the document's properties, such as "creator" or "lastModifiedBy".</summary>
     public static string? Property(byte[] docx, string name)
     {
