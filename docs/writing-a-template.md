@@ -98,6 +98,22 @@ across pages.
 - A list's fields only work in a table row. The row cannot be a heading row, be merged with the
   row above or below, or hold a footnote, and it cannot use fields from two lists.
 
+## Text messages
+
+The SMS part of a correspondence is plain text. Tags, and conditions inside a sentence, work as
+they do in a document:
+
+```text
+NJF: your licence for ((Event name)) is approved. Pay £((Licence fee)) by ((Fee due date)).((if Dangerous props)) Bring your fire plan.((end if))
+```
+
+- A condition's tags on lines of their own show or hide the lines between them.
+- A line that uses a list's fields is repeated for each item. There is no table to put it in.
+- When a message is rendered you are told how many messages it will be sent, and charged, as. A
+  message in the basic character set holds 160 characters. One with any character outside that
+  set, such as a curly quote or an accent the set lacks, holds 70. You are warned when the
+  template itself has such a character. A recipient's name can still push one message over.
+
 ## Where tags work
 
 | Place | Works |
@@ -129,7 +145,8 @@ The ones you are most likely to meet:
 | Left tracked changes or comments in the document | `HG0006`, `HG0007`. They would be sent to every recipient |
 
 **Warnings** do not stop anything. They point at something that may be a mistake: `{{Name}}` or
-`(Name))` where you may have meant `((Name))`, or hidden text, which travels inside the file.
+`(Name))` where you may have meant `((Name))`, hidden text, which travels inside the file, or a
+character that makes every text message cost more.
 
 ## What you cannot do yet
 

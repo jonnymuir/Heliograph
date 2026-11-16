@@ -80,6 +80,9 @@ started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
+Step 3 has started: the SMS part is built, with the same tags, conditions and lists as a
+document, and each benchmark letter has a text message. The email part is next.
+
 Step 2 is done for the document part, apart from shared parts. The annual statement compiles and
 renders: a table row repeated for each of up to sixty contributions, the heading row repeating
 on each page, and a sentence in place of the table when there are none. Its letterhead and

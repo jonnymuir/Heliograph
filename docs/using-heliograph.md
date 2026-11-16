@@ -89,6 +89,19 @@ wrong with the data. Only fields the template uses for this recipient are checke
 The full example, which a test compiles and runs, is in the
 [README](https://github.com/jonnymuir/Heliograph#in-code).
 
+## Text messages
+
+The SMS part is a string, compiled and rendered the same way.
+
+```csharp
+var compilation = SmsTemplate.Compile(File.ReadAllText(smsPath), dictionary);
+var render = compilation.Sms!.Render(recipient, settings);
+```
+
+`Render` returns `Text`, with `Encoding` (`Gsm7` or `Ucs2`) and `Segments`: how many messages the
+text will be sent, and charged, as. Heliograph does not shorten or split a message. Sending it is
+your provider's job.
+
 ## Diagnostics
 
 Every problem has a stable `Code`, a `Message` and a `Fix` in plain words, a `Severity` (`Error`

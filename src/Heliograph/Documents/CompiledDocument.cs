@@ -51,7 +51,7 @@ public sealed class CompiledDocument
         {
             // A copy, so the compiled template is never changed and can be shared.
             var part = new XDocument(template);
-            bool IsYes(XElement condition) => recipient.IsYes(FieldOf(condition), condition);
+            bool IsYes(XElement condition) => recipient.IsYes(FieldOf(condition), Repeats.ItemAt(condition));
 
             // Conditions outside repeated rows go first, so that a list inside hidden content needs no value.
             ConditionResolver.Resolve(part, IsYes, insideRepeatedRows: false);
@@ -60,7 +60,7 @@ public sealed class CompiledDocument
             DocumentMender.Mend(part);
             foreach (var slot in part.Descendants(TagScanner.Value).ToList())
             {
-                if (recipient.Paragraphs(FieldOf(slot), slot) is { } paragraphs)
+                if (recipient.Paragraphs(FieldOf(slot), Repeats.ItemAt(slot)) is { } paragraphs)
                 {
                     ValueWriter.Write(slot, paragraphs);
                 }

@@ -102,6 +102,10 @@ internal static class Repeats
         }
     }
 
+    /// <summary>The item a place in the document is for: the one its repeated row was copied for, if it is in one.</summary>
+    public static ItemScope? ItemAt(XElement at) =>
+        at.AncestorsAndSelf().Select(element => element.Annotation<ItemScope>()).FirstOrDefault(item => item is not null);
+
     /// <summary>Why a row cannot be one that repeats, or null if it can.</summary>
     private static string? WhyNot(XElement row)
     {

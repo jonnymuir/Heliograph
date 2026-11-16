@@ -1,0 +1,1 @@
+NJF: your yearly contributions statement is on its way.((if Owes money)) You owe £((Amount owed)), due by ((Payment due date)).((end if))

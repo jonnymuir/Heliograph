@@ -29,7 +29,7 @@ The file is not read any further. See the brief's constraint that
 
 Found when a template is compiled. Most have a location: the part (`document`, `header`,
 `footer`, `footnotes` or `endnotes`), the paragraph number in that part, and the start of the
-paragraph's text.
+paragraph's text. In a text message the part is `sms` and the number is the line.
 
 | Code | Meaning | What to do |
 |---|---|---|
@@ -48,6 +48,7 @@ paragraph's text.
 | `HG1014` | A field that belongs to a list is used outside a table row, or a list itself is used as a value. A list's fields can only go in a row of a table, which is repeated for each item. | Put the field in a table row. |
 | `HG1015` | A table row uses fields from two different lists. A row can repeat for one list only. | Give each list a row, or a table, of its own. |
 | `HG1016` | A row that would repeat cannot: it is marked as a heading row, one of its cells is merged with a cell above or below, or it holds a footnote or an endnote. | Use an ordinary row for the list's fields. |
+| `HG1017` | Warning. A text message template has a character outside the basic set for text messages, such as a curly quote. Every message from it will hold 70 characters, not 160, so most will be charged as more than one. Reported once, at the first such character. | Replace it with a plain character unless you need it. |
 | `HG1010` | Warning. The document has hidden text, which is sent to every recipient inside the file. Reported once for each part. | Delete it if recipients should not have it. |
 
 ## Data that is wrong for one recipient (HG2)

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace Heliograph.Documents;
 
@@ -14,12 +13,12 @@ internal sealed class RecipientData(JsonElement data, RenderSettings settings, F
     public IReadOnlyList<Diagnostic> Diagnostics => [.. _diagnostics.Values];
 
     /// <summary>
-    /// The paragraphs to print for a field at one place in the document, or null, with a diagnostic, when its
-    /// value is missing or of the wrong type.
+    /// The paragraphs to print for a field, or null, with a diagnostic, when its value is missing or of the wrong
+    /// type. A field that belongs to a list is read from <paramref name="item"/>, the item its row or line is for.
     /// </summary>
-    public IReadOnlyList<string[]>? Paragraphs(Field field, XElement at)
+    public IReadOnlyList<string[]>? Paragraphs(Field field, ItemScope? item)
     {
-        var source = Source(field, at);
+        var source = Source(field, item);
         if (Value(field, source) is not { } value)
         {
             return null;
@@ -35,9 +34,9 @@ internal sealed class RecipientData(JsonElement data, RenderSettings settings, F
     }
 
     /// <summary>Whether a yes or no field is yes. Anything else, including a missing or wrong value, is not, and is reported.</summary>
-    public bool IsYes(Field field, XElement at)
+    public bool IsYes(Field field, ItemScope? item)
     {
-        var source = Source(field, at);
+        var source = Source(field, item);
         var kind = Value(field, source)?.ValueKind;
         if (kind is not (null or JsonValueKind.True or JsonValueKind.False))
         {
@@ -66,16 +65,9 @@ internal sealed class RecipientData(JsonElement data, RenderSettings settings, F
     }
 
     /// <summary>Where a field's value is read from: the recipient's data, or one item of the list the field belongs to.</summary>
-    private Source Source(Field field, XElement at)
-    {
-        if (dictionary.ListOf(field) is not { } list)
-        {
-            return new Source(data, field.Key, "");
-        }
-
-        var scope = at.AncestorsAndSelf().Select(element => element.Annotation<ItemScope>()).First(item => item?.List == list)!;
-        return new Source(scope.Item, $"{list.Key}[{scope.Number}].{field.Key}", $" in item {scope.Number} of \"{list.Name}\"");
-    }
+    private Source Source(Field field, ItemScope? item) => dictionary.ListOf(field) is { } list
+        ? new Source(item!.Item, $"{list.Key}[{item.Number}].{field.Key}", $" in item {item.Number} of \"{list.Name}\"")
+        : new Source(data, field.Key, "");
 
     private JsonElement? Value(Field field, Source source)
     {

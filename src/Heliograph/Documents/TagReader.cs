@@ -112,7 +112,8 @@ internal sealed class TagReader(FieldDictionary dictionary, DiagnosticLocation l
         {
             diagnostics.Add(new Diagnostic(DiagnosticCodes.ListFieldOutsideRow,
                 $"\"{field.Name}\" is a list, which cannot be printed.",
-                $"Put its fields, such as (({field.Fields![0].Name})), in a row of a table. The row is repeated for each item.",
+                $"Use its fields, such as (({field.Fields![0].Name})). In a document they go in a row of a table, and in a message on a "
+                + "line of their own. The row or line is repeated for each item.",
                 location));
             return false;
         }
