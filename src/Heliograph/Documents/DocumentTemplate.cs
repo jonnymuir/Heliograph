@@ -42,6 +42,11 @@ public static class DocumentTemplate
                 compiled[name] = xml;
             }
 
+            if (AuthorDetails.Removed(package) is { } properties)
+            {
+                compiled[properties.Key] = properties.Value;
+            }
+
             return diagnostics.Count == 0
                 ? new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), [])
                 : new DocumentCompilation(null, diagnostics);

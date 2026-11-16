@@ -17,6 +17,7 @@ internal sealed class TestDocx
     private readonly List<string> _documentRelationships = [];
     private string? _header;
     private string? _footer;
+    private string? _author;
     private string _mainContentType = MainType;
 
     /// <summary>A document with one paragraph per string, each in a single run.</summary>
@@ -68,6 +69,13 @@ internal sealed class TestDocx
         return this;
     }
 
+    /// <summary>Records who wrote and last saved the document, the way an editor does in its properties.</summary>
+    public TestDocx Author(string name)
+    {
+        _author = name;
+        return this;
+    }
+
     public TestDocx MainContentType(string contentType)
     {
         _mainContentType = contentType;
@@ -108,7 +116,16 @@ internal sealed class TestDocx
                 + overrides + string.Concat(_contentTypes) + "</Types>");
             Add(zip, "_rels/.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-                + $"<Relationship Id=\"rId1\" Type=\"{OfficeRelationships}/officeDocument\" Target=\"word/document.xml\"/></Relationships>");
+                + $"<Relationship Id=\"rId1\" Type=\"{OfficeRelationships}/officeDocument\" Target=\"word/document.xml\"/>"
+                + (_author is null ? "" : "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties\" Target=\"docProps/core.xml\"/>")
+                + "</Relationships>");
+            if (_author is not null)
+            {
+                Add(zip, "docProps/core.xml",
+                    "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
+                    + $"<dc:title>Decision letter</dc:title><dc:creator>{_author}</dc:creator><cp:lastModifiedBy>{_author}</cp:lastModifiedBy></cp:coreProperties>");
+            }
+
             Add(zip, "word/_rels/document.xml.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                 + relationships + string.Concat(_documentRelationships) + "</Relationships>");
@@ -154,6 +171,14 @@ internal sealed class TestDocx
         return XDocument.Load(part).Descendants(w + "p").Select(paragraph => string.Concat(
             paragraph.Descendants().Where(e => e.Name == w + "t" || e.Name == w + "br")
                 .Select(e => e.Name == w + "br" ? "\n" : e.Value))).ToList();
+    }
+
+    /// <summary>The text of one of the document's properties, such as "creator" or "lastModifiedBy".</summary>
+    public static string? Property(byte[] docx, string name)
+    {
+        using var zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
+        using var part = zip.GetEntry("docProps/core.xml")!.Open();
+        return XDocument.Load(part).Descendants().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
     }
 
     private static string ParagraphXml(IEnumerable<string> runs) =>
