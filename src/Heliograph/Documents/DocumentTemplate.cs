@@ -28,34 +28,40 @@ public static class DocumentTemplate
                 return new DocumentCompilation(null, refused);
             }
 
-            if (package.TextParts() is not { } parts)
-            {
-                return new DocumentCompilation(null, [NotAWordDocument()]);
-            }
-
-            var diagnostics = new List<Diagnostic>();
-            var compiled = new Dictionary<string, XDocument>();
-            foreach (var (name, label) in parts)
-            {
-                var xml = package.Xml(name)!;
-                TagScanner.Compile(xml, label, dictionary, diagnostics);
-                compiled[name] = xml;
-            }
-
-            if (AuthorDetails.Removed(package) is { } properties)
-            {
-                compiled[properties.Key] = properties.Value;
-            }
-
-            return diagnostics.Count == 0
-                ? new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), [])
-                : new DocumentCompilation(null, diagnostics);
+            return package.TextParts() is { } parts
+                ? CompileParts(package, parts, dictionary)
+                : new DocumentCompilation(null, [NotAWordDocument()]);
         }
         catch (XmlException)
         {
             // Malformed XML, or a document type definition, which a Word document never needs.
             return new DocumentCompilation(null, [NotAWordDocument()]);
         }
+    }
+
+    private static DocumentCompilation CompileParts(
+        DocxPackage package, IReadOnlyList<(string Name, string Label)> parts, FieldDictionary dictionary)
+    {
+        var diagnostics = new List<Diagnostic>();
+        var compiled = new Dictionary<string, XDocument>();
+        foreach (var (name, label) in parts)
+        {
+            var xml = package.Xml(name)!;
+            TagScanner.Compile(xml, label, dictionary, diagnostics);
+            compiled[name] = xml;
+        }
+
+        if (diagnostics.Count > 0)
+        {
+            return new DocumentCompilation(null, diagnostics);
+        }
+
+        if (AuthorDetails.Removed(package) is { } properties)
+        {
+            compiled[properties.Key] = properties.Value;
+        }
+
+        return new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), []);
     }
 
     private static Diagnostic NotAWordDocument() => new(DiagnosticCodes.NotAWordDocument,
