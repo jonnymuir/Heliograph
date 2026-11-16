@@ -222,6 +222,32 @@ internal sealed class TestDocx
         return XDocument.Load(part);
     }
 
+    /// <summary>A copy of a .docx with one of its XML parts changed.</summary>
+    public static byte[] WithPart(byte[] docx, string partName, Action<XDocument> change)
+    {
+        var output = new MemoryStream();
+        using (var source = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read))
+        using (var target = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var entry in source.Entries)
+            {
+                using var from = entry.Open();
+                using var to = target.CreateEntry(entry.FullName).Open();
+                if (entry.FullName != partName)
+                {
+                    from.CopyTo(to);
+                    continue;
+                }
+
+                var document = XDocument.Load(from, LoadOptions.PreserveWhitespace);
+                change(document);
+                document.Save(to, SaveOptions.DisableFormatting);
+            }
+        }
+
+        return output.ToArray();
+    }
+
     /// <summary>The raw text of one part of the file.</summary>
     public static string PartText(byte[] docx, string partName)
     {
