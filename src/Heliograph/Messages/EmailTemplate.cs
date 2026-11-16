@@ -44,8 +44,8 @@ public static partial class EmailTemplate
         }
 
         var diagnostics = new List<Diagnostic>();
-        var subjectTemplate = TextTemplate.Parse(subject.Trim(), SubjectPart, dictionary, diagnostics);
-        var bodyTemplate = TextTemplate.Parse(body, BodyPart, dictionary, diagnostics, linesBefore);
+        var subjectTemplate = TextTemplate.Parse(subject.Trim(), new TextPart(SubjectPart), dictionary, diagnostics);
+        var bodyTemplate = TextTemplate.Parse(body, new TextPart(BodyPart, linesBefore), dictionary, diagnostics);
         diagnostics.AddRange(subjectTemplate.Lines.Where(line => line.RepeatsOver is not null).Select(line => new Diagnostic(
             DiagnosticCodes.ListFieldOutsideRow,
             $"The subject uses a field from the list \"{line.RepeatsOver!.Name}\". A subject is one line and cannot repeat.",

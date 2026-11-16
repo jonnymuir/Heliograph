@@ -19,6 +19,12 @@ internal sealed record TextLine(List<TextNode> Nodes, Field? RepeatsOver, Diagno
 
 internal sealed record TextCondition(Field Field, List<TextBlock> Blocks) : TextBlock;
 
+/// <summary>
+/// Which part of a correspondence a text is, for diagnostics. <paramref name="LinesBefore"/> is how many lines of
+/// the author's file come before this text, so that a problem is reported at the line the author will find it on.
+/// </summary>
+internal sealed record TextPart(string Name, int LinesBefore = 0);
+
 /// <summary>One line of a rendered message, with the line of the template it came from.</summary>
 internal sealed record RenderedLine(TextLine Source, List<TextPiece> Pieces);
 
@@ -47,17 +53,13 @@ internal sealed class TextTemplate
     /// <summary>Every line of the template, including those inside conditions.</summary>
     public IEnumerable<TextLine> Lines => All(_blocks);
 
-    /// <summary>
-    /// Reads a template. <paramref name="linesBefore"/> is how many lines of the author's file come before this
-    /// text, so that a problem is reported at the line the author will find it on.
-    /// </summary>
-    public static TextTemplate Parse(string source, string part, FieldDictionary dictionary, List<Diagnostic> diagnostics, int linesBefore = 0)
+    public static TextTemplate Parse(string source, TextPart part, FieldDictionary dictionary, List<Diagnostic> diagnostics)
     {
-        var parser = new TextParser(part, dictionary, diagnostics);
+        var parser = new TextParser(part.Name, dictionary, diagnostics);
         var lines = source.ReplaceLineEndings("\n").TrimEnd('\n').Split('\n');
         for (var index = 0; index < lines.Length; index++)
         {
-            parser.Line(lines[index], linesBefore + index + 1);
+            parser.Line(lines[index], part.LinesBefore + index + 1);
         }
 
         return new TextTemplate(parser.Finish(), dictionary) { Wording = parser.Wording };

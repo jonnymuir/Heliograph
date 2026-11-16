@@ -33,11 +33,17 @@ internal static partial class EmailBody
         [LineKind.Numbered] = ($"<ol style=\"margin:0 0 20px 0;padding:0 0 0 25px;font-size:19px;line-height:1.32;{Font}\">", "</ol>"),
     };
 
+    // What an author writes at the start of a line to say what the line is.
+    private static readonly (string Marker, LineKind Kind)[] Markers =
+    [
+        ("## ", LineKind.Heading2), ("# ", LineKind.Heading1), ("- ", LineKind.Bullet), ("* ", LineKind.Bullet),
+    ];
+
     /// <summary>What kind of line the author wrote, and how many characters of marker start it.</summary>
     public static (LineKind Kind, int Marker) Kind(TextLine line)
     {
         var start = line.Nodes.FirstOrDefault() is Literal literal ? literal.Text : "";
-        if (line.Nodes.Count == 0 || line.Nodes.All(node => node is Literal { Text: var text } && string.IsNullOrWhiteSpace(text)))
+        if (line.Nodes.All(IsBlank))
         {
             return (LineKind.Blank, 0);
         }
@@ -47,15 +53,16 @@ internal static partial class EmailBody
             return (LineKind.Rule, start.Length);
         }
 
-        return start switch
+        if (Markers.FirstOrDefault(known => start.StartsWith(known.Marker, StringComparison.Ordinal)) is { Marker: not null } marked)
         {
-            _ when start.StartsWith("## ", StringComparison.Ordinal) => (LineKind.Heading2, 3),
-            _ when start.StartsWith("# ", StringComparison.Ordinal) => (LineKind.Heading1, 2),
-            _ when start.StartsWith("- ", StringComparison.Ordinal) || start.StartsWith("* ", StringComparison.Ordinal) => (LineKind.Bullet, 2),
-            _ when NumberedStart().Match(start) is { Success: true } numbered => (LineKind.Numbered, numbered.Length),
-            _ => (LineKind.Paragraph, 0),
-        };
+            return (marked.Kind, marked.Marker.Length);
+        }
+
+        var numbered = NumberedStart().Match(start);
+        return numbered.Success ? (LineKind.Numbered, numbered.Length) : (LineKind.Paragraph, 0);
     }
+
+    private static bool IsBlank(TextNode node) => node is Literal literal && string.IsNullOrWhiteSpace(literal.Text);
 
     /// <summary>The body as HTML and as plain text.</summary>
     public static (string Html, string Text) Write(IEnumerable<RenderedLine> lines)

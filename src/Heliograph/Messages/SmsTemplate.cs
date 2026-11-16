@@ -15,7 +15,7 @@ public static class SmsTemplate
         ArgumentNullException.ThrowIfNull(dictionary);
 
         var diagnostics = new List<Diagnostic>();
-        var template = TextTemplate.Parse(text, Part, dictionary, diagnostics);
+        var template = TextTemplate.Parse(text, new TextPart(Part), dictionary, diagnostics);
         if (diagnostics.Errors() > 0)
         {
             return new SmsCompilation(null, diagnostics);
