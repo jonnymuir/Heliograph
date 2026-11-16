@@ -26,7 +26,7 @@ Each case below is handled by one of these. "Compile" means the author is told a
 |---|---|---|
 | S1 | **Fold what editors change.** Before a field name is matched, capitals, spacing, curly quotes, dashes and invisible characters are folded to one form. | Compile |
 | S2 | **Join what editors split.** A paragraph's text is joined before tags are read, however many pieces and formats it is stored in. | Compile |
-| S3 | **Spot the near miss.** Text that looks like a tag for a real field but is not one (wrong brackets, one bracket missing) is reported. | Compile |
+| S3 | **Spot the near miss.** Text that looks like a tag for a real field but is not one (wrong brackets, one bracket missing) is pointed out with a warning. It cannot be an error, because `(Applicant name)` may be exactly what the author meant to print. | Compile |
 | S4 | **Leave no tag behind.** After compiling, every part of the file is searched, text and attributes alike. A tag found anywhere it was not processed is reported with the place. | Compile |
 | S5 | **Refuse what cannot be honoured.** A file whose format or content cannot be handled safely is refused whole, with what to do. | Compile |
 | S6 | **Check structure before accepting.** A condition must not cut through anything that has a start and an end of its own: a table cell, a link, a field, a bookmark, a section. | Compile |
@@ -42,6 +42,9 @@ Each case below is handled by one of these. "Compile" means the author is told a
 - **Mended**: the renderer makes it valid, and a test proves it.
 - **Planned**: the strategy is chosen and not built. Until it is, the case can reach a recipient.
 
+A case that is pointed out with a warning counts as "Works": the author is told at compile, and
+the template is not stopped, because the text may be what they meant.
+
 ## 1. A tag that is not recognised
 
 ### 1.1 The editor changed the tag's text
@@ -50,8 +53,8 @@ Each case below is handled by one of these. "Compile" means the author is told a
 |---|---|---|---|
 | Capitals or spacing differ from the dictionary | Read as the same field | S1 | Works |
 | A non-breaking space in the name | Read as the same field | S1 | Works |
-| The editor turned `'` into `’`, `"` into `”` or `-` into `–` inside the name | Read as the same field | S1 | Planned |
-| An invisible character in the name (soft hyphen, zero-width space), usually from pasting | Read as the same field | S1 | Planned |
+| The editor turned `'` into `’`, `"` into `”` or `-` into `–` inside the name | Read as the same field | S1 | Works |
+| An invisible character in the name (soft hyphen, zero-width space), usually from pasting | Read as the same field | S1 | Works |
 | The tag is stored in several pieces | Joined and read | S2 | Works |
 | Formatting changes half-way through the tag | Read. The value prints in the formatting the tag starts with | S2 | Works |
 | A spelling or grammar mark, or a bookmark, sits inside the tag | Read | S2 | Works |
@@ -59,8 +62,8 @@ Each case below is handled by one of these. "Compile" means the author is told a
 | A new paragraph was started inside the tag | The first half is reported as a tag that is not closed | S3 | Refused |
 | The name is misspelt | Reported, with the nearest field suggested | S3 | Refused |
 | `((` with no `))`, or nothing between them | Reported | S3 | Refused |
-| One bracket instead of two, or `))` with no `((`, around a real field's name | Reported as a likely tag | S3 | Planned |
-| The wrong brackets around a real field's name: `{{ }}`, `[[ ]]`, `<< >>`, `« »` | Reported as a likely tag | S3 | Planned |
+| One bracket instead of two, or `))` with no `((`, around a real field's name | Pointed out as a likely tag, as a warning | S3 | Works |
+| The wrong brackets around a real field's name: `{{ }}`, `[[ ]]`, `<< >>`, `« »` | Pointed out as a likely tag, as a warning | S3 | Works |
 | The editor's autocorrect replaced part of a tag, for example `(c)` becoming `©` | Not detected unless what is left is near a field's name | S3 | Planned |
 | The author means the text `((something))` literally | Reported as an unknown field. There is no way to write it yet | | Planned |
 
@@ -70,14 +73,14 @@ Each case below is handled by one of these. "Compile" means the author is told a
 |---|---|---|---|
 | In the body, a table, a header or a footer, including first-page and even-page ones | Read | | Works |
 | In a text box | Read, in both copies an editor may store | | Works |
-| In a footnote or an endnote | Not read: printed as typed | S4 | Planned: will be read |
-| In a comment | Not read. See 3 | S5 | Planned |
-| In a picture's alternative text or title | Not read | S4 | Planned |
-| In a chart, a diagram or other drawing text | Not read | S4 | Planned |
-| In a field's code, such as the address a link goes to | Not read | S4 | Planned |
-| In the document's properties, such as its title | Not read | S4 | Planned |
+| In a footnote or an endnote | Read | S4 | Works |
+| In a comment | The template is refused. See 3 | S5 | Refused |
+| In a picture's alternative text or title | Reported: it would not be filled in | S4 | Refused |
+| In a chart, a diagram or other drawing text | Reported: it would not be filled in | S4 | Refused |
+| In a field's code, such as the address a link goes to | Reported: it would not be filled in | S4 | Refused |
+| In the document's properties, such as its title | Reported: it would not be filled in | S4 | Refused |
 | In text marked as deleted by tracked changes | Ignored, correctly. See 3 | S5 | Works |
-| In text marked as moved away by tracked changes | Read as if still there | S5 | Planned |
+| In text marked as moved away by tracked changes | The template is refused. See 3 | S5 | Refused |
 | In hidden text | Read and filled in, and still hidden | | Works |
 
 ### 1.3 The file is not what it seems
@@ -85,9 +88,9 @@ Each case below is handled by one of these. "Compile" means the author is told a
 | Case | What happens | Strategy | Status |
 |---|---|---|---|
 | Not a zip, or a zip that is not a Word document | Refused | S5 | Refused |
-| An older `.doc`, or a file protected with a password | Refused, with a message that does not say which | S5 | Planned: a message that names the likely cause |
+| An older `.doc`, or a file protected with a password | Refused, with a message that names both likely causes | S5 | Refused |
 | A macro-enabled document or template | Refused | S5 | Refused |
-| Saved as "Strict Open XML Document", which uses different names for everything | Compiles, finds no tags, replaces nothing | S5 | Planned |
+| Saved as "Strict Open XML Document", which uses different names for everything | Refused, with how to save it instead | S5 | Refused |
 | An OpenDocument file (`.odt`) | Refused as not a Word document | S5 | Refused |
 
 ## 2. A document that would be structurally broken
@@ -144,7 +147,7 @@ Not built. These are the cases the list work must answer.
 
 | Case | What happens | Strategy | Status |
 |---|---|---|---|
-| The file is digitally signed | Any render invalidates the signature | S5 | Planned |
+| The file is digitally signed | Refused | S5 | Refused |
 | Pictures, links and footnotes that hidden content referred to | Left in the file unused, which is valid | | Works |
 | Word and page counts stored in the file | Left as the template had them | | Works |
 
@@ -153,11 +156,11 @@ Not built. These are the cases the list work must answer.
 | Case | What happens | Strategy | Status |
 |---|---|---|---|
 | The author's name and the last person to save | Emptied | S9 | Works |
-| The names of people who commented or tracked changes | Kept in the file | S9 | Planned |
-| A company or a manager recorded in the file | Kept in the file | S9 | Planned |
-| Comments | Sent to every recipient | S5 | Planned: refused |
-| Tracked changes not yet accepted or rejected | Sent to every recipient, deletions included | S5 | Planned: refused |
-| Hidden text | Sent to every recipient, hidden | S3 | Planned: reported, not refused |
+| The names of people who commented or tracked changes | Emptied | S9 | Works |
+| A company or a manager recorded in the file | Emptied | S9 | Works |
+| Comments | Refused | S5 | Refused |
+| Tracked changes not yet accepted or rejected | Refused | S5 | Refused |
+| Hidden text | Pointed out, as a warning. Sent, still hidden | S3 | Works |
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
 | An embedded file or object | Refused | S5 | Refused |
 

@@ -15,22 +15,27 @@ public static class DocumentTemplate
         ArgumentNullException.ThrowIfNull(docx);
         ArgumentNullException.ThrowIfNull(dictionary);
 
-        var package = DocxPackage.Read(docx, out var refusalCode);
+        var package = DocxPackage.Read(docx, out var refusal);
         if (package is null)
         {
-            return new DocumentCompilation(null, [refusalCode == DiagnosticCodes.TooLarge ? TooLarge() : NotAWordDocument()]);
+            return new DocumentCompilation(null, [Refused(refusal)]);
         }
 
         try
         {
-            if (DocxSafety.Check(package) is { Count: > 0 } refused)
+            if (DocxSafety.Check(package) is { Count: > 0 } unsafeContent)
             {
-                return new DocumentCompilation(null, refused);
+                return new DocumentCompilation(null, unsafeContent);
             }
 
-            return package.TextParts() is { } parts
-                ? CompileParts(package, parts, dictionary)
-                : new DocumentCompilation(null, [NotAWordDocument()]);
+            if (package.TextParts() is not { } parts)
+            {
+                return new DocumentCompilation(null, [NotAWordDocument()]);
+            }
+
+            return TemplateFitness.Check(package, parts) is { Count: > 0 } unfit
+                ? new DocumentCompilation(null, unfit)
+                : CompileParts(package, parts, dictionary);
         }
         catch (XmlException)
         {
@@ -44,25 +49,33 @@ public static class DocumentTemplate
     {
         var diagnostics = new List<Diagnostic>();
         var compiled = new Dictionary<string, XDocument>();
+        var nearMiss = new NearMiss(dictionary);
         foreach (var (name, label) in parts)
         {
             var xml = package.Xml(name)!;
-            TagScanner.Compile(xml, label, dictionary, diagnostics);
+            TagScanner.Compile(xml, new PartScanSettings(label, dictionary, nearMiss), diagnostics);
             compiled[name] = xml;
         }
 
-        if (diagnostics.Count > 0)
+        foreach (var (name, xml) in AuthorDetails.Removed(package))
         {
-            return new DocumentCompilation(null, diagnostics);
+            compiled[name] = xml;
         }
 
-        if (AuthorDetails.Removed(package) is { } properties)
-        {
-            compiled[properties.Key] = properties.Value;
-        }
-
-        return new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), []);
+        TemplateSweep.Run(package, compiled, parts.Select(part => part.Name).ToHashSet(), dictionary, diagnostics);
+        return diagnostics.Errors() > 0
+            ? new DocumentCompilation(null, diagnostics)
+            : new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), diagnostics);
     }
+
+    private static Diagnostic Refused(DocxRefusal? refusal) => refusal switch
+    {
+        DocxRefusal.TooLarge => TooLarge(),
+        DocxRefusal.OldOrProtected => new Diagnostic(DiagnosticCodes.NotAWordDocument,
+            "This file is an older Word document (.doc), or is protected with a password, so it cannot be read.",
+            "Open it in your word processor, remove any password, save it as a Word document (.docx), and upload that."),
+        _ => NotAWordDocument(),
+    };
 
     private static Diagnostic NotAWordDocument() => new(DiagnosticCodes.NotAWordDocument,
         "This file is not a Word document (.docx) that can be read.",
@@ -82,9 +95,10 @@ public sealed class DocumentCompilation
         Diagnostics = diagnostics;
     }
 
-    /// <summary>The compiled template, or null when there are diagnostics.</summary>
+    /// <summary>The compiled template, or null when any diagnostic is an error.</summary>
     public CompiledDocument? Document { get; }
 
+    /// <summary>Everything found. A template that compiled may still carry warnings for its author to look at.</summary>
     public IReadOnlyList<Diagnostic> Diagnostics { get; }
 
     public bool Succeeded => Document is not null;

@@ -16,12 +16,12 @@ internal static class TagScanner
 
     private const int ExcerptLength = 80;
 
-    public static void Compile(XDocument part, string label, FieldDictionary dictionary, List<Diagnostic> diagnostics)
+    public static void Compile(XDocument part, PartScanSettings settings, List<Diagnostic> diagnostics)
     {
         // An uploaded file must not be able to plant a slot of its own.
         part.Descendants().Where(e => e.Name.Namespace == Slot).ToList().ForEach(e => e.Remove());
 
-        var scan = new PartScan(label, dictionary, diagnostics);
+        var scan = new PartScan(settings, diagnostics);
         var paragraphs = part.Descendants(Word + "p").ToList();
         for (var index = 0; index < paragraphs.Count; index++)
         {
@@ -32,8 +32,10 @@ internal static class TagScanner
     }
 
     /// <summary>The scan of one part: what it is checked against, and what it has found so far.</summary>
-    private sealed class PartScan(string label, FieldDictionary dictionary, List<Diagnostic> diagnostics)
+    private sealed class PartScan(PartScanSettings settings, List<Diagnostic> diagnostics)
     {
+        private bool _hiddenTextReported;
+
         public List<ConditionMarker> Markers { get; } = [];
 
         public void Paragraph(XElement paragraph, int number)
@@ -41,32 +43,82 @@ internal static class TagScanner
             // A text box sits inside a paragraph and has paragraphs of its own, which get their own turn.
             var texts = paragraph.Descendants(Word + "t").Where(t => t.Ancestors(Word + "p").First() == paragraph).ToList();
             var joined = string.Concat(texts.Select(t => t.Value));
+            var location = new DiagnosticLocation(settings.Label, number, joined.Length <= ExcerptLength ? joined : joined[..ExcerptLength] + "...");
+            HiddenText(texts, location);
             if (!joined.Contains(TagReader.Open, StringComparison.Ordinal))
             {
+                LooksLikeATag(joined, location);
                 return;
             }
 
-            var location = new DiagnosticLocation(label, number, joined.Length <= ExcerptLength ? joined : joined[..ExcerptLength] + "...");
-            var before = diagnostics.Count;
-            var tags = new TagReader(dictionary, location, diagnostics).Read(joined);
+            var before = diagnostics.Errors();
+            var tags = new TagReader(settings.Dictionary, location, diagnostics).Read(joined);
             if (IsConditionAloneOnItsLine(tags, joined))
             {
                 // Alone on its line, the tag marks a boundary between paragraphs.
-                Markers.Add(new ConditionMarker(paragraph, tags[0], location, Reported: diagnostics.Count > before));
+                Markers.Add(new ConditionMarker(paragraph, tags[0], location, Reported: diagnostics.Errors() > before));
                 return;
             }
 
             Markers.AddRange(InlineConditions.Unpaired(tags, location, diagnostics)
                 .Select(tag => new ConditionMarker(paragraph, tag, location, Reported: true)));
-            if (diagnostics.Count > before)
+            if (diagnostics.Errors() > before)
             {
                 return;
             }
+
+            LooksLikeATag(Without(joined, tags), location);
 
             // Last first, so replacing one tag does not move the text before it.
             tags.AsEnumerable().Reverse().ToList().ForEach(tag => Replace(texts, tag));
             texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
             InlineConditions.Wrap(paragraph, location, diagnostics);
+        }
+
+        private void LooksLikeATag(string text, DiagnosticLocation location)
+        {
+            if (settings.NearMiss.In(text) is { } field)
+            {
+                diagnostics.Add(new Diagnostic(DiagnosticCodes.LooksLikeATag,
+                    $"This looks like a tag for \"{field.Name}\", but it is not written as one, so it will be printed as it is.",
+                    $"If it is meant to be filled in, write it as (({field.Name})), with two round brackets each side. "
+                    + "If it is ordinary text, nothing needs to change.",
+                    location, DiagnosticSeverity.Warning));
+            }
+        }
+
+        /// <summary>Reported once for each part, at the first place it is found.</summary>
+        private void HiddenText(List<XElement> texts, DiagnosticLocation location)
+        {
+            if (_hiddenTextReported || !texts.Any(IsHidden))
+            {
+                return;
+            }
+
+            _hiddenTextReported = true;
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.HasHiddenText,
+                "This document has hidden text. It is sent to every recipient inside the file, where it can be revealed.",
+                "Delete the hidden text if recipients should not have it. If they may, nothing needs to change.",
+                location, DiagnosticSeverity.Warning));
+        }
+
+        private static bool IsHidden(XElement text)
+        {
+            var hidden = text.Parent?.Element(Word + "rPr")?.Element(Word + "vanish");
+            var off = (string?)hidden?.Attribute(Word + "val") is "0" or "false";
+            return hidden is not null && !off && !string.IsNullOrWhiteSpace(text.Value);
+        }
+
+        /// <summary>The paragraph's text with each recognised tag blanked out, leaving what will be printed as it is.</summary>
+        private static string Without(string text, List<Tag> tags)
+        {
+            var characters = text.ToCharArray();
+            foreach (var tag in tags)
+            {
+                Array.Fill(characters, ' ', tag.Start, tag.End - tag.Start);
+            }
+
+            return new string(characters);
         }
     }
 
@@ -124,3 +176,6 @@ internal static class TagScanner
         return text;
     }
 }
+
+/// <summary>What one part is scanned with: its name in diagnostics, the dictionary, and the near-miss finder built from it.</summary>
+internal sealed record PartScanSettings(string Label, FieldDictionary Dictionary, NearMiss NearMiss);

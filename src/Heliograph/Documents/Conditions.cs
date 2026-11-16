@@ -20,7 +20,7 @@ internal static class Conditions
     public static void Wrap(IEnumerable<ConditionMarker> markers, List<Diagnostic> diagnostics)
     {
         var pairs = Pair(markers, diagnostics);
-        if (diagnostics.Count > 0)
+        if (diagnostics.Errors() > 0)
         {
             // The template will not compile, and a condition already reported as wrong has no field to wrap on.
             return;

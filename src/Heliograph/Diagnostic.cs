@@ -5,10 +5,21 @@ namespace Heliograph;
 /// <param name="Message">What is wrong, in plain words.</param>
 /// <param name="Fix">What to do about it.</param>
 /// <param name="Location">Where it is, when it has a place in a file.</param>
-public sealed record Diagnostic(string Code, string Message, string Fix, DiagnosticLocation? Location = null);
+/// <param name="Severity">An error stops the template or the render. A warning is something to look at.</param>
+public sealed record Diagnostic(
+    string Code, string Message, string Fix, DiagnosticLocation? Location = null, DiagnosticSeverity Severity = DiagnosticSeverity.Error);
+
+public enum DiagnosticSeverity
+{
+    /// <summary>The template does not compile, or the document is not rendered.</summary>
+    Error,
+
+    /// <summary>Something an author should look at. It may be a mistake, and it does not stop anything.</summary>
+    Warning,
+}
 
 /// <summary>A place in a document an author can find without tooling.</summary>
-/// <param name="Part">"document", "header" or "footer".</param>
+/// <param name="Part">"document", "header", "footer", "footnotes" or "endnotes".</param>
 /// <param name="Paragraph">The paragraph's position in that part, counting from 1.</param>
 /// <param name="Excerpt">The start of the paragraph's text.</param>
 public sealed record DiagnosticLocation(string Part, int Paragraph, string Excerpt);
@@ -21,6 +32,10 @@ public static class DiagnosticCodes
     public const string ContainsEmbeddedObject = "HG0003";
     public const string LoadsOutsideContent = "HG0004";
     public const string TooLarge = "HG0005";
+    public const string HasTrackedChanges = "HG0006";
+    public const string HasComments = "HG0007";
+    public const string IsSigned = "HG0008";
+    public const string StrictFormat = "HG0009";
 
     public const string UnknownField = "HG1001";
     public const string TagNotClosed = "HG1002";
@@ -29,7 +44,16 @@ public static class DiagnosticCodes
     public const string EndWithoutCondition = "HG1005";
     public const string ConditionNeedsYesNo = "HG1006";
     public const string YesNoPrinted = "HG1007";
+    public const string TagNotFilledIn = "HG1008";
+    public const string LooksLikeATag = "HG1009";
+    public const string HasHiddenText = "HG1010";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";
+}
+
+internal static class DiagnosticLists
+{
+    /// <summary>How many of the diagnostics stop the template. Warnings do not.</summary>
+    public static int Errors(this IEnumerable<Diagnostic> diagnostics) => diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
 }

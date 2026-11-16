@@ -40,6 +40,13 @@ internal static class DocxSafety
                 "Put the content in the document itself. For a picture, insert the picture, not a link to it."));
         }
 
+        if (names.Any(n => n.StartsWith("_xmlsignatures/", StringComparison.OrdinalIgnoreCase)))
+        {
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.IsSigned,
+                "This document is digitally signed. Filling it in would break the signature on every letter.",
+                "Remove the signature, save, and upload it again."));
+        }
+
         return diagnostics;
     }
 
