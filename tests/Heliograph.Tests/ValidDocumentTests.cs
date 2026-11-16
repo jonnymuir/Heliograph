@@ -36,6 +36,7 @@ public class ValidDocumentTests
         render.Diagnostics.Should().BeEmpty();
 
         WordSchema.Problems(render.Docx!).Except(before).Should().BeEmpty();
+        WordRules.Problems(render.Docx!).Should().BeEmpty();
     }
 
     [Fact]

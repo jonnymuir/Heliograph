@@ -33,36 +33,58 @@ public class RandomisedTests
     }
 
     [Fact]
-    public void A_random_template_is_either_refused_with_reasons_or_renders_a_valid_document_for_every_recipient()
+    public void A_random_template_with_a_mistake_in_it_is_refused_with_reasons()
     {
-        var compiled = 0;
+        var checkedTemplates = 0;
         for (var seed = 1; seed <= Templates; seed++)
         {
-            var template = RandomTemplate.Build(seed).Build().ToArray();
-            var compilation = DocumentTemplate.Compile(new MemoryStream(template), RandomTemplate.Dictionary);
-            if (!compilation.Succeeded)
+            var template = new RandomTemplate(seed);
+            if (!template.HasMistake)
             {
-                compilation.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).Should().NotBeEmpty($"seed {seed} was refused");
-                compilation.Diagnostics.Should().OnlyContain(d => d.Code.Length == 6 && d.Message.Length > 0 && d.Fix.Length > 0, $"seed {seed}");
                 continue;
             }
 
-            compiled++;
-            var before = WordSchema.Problems(template);
+            checkedTemplates++;
+            var compilation = DocumentTemplate.Compile(new MemoryStream(template.Docx()), RandomTemplate.Dictionary);
+
+            compilation.Succeeded.Should().BeFalse($"seed {seed} has a condition tag with no partner");
+            compilation.Diagnostics.Should().OnlyContain(d => d.Code.Length == 6 && d.Message.Length > 0 && d.Fix.Length > 0, $"seed {seed}");
+        }
+
+        checkedTemplates.Should().BeGreaterThan(Templates / 10);
+    }
+
+    [Fact]
+    public void A_random_template_with_no_mistake_says_exactly_what_it_should_to_every_recipient_in_a_valid_file()
+    {
+        var checkedTemplates = 0;
+        for (var seed = 1; seed <= Templates; seed++)
+        {
+            var template = new RandomTemplate(seed);
+            if (template.HasMistake)
+            {
+                continue;
+            }
+
+            checkedTemplates++;
+            var docx = template.Docx();
+            var compilation = DocumentTemplate.Compile(new MemoryStream(docx), RandomTemplate.Dictionary);
+            compilation.Diagnostics.Should().BeEmpty($"seed {seed} has no mistake in it");
+            var schemaBefore = WordSchema.Problems(docx);
+
             for (var answers = 0; answers < 8; answers++)
             {
-                var render = compilation.Document!.Render(Benchmark.Data(RandomTemplate.Data(answers)), Benchmark.British);
                 var where = $"seed {seed}, answers {answers}";
+                var render = compilation.Document!.Render(Benchmark.Data(RandomTemplate.Data(answers)), Benchmark.British);
 
                 render.Diagnostics.Should().BeEmpty(where);
-                WordSchema.Problems(render.Docx!).Except(before).Should().BeEmpty(where);
-                var xml = TestDocx.PartText(render.Docx!, "word/document.xml");
-                xml.Should().NotContain("urn:heliograph", where);
-                xml.Should().NotContain("((", where);
+                TestDocx.Paragraphs(render.Docx!).Should().Equal(template.Expected(answers), where);
+                WordRules.Problems(render.Docx!).Should().BeEmpty(where);
+                WordSchema.Problems(render.Docx!).Except(schemaBefore).Should().BeEmpty(where);
             }
         }
 
-        compiled.Should().BeGreaterThan(Templates / 10, "enough random templates must compile for the render checks to mean something");
+        checkedTemplates.Should().BeGreaterThan(Templates / 3);
     }
 
     private static IReadOnlyList<string> Paragraphs(byte[] template, string letter, string sample)

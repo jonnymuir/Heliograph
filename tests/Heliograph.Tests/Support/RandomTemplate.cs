@@ -5,13 +5,13 @@ using System.Xml.Linq;
 namespace Heliograph.Tests.Support;
 
 /// <summary>
-/// Builds a document nobody would write on purpose: paragraphs and tables with tags and conditions dropped anywhere,
-/// well placed or not, and the text chopped into runs at random. The same seed always builds the same document.
+/// Builds a document nobody would write on purpose: paragraphs and tables, conditions around and inside them to any
+/// depth, values everywhere, and the text chopped into runs at random. It also knows what the finished letter should
+/// say for any recipient, worked out from its own plan and not from the engine, so a test can compare the two.
+/// The same seed always builds the same document.
 /// </summary>
 internal sealed class RandomTemplate
 {
-    public static readonly string[] YesNoFields = ["Owes money", "Is a member", "Has a fire act"];
-
     public static readonly FieldDictionary Dictionary = new(
     [
         new Field("Owes money", "owesMoney", FieldType.YesNo),
@@ -23,24 +23,53 @@ internal sealed class RandomTemplate
         new Field("Applicant address", "applicantAddress", FieldType.Address),
     ]);
 
+    private const char NewParagraph = (char)0x2029;
+    private static readonly string[] YesNoFields = ["Owes money", "Is a member", "Has a fire act"];
     private static readonly string[] Words = ["Dear", "you", "owe", "us", "please", "pay", "by", "Friday", "the", "licence", "is", "ready", "."];
-    private static readonly string[] Values = ["((Applicant name))", "((Notes))", "£((Amount owed))", "((Applicant address))"];
     private static readonly string[] Formats = ["", "<w:rPr><w:b/></w:rPr>", "<w:rPr><w:i/></w:rPr>", "<w:rPr><w:u w:val=\"single\"/></w:rPr>"];
 
-    private readonly Random _random;
+    // Each tag an author can print, and what it should become for the recipient in Data.
+    private static readonly (string Tag, string Printed)[] Values =
+    [
+        ("((Applicant name))", "Alex Applicant"),
+        ("((Notes))", $"First paragraph.{NewParagraph}Second paragraph.\nSame paragraph."),
+        ("£((Amount owed))", "£12.50"),
+        ("((Applicant address))", "12 Tumble Lane\nClubtown\nZZ1 1ZZ"),
+    ];
 
-    private RandomTemplate(int seed) => _random = new Random(seed);
+    private readonly Random _random;
+    private readonly List<Block> _blocks;
+
+    public RandomTemplate(int seed)
+    {
+        _random = new Random(seed);
+
+        // One template in three is given a single mistake: a condition tag with no partner.
+        MistakeAt = _random.Next(3) == 0 ? _random.Next(1, 12) : 0;
+        _blocks = Blocks(depth: 0);
+        HasMistake = MistakeAt > 0 && _choices >= MistakeAt;
+    }
+
+    private int MistakeAt { get; }
+    private int _choices;
+
+    /// <summary>Whether the document holds an unpaired condition tag, and so must be refused.</summary>
+    public bool HasMistake { get; }
 
     /// <summary>The data for one recipient: every field supplied, with the yes or no fields set from the bits of <paramref name="answers"/>.</summary>
     public static string Data(int answers) => string.Create(CultureInfo.InvariantCulture, $$"""
         {
-          "owesMoney": {{Bit(answers, 0)}}, "isAMember": {{Bit(answers, 1)}}, "hasAFireAct": {{Bit(answers, 2)}},
+          "owesMoney": {{(Yes(answers, "Owes money") ? "true" : "false")}}, "isAMember": {{(Yes(answers, "Is a member") ? "true" : "false")}},
+          "hasAFireAct": {{(Yes(answers, "Has a fire act") ? "true" : "false")}},
           "applicantName": "Alex Applicant", "notes": "First paragraph.\n\nSecond paragraph.\nSame paragraph.",
           "amountOwed": 12.5, "applicantAddress": ["12 Tumble Lane", "Clubtown", "ZZ1 1ZZ"]
         }
         """);
 
-    public static TestDocx Build(int seed) => new TestDocx().RawParagraph(new RandomTemplate(seed).Blocks(depth: 0));
+    public byte[] Docx() => new TestDocx().RawParagraph(string.Concat(_blocks.Select(Xml))).Build().ToArray();
+
+    /// <summary>The text of every paragraph the finished letter should have, in order, for one recipient.</summary>
+    public IReadOnlyList<string> Expected(int answers) => [.. _blocks.SelectMany(block => block.Expected(answers))];
 
     /// <summary>Chops the text of every paragraph in a document's body into runs at random places, with random formatting.</summary>
     public static byte[] Chopped(byte[] docx, int seed)
@@ -49,17 +78,19 @@ internal sealed class RandomTemplate
         var random = new Random(seed);
         return TestDocx.WithPart(docx, "word/document.xml", document =>
         {
-            foreach (var run in document.Descendants(w + "r").Where(r => r.Elements(w + "t").Count() == 1 && r.Elements().All(e => e.Name == w + "t" || e.Name == w + "rPr")).ToList())
+            var plain = document.Descendants(w + "r")
+                .Where(r => r.Elements(w + "t").Count() == 1 && r.Elements().All(e => e.Name == w + "t" || e.Name == w + "rPr")).ToList();
+            foreach (var run in plain)
             {
-                var text = run.Element(w + "t")!.Value;
-                var pieces = Pieces(text, random);
-                run.ReplaceWith(pieces.Select(piece => new XElement(w + "r", run.Element(w + "rPr") is { } format && random.Next(3) > 0 ? new XElement(format) : null,
+                var format = run.Element(w + "rPr");
+                run.ReplaceWith(Pieces(run.Element(w + "t")!.Value, random).Select(piece => new XElement(w + "r",
+                    format is not null && random.Next(3) > 0 ? new XElement(format) : null,
                     new XElement(w + "t", new XAttribute(XNamespace.Xml + "space", "preserve"), piece))));
             }
         });
     }
 
-    private static string Bit(int answers, int bit) => (answers >> bit & 1) == 1 ? "true" : "false";
+    private static bool Yes(int answers, string field) => (answers >> Array.IndexOf(YesNoFields, field) & 1) == 1;
 
     private static List<string> Pieces(string text, Random random)
     {
@@ -74,68 +105,159 @@ internal sealed class RandomTemplate
         return pieces;
     }
 
-    private string Blocks(int depth)
+    /// <summary>True once, at the place the template's one mistake goes.</summary>
+    private bool Mistake() => ++_choices == MistakeAt;
+
+    private List<Block> Blocks(int depth)
     {
-        var xml = new StringBuilder();
-        var count = _random.Next(1, depth == 0 ? 7 : 3);
-        for (var index = 0; index < count; index++)
+        var blocks = new List<Block>();
+        for (var count = _random.Next(1, depth == 0 ? 7 : 3); count > 0; count--)
         {
-            xml.Append(_random.Next(40) switch
+            blocks.Add(_random.Next(40) switch
             {
-                // The mistakes: a condition tag on its own line with no partner.
-                0 => Paragraph($"((if {Pick(YesNoFields)}))"),
-                1 => Paragraph("((end if))"),
-                < 10 when depth < 3 => Paragraph($"((if {Pick(YesNoFields)}))") + Blocks(depth + 1) + Paragraph("((end if))"),
+                _ when Mistake() => new Paragraph([new Stray(_random.Next(2) == 0 ? $"((if {Pick(YesNoFields)}))" : "((end if))")]),
+                < 10 when depth < 3 => new Condition(Pick(YesNoFields), Blocks(depth + 1)),
                 < 14 when depth < 2 => Table(depth),
-                _ => Paragraph(Sentence(depth: 0)),
+                _ => new Paragraph(Sentence(depth: 0)),
             });
         }
 
-        return xml.ToString();
+        return blocks;
     }
 
-    private string Table(int depth)
+    private Table Table(int depth)
     {
-        var rows = new StringBuilder();
+        var rows = new List<List<List<Block>>>();
         for (var row = _random.Next(1, 3); row > 0; row--)
         {
-            rows.Append("<w:tr>");
+            var cells = new List<List<Block>>();
             for (var cell = _random.Next(1, 3); cell > 0; cell--)
             {
                 // Sometimes the whole cell is inside one condition, which is what empties a cell.
-                var content = _random.Next(3) == 0
-                    ? Paragraph($"((if {Pick(YesNoFields)}))") + Blocks(depth + 2) + Paragraph("((end if))")
-                    : Blocks(depth + 2);
-                rows.Append("<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>").Append(content).Append("</w:tc>");
+                cells.Add(_random.Next(3) == 0 ? [new Condition(Pick(YesNoFields), Blocks(depth + 2))] : Blocks(depth + 2));
             }
 
-            rows.Append("</w:tr>");
+            rows.Add(cells);
         }
 
-        return $"<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>{rows}</w:tbl>";
+        return new Table(rows);
     }
 
-    private string Sentence(int depth)
+    private List<Token> Sentence(int depth)
     {
-        var text = new StringBuilder();
+        var tokens = new List<Token>();
         for (var count = _random.Next(depth == 0 ? 1 : 0, 6); count > 0; count--)
         {
-            text.Append(_random.Next(60) switch
+            tokens.Add(_random.Next(60) switch
             {
-                // The mistakes: a condition tag in a sentence with no partner in it.
-                0 => $"((if {Pick(YesNoFields)}))",
-                1 => "((end if))",
-                < 14 => Pick(Values),
-                < 24 when depth < 3 => $"((if {Pick(YesNoFields)})){Sentence(depth + 1)}((end if))",
-                _ => Pick(Words),
-            }).Append(' ');
+                _ when Mistake() => new Stray(_random.Next(2) == 0 ? $"((if {Pick(YesNoFields)}))" : "((end if))"),
+                < 14 => new Value(Pick(Values)),
+                < 24 when depth < 3 => new Inline(Pick(YesNoFields), Sentence(depth + 1)),
+                _ => new Word(Pick(Words)),
+            });
         }
 
-        return text.ToString();
+        return tokens;
     }
 
-    private string Paragraph(string text) => "<w:p>" + string.Concat(Pieces(text, _random).Select(piece =>
+    private string Xml(Block block) => block switch
+    {
+        Paragraph paragraph => ParagraphXml(string.Concat(paragraph.Tokens.Select(token => token.Written))),
+        Condition condition => ParagraphXml($"((if {condition.Field}))") + string.Concat(condition.Blocks.Select(Xml)) + ParagraphXml("((end if))"),
+        Table table => "<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>"
+                       + string.Concat(table.Rows.Select(row => "<w:tr>" + string.Concat(row.Select(cell =>
+                           "<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>" + string.Concat(cell.Select(Xml)) + "</w:tc>")) + "</w:tr>"))
+                       + "</w:tbl>",
+        _ => throw new InvalidOperationException(),
+    };
+
+    private string ParagraphXml(string text) => "<w:p>" + string.Concat(Pieces(text, _random).Select(piece =>
         $"<w:r>{Pick(Formats)}<w:t xml:space=\"preserve\">{new XText(piece)}</w:t></w:r>")) + "</w:p>";
 
-    private string Pick(string[] from) => from[_random.Next(from.Length)];
+    private T Pick<T>(T[] from) => from[_random.Next(from.Length)];
+
+    // ---- the plan of a document, and what it should say ----
+
+    private abstract record Token
+    {
+        /// <summary>The token as the author typed it, followed by a space.</summary>
+        public abstract string Written { get; }
+
+        /// <summary>What the token becomes. <paramref name="hidden"/> is set when a condition in it was not shown.</summary>
+        public abstract string Printed(int answers, ref bool hidden);
+    }
+
+    private sealed record Word(string Text) : Token
+    {
+        public override string Written => Text + " ";
+        public override string Printed(int answers, ref bool hidden) => Written;
+    }
+
+    private sealed record Value((string Tag, string Printed) Pair) : Token
+    {
+        public override string Written => Pair.Tag + " ";
+        public override string Printed(int answers, ref bool hidden) => Pair.Printed + " ";
+    }
+
+    private sealed record Stray(string Tag) : Token
+    {
+        public override string Written => Tag + " ";
+        public override string Printed(int answers, ref bool hidden) => throw new InvalidOperationException("A template with a mistake has no finished letter.");
+    }
+
+    private sealed record Inline(string Field, List<Token> Tokens) : Token
+    {
+        public override string Written => $"((if {Field}))" + string.Concat(Tokens.Select(token => token.Written)) + "((end if)) ";
+
+        public override string Printed(int answers, ref bool hidden)
+        {
+            if (!Yes(answers, Field))
+            {
+                hidden = true;
+                return " ";
+            }
+
+            var text = new StringBuilder();
+            foreach (var token in Tokens)
+            {
+                text.Append(token.Printed(answers, ref hidden));
+            }
+
+            return text.Append(' ').ToString();
+        }
+    }
+
+    private abstract record Block
+    {
+        public abstract IEnumerable<string> Expected(int answers);
+    }
+
+    private sealed record Paragraph(List<Token> Tokens) : Block
+    {
+        public override IEnumerable<string> Expected(int answers)
+        {
+            var hidden = false;
+            var text = new StringBuilder();
+            foreach (var token in Tokens)
+            {
+                text.Append(token.Printed(answers, ref hidden));
+            }
+
+            // A sentence that was all condition leaves no paragraph behind once a condition in it is hidden.
+            return hidden && string.IsNullOrWhiteSpace(text.ToString()) ? [] : text.ToString().Split(NewParagraph);
+        }
+    }
+
+    private sealed record Condition(string Field, List<Block> Blocks) : Block
+    {
+        public override IEnumerable<string> Expected(int answers) =>
+            Yes(answers, Field) ? Blocks.SelectMany(block => block.Expected(answers)) : [];
+    }
+
+    private sealed record Table(List<List<List<Block>>> Rows) : Block
+    {
+        // A cell always keeps one paragraph, empty if everything in it was hidden.
+        public override IEnumerable<string> Expected(int answers) => Rows.SelectMany(row => row.SelectMany(cell =>
+            cell.SelectMany(block => block.Expected(answers)).DefaultIfEmpty("")));
+    }
 }
