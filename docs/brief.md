@@ -7,79 +7,178 @@ recommend, with the trade-off, and wait. [architecture.md](architecture.md) draw
 
 **Who it is for**
 
-- A service team that has to write to people at points in a journey: an acknowledgement, a
-  reminder, a decision letter, a request for evidence. In Wayfinder these are moments at a stage
-  or gateway in a service blueprint.
+- A content designer who writes what an organisation sends to people: an acknowledgement, a
+  reminder, a decision letter, an annual statement. They work in the word processor they already
+  have.
+- A service designer who decides when something is sent. In Wayfinder that is a moment at a
+  stage or gateway in a service blueprint.
 - A developer who has to add correspondence to an existing system without adopting a whole
   platform.
+- An AI agent doing any of those three jobs on someone's behalf.
 - The recipient, who needs a message that is accessible, plain and correct on whatever they read
   it with.
 
 **The problem**
 
-The same message usually gets built several times: an HTML email, a shorter SMS, a PDF letter for
-post. Each copy is written and tested separately, so the wording drifts, the data merge is
-duplicated, and accessibility depends on who built which version. Nobody can say exactly what a
-person was sent.
+Professional correspondence is hard to change safely. Templates live in a developer's code or in
+a vendor's proprietary designer, so a content designer cannot fix a sentence without help. Fields
+are magic strings that fail silently at run time, when a real person gets a letter with a hole in
+it. The letter, the email and the text about the same event are built separately, take different
+data and are checked by nobody. And nobody can say exactly what a person was sent.
 
 **What Heliograph does about it**
 
-One definition of a piece of correspondence, merged with data, renders to each channel it
-supports. Delivery stays with the host.
+A piece of correspondence is one named thing with a part for each channel it is sent on: a
+document for post and PDF, a body for email, a text for SMS. Every part draws on the same
+dictionary of allowed data, is checked the same way before it can be used, and is rendered by the
+same call. Authors use their own tools. Delivery stays with the host.
+
+## Principles
+
+1. **Standards first.** Templates and outputs are open, standard formats that existing tools
+   already read and write. Heliograph invents a format only where no standard exists.
+2. **Extension by design.** The engine names the seams (template format, output conversion,
+   storage, the source of the dictionary) and ships one good implementation of each. No single
+   product, vendor or library is assumed by the core.
+3. **Any editor, unmodified.** A template can be written from start to finish in a stock editor:
+   Word on the desktop, Word in Microsoft 365, LibreOffice, anything that saves the standard
+   format. Helpers such as an add-in may make it nicer. Nothing may ever require one.
+4. **Design time matters as much as run time.** Finding out what is wrong is the author's
+   experience, not the recipient's. A template is compiled before it can be used, and every
+   problem is reported in plain words, at the place it occurs, with what to do about it.
+5. **Nothing to remember.** An author never types a field name from memory. A dictionary says
+   what a template may use, and tooling offers it, checks against it and suggests the nearest
+   match when something is wrong.
+6. **AI native.** Whatever helps a person helps an agent, through the same operations with the
+   same answers: read the dictionary, compile, preview, render. There is no agent-only or
+   human-only path.
+7. **Complex requirements, simple use.** Real letters carry tables of financial data, conditional
+   paragraphs and letterheads that change by department. The complexity is absorbed by the
+   dictionary and the engine, not by the author. The document carries the layout, the dictionary
+   carries the data, and logic stays out of the template.
+
+## The dictionary
+
+The dictionary is the contract between the people who know the data and the people who write the
+words. It is a closed list of everything a template is allowed to refer to:
+
+- **Values**, each with a plain name, a description, a type (text, date, money, number, yes or
+  no, address) and sample values. The type decides the formatting, so an author never writes a
+  date or currency format.
+- **Lists**, such as the rows of a statement, with their columns.
+- **Conditions**, yes or no answers a template can show or hide content on.
+- **Shared parts**, such as a letterhead, a footer or a signature block, that a template can
+  include by name and that can be swapped by a value.
+
+It is what makes the rest possible: the tooling offers what is in it, the compiler rejects what
+is not, previews use its samples, the render call checks real data against it, and Wayfinder
+checks a blueprint's bindings against it at design time. Where a host already knows its data (a
+Wayfinder blueprint's fields), the dictionary is generated from that source, not typed again.
+
+## Constraints
+
+- **Three things an author can ask for, and no more:** put a value here, show this only when a
+  condition holds, repeat this for each item in a list. Calculations, comparisons and formatting
+  rules live upstream, in the system that supplies the data.
+- **Layout uses the editor's own features.** Tables, headers, footers, styles, page breaks and
+  repeated header rows are whatever the word processor already does. Heliograph adds no layout
+  language.
+- **Only compiled templates render.** A template that does not compile cannot be published, and
+  the render call accepts nothing else.
+- **A template is data, never code.** No scripts, no macros, no expressions a developer has to
+  deploy.
+- **Uploaded files are untrusted.** Macros, embedded objects, links to remote content and
+  oversized archives are refused, each with a test.
+- **Heliograph renders and never sends.** No provider is called and nothing leaves the process
+  except through a seam the host supplies.
+- **Rendering is deterministic** for the document, the email and the text: same template, same
+  data, same output. A converted PDF is the exception, because converters stamp dates and
+  identifiers into the file.
+
+## Formats
+
+| Part | The template is | The output is |
+|---|---|---|
+| Document (post, PDF, print) | A word-processor file in Office Open XML (`.docx`, ISO/IEC 29500) | The merged `.docx`, and a PDF through a converter the host chooses |
+| Email | A subject and a body in CommonMark | Sanitised HTML in one accessible layout, with a plain-text alternative |
+| SMS | Plain text | Plain text, with its length, encoding and number of segments |
+
+Each is the first implementation behind a seam, not a limit. OpenDocument, a messaging app or
+another PDF route can be added without changing the core.
 
 ## How we will know it worked
 
-Proposed, to be agreed:
-
-1. Wayfinder.Umbraco sends one real message (a decision letter, say) as email, SMS and PDF from a
-   single definition, with no channel-specific wording in host code.
-2. A second, non-Wayfinder host can render correspondence by referencing only the core package.
-3. Rendering is deterministic: the same definition and data give byte-identical output, proved by
-   snapshot tests.
-4. Rendered output meets an accessibility bar per channel (PDF/UA for PDF, semantic HTML for
-   email), checked in CI rather than by eye.
-5. Merged data cannot inject markup into any channel, proved by a test per channel.
+1. **The benchmark letters.** Three fictional letters of rising difficulty are kept in the repo
+   as the acceptance test: an acknowledgement, a decision letter with conditional paragraphs, and
+   an annual statement with a multi-page table of money, totals, and a letterhead and footer that
+   change by department. A content designer builds each in a stock editor with no developer.
+2. **Editor round trip.** Each benchmark letter is edited and saved in Word on the desktop, Word
+   in Microsoft 365 and LibreOffice, and still compiles and renders the same.
+3. **No silent failure.** Every way a template can be wrong (unknown field, misspelt field,
+   unclosed section, a list used as a value, a missing shared part) has a diagnostic with a
+   location and a suggested fix, and a test that proves it.
+4. **Agent parity.** An agent given only the published docs and the MCP server writes a template
+   that compiles, measured by an evaluation that runs when the guidance changes.
+5. **One call, every part.** Wayfinder.Umbraco sends one correspondence as letter, email and
+   text from a single render call, with no wording and no field names in host code.
+6. **Standalone.** A second host with no Wayfinder and no Umbraco renders the benchmark letters
+   by referencing only the published packages.
+7. **Injection.** Merged data cannot add markup, fields or content to any part, proved by a test
+   per format.
+8. **Accessibility.** The compiler refuses a document without real headings, image descriptions
+   and a language, and the email layout passes an automated accessibility check.
 
 ## Scope
 
-| In | Out (the host's job) |
-|---|---|
-| Defining correspondence and its content | Sending, retries, delivery receipts |
-| Merging data into it | Provider adapters (GOV.UK Notify, Twilio, SES, WhatsApp Business API) |
-| Rendering per channel: email, SMS, messaging, PDF, print | Scheduling and queues |
-| Channel rules: SMS length, PDF page layout, window-envelope address blocks | Recipient preferences, consent and contact details |
-| Metadata a sender needs (subject, segments, page count) | Storing what was sent |
+| First release | Later | Never (the host's job) |
+|---|---|---|
+| Document, email and SMS parts | Messaging apps such as WhatsApp | Sending, retries, delivery receipts |
+| The dictionary, the compiler and its diagnostics | An add-in that offers the dictionary inside the editor | Provider adapters |
+| Upload, check, preview and publish, for people and for agents | Opening a template for editing straight from the browser | Scheduling and queues |
+| Shared parts | OpenDocument templates | Recipient preferences, consent and contact details |
+| PDF through one converter | Bilingual correspondence | Storing what was sent |
 
 ## Prior art to learn from
 
-- [GOV.UK Notify](https://www.notifications.service.gov.uk/) templates: one plain formatting
-  language for email, text and letter, with placeholders and conditional content. Notify delivers,
-  so it is a likely target for a host, and a model for what authors find easy.
-- The [GOV.UK Design System](https://design-system.service.gov.uk/) and the GDS guidance on
-  writing for users, which Wayfinder already follows.
+- [GOV.UK Notify](https://www.notifications.service.gov.uk/) templates: a plain formatting
+  language, placeholders and optional content that content designers manage themselves.
+- Mail merge, which word processors have had for decades: the idea that a document is the
+  template is already familiar to the people Heliograph is for.
+- Wayfinder's own validation, which returns coded, located, plain-language problems to people and
+  agents alike.
 
 ## Decided
 
-- **Scope:** Heliograph composes and renders. Delivery belongs to the host.
-- **Who authors:** content designers and service designers, at design time, in an editor. A
-  template is data, not code, in the way a Wayfinder blueprint is.
+- **Scope:** Heliograph designs and renders. Delivery belongs to the host.
+- **Who authors:** content designers and service designers, at design time, in their own tools.
 - **Shape:** the Wayfinder model. An engine that runs on its own with a reference host, and
   [Heliograph.Umbraco](https://github.com/jonnymuir/Heliograph.Umbraco) to host it in Umbraco.
   Wayfinder starts a render at run time by calling Heliograph as a support system; a batch job
-  can do the same. See [architecture.md](architecture.md).
+  can do the same.
+- **One correspondence, a part per channel.** Parts share a dictionary, a version and a render
+  call. They do not share a body: a good email is not derived from a letter.
+- **Heliograph builds no editor.** Authors use existing word processors. Heliograph supplies the
+  dictionary, the compiler and the preview around them.
+- **The principles and constraints above.**
 
 ## Open decisions
 
-1. **The content model.** Structured blocks (heading, paragraph, list, address, table, call to
-   action) rendered per channel, or a plain formatting language in the style of GOV.UK Notify.
-   Either way it is data a content designer can author.
-2. **Channels for the first release**, and which are first-class versus derived (is SMS written
-   separately, or cut down from the email?).
-3. **PDF engine**, chosen with its licence and its PDF/UA support in view.
-4. **The data contract**: how a template declares the data it needs, and whether conditions and
-   calculations reuse Wayfinder's expression language or stay independent of it.
-5. **Languages**, including bilingual correspondence (English and Welsh in the same letter).
-6. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
-   support-system capability per template, or one capability that takes the template as an input.
-7. **Versioning**: how a template changes while journeys that will use it are already running,
-   and how a host records which version a person was sent.
+1. **How a field is marked in a document.** It must be insertable without typing from memory,
+   work in every stock editor, and survive being saved by each. Candidates: tags in the text
+   (offered by a picker or a generated field sheet to copy from), the word processor's own merge
+   fields, content controls. They differ most in how they handle repeats and conditions.
+2. **How the dictionary reaches an author inside an unmodified editor.** Candidates: a picker in
+   the workbench to copy from, a generated reference document, a generated starter template, a
+   sample data file the editor's own mail merge can read.
+3. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
+   own document with a comment at each problem would put them where the work is.
+4. **The dictionary's home and reach.** One per correspondence, one per service, or shared; who
+   maintains it when it is not generated; and its file format.
+5. **The first PDF converter**, chosen with its licence, its accessible (tagged) output and where
+   personal data goes during conversion.
+6. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
+   shared part is itself a document.
+7. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+   support-system capability per correspondence, or one capability that takes it as an input.
+8. **Versioning**: how a correspondence changes while journeys that will use it are running, and
+   how a host records which version a person was sent.
