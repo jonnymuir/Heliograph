@@ -1,3 +1,8 @@
+---
+name: writing-a-template
+description: How to write or change a Heliograph correspondence template. Covers tags for values, conditions, table rows that repeat over a list, the email and text message parts, where tags work, and what stops a template being accepted. Use before writing or editing any part of a correspondence.
+---
+
 # Writing a template
 
 For anyone who writes the letters: a content designer, a service designer, or an AI agent doing
@@ -178,7 +183,7 @@ statement"), and do not put a tag in it.
 
 When you upload a template it is **compiled**: checked against the dictionary and against the
 rules below. You get back every problem at once, each with where it is and what to do. The full
-list is in [diagnostics.md](diagnostics.md).
+list is in [Diagnostics](../diagnostics/SKILL.md).
 
 The ones you are most likely to meet:
 

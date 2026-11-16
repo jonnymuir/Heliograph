@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Heliograph/Heliograph.csproj" />
+    <Project Path="src/Heliograph.Mcp/Heliograph.Mcp.csproj" />
     <Project Path="src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Heliograph.Mcp.Tests/Heliograph.Mcp.Tests.csproj" />
     <Project Path="tests/Heliograph.Tests/Heliograph.Tests.csproj" />
   </Folder>
 </Solution>

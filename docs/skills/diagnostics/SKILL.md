@@ -1,3 +1,8 @@
+---
+name: diagnostics
+description: Every diagnostic code Heliograph reports, HG0 to HG3, with what it means and what to do about it. Use when a compile, a save, a publish or a render comes back with a code.
+---
+
 # Diagnostics
 
 Every problem Heliograph reports has a stable code, a message in plain words, a suggested fix
@@ -11,7 +16,7 @@ A template that compiles can still come back with warnings.
 ## A file that is refused (HG0)
 
 The file is not read any further. See the brief's constraint that
-[uploaded files are untrusted](brief.md#constraints).
+[uploaded files are untrusted](../../brief.md#constraints).
 
 | Code | Meaning | What to do |
 |---|---|---|

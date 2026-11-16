@@ -216,6 +216,12 @@ another PDF route can be added without changing the core.
    benchmark letters failed. Warn at compile, refuse at compile, or fill it in from the first
    heading. Word in Microsoft 365 may not let an author set it, which counts against refusing.
 
+5. **How an agent writes the document part.** Over MCP an agent writes the email and the text
+   message, and can upload a `.docx` it has been given, but it cannot lay one out. Success
+   measure 4 asks for an agent that writes a template that compiles. Either the measure means
+   the email and the text, or Heliograph offers a way to start a document from plain text, which
+   edges towards building an editor.
+
 ## Chosen while the maintainer was away
 
 The maintainer asked the agent to take its own recommended option on each question and list the
@@ -228,3 +234,7 @@ choices here. Each can be reversed; the line says what reversing it would cost.
 | A published version keeps a copy of its dictionary. | Compiling a version against the dictionary as it is today. | Medium: stores would drop a column, and a dictionary change could then break a published letter. |
 | Heliograph reads dictionaries and does not edit them. Whoever knows the data maintains its dictionary. | Editing a dictionary through Heliograph. | Small: add a save operation to `IDictionarySource`. |
 | A correspondence's key is lower-case letters, digits and hyphens. | Any text. | Small, until keys are in use in addresses and file names. |
+| The guides moved to `docs/skills/<name>/SKILL.md`, each with a name and a description, and are served over MCP from those files. | Keeping `docs/*.md` and writing separate material for agents. | Small before the first release: move the files back and fix the links. |
+| The MCP server offers authoring only. It does not render for a real recipient. | Offering every operation, render included, over MCP. | Small: one more tool. It would put recipients' personal data into agent conversations. |
+| Over MCP, a part an agent does not pass is kept, and it names the parts to remove. | Every save replacing the whole draft. | Small: tool arguments only. |
+| The MCP endpoint is `/heliograph/correspondence-authoring/mcp`, mirroring Wayfinder's `/wayfinder/service-blueprint-authoring/mcp`. | Any other address. | Nothing: a host can pass its own. |

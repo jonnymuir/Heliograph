@@ -8,7 +8,7 @@ public class DiagnosticsGuideTests
     [Fact]
     public void Every_diagnostic_code_is_explained_in_the_guide()
     {
-        var guide = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "docs", "diagnostics.md"));
+        var guide = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "docs", "skills", "diagnostics", "SKILL.md"));
         var codes = typeof(DiagnosticCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(field => (string)field.GetRawConstantValue()!).ToList();
 

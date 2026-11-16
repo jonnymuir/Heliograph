@@ -85,7 +85,10 @@ check, once the template has a title. What to do about a template without one is
 decision. The API, MCP server, reference app and workbench are next (step 5).
 
 Step 5 has begun: `CorrespondenceLibrary` holds the operations the API, the MCP server and
-Heliograph.Umbraco will all offer, over a store and a dictionary source the host supplies.
+Heliograph.Umbraco all offer, over a store and a dictionary source the host supplies.
+`Heliograph.Mcp` offers them to agents, and the guides in `docs/skills` are served to agents as
+they are written for people. The REST API, the workbench, the reference app and the evaluation
+of an agent writing a template are still to do.
 
 Step 3 is done. The SMS and email parts are built, with the same tags, conditions and lists as
 a document. Each benchmark letter has a text message and an email, and one call compiles and

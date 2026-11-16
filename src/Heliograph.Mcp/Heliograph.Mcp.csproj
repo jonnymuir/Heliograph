@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Heliograph.Mcp</PackageId>
+    <Title>Heliograph.Mcp</Title>
+    <Version>0.1.0-alpha.1</Version>
+    <Authors>Jonny Muir</Authors>
+    <Description>Correspondence authoring for AI agents: one MapCorrespondenceAuthoringMcp() call adds an MCP-over-HTTP endpoint with the operations a person has (read the dictionary, save a draft, check, preview, publish), the guides as resources, and ready-made prompts. It inherits the host's own authorisation.</Description>
+    <PackageTags>Correspondence;MCP;Model-Context-Protocol;Templates;Heliograph</PackageTags>
+    <PackageProjectUrl>https://github.com/jonnymuir/Heliograph</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jonnymuir/Heliograph</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Heliograph/Heliograph.csproj" />
+  </ItemGroup>
+
+  <!-- Every skill under docs/skills is served as an MCP resource. The file a person reads on GitHub is the file an
+       agent is given: there is no second copy to keep in step. -->
+  <ItemGroup>
+    <EmbeddedResource Include="../../docs/skills/*/SKILL.md" LogicalName="Heliograph.Mcp.skills.%(RecursiveDir)SKILL.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

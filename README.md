@@ -26,6 +26,8 @@ A heliograph sent messages by flashing sunlight across long distances.
 | A letterhead or footer shared between templates | Not yet |
 | SMS part | Yes: the same tags and conditions, with the encoding and the number of messages it will be charged as |
 | Email part | Yes: a subject and a body in a small set of Markdown, rendered as accessible HTML and as plain text |
+| An MCP server for AI agents | Yes: `Heliograph.Mcp` offers the authoring operations, and serves the guides people read as the agent's skills |
+| Stored correspondence, with drafts and numbered versions | Yes, over a store the host supplies |
 | PDF output | Yes: an accessible, tagged PDF through `Heliograph.Pdf.LibreOffice`, checked against PDF/UA by an independent validator |
 | A package on nuget.org | Not yet. Reference the project from a checkout |
 
@@ -39,7 +41,7 @@ Your licence for ((Event name)) on ((Event date)) is approved. Pay £((Licence f
 ((end if))
 ```
 
-[Writing a template](https://github.com/jonnymuir/Heliograph/blob/main/docs/writing-a-template.md)
+[Writing a template](https://github.com/jonnymuir/Heliograph/blob/main/docs/skills/writing-a-template/SKILL.md)
 is the guide for authors.
 
 ## In code
@@ -80,14 +82,14 @@ File.WriteAllText(Path.Combine(output, "email.html"), rendered.Email!.Html);
 File.WriteAllText(Path.Combine(output, "sms.txt"), rendered.Sms!.Text);
 ```
 
-[Using Heliograph](https://github.com/jonnymuir/Heliograph/blob/main/docs/using-heliograph.md)
+[Using Heliograph](https://github.com/jonnymuir/Heliograph/blob/main/docs/skills/using-heliograph/SKILL.md)
 is the guide for developers, with the dictionary's format and what the library guarantees.
 
 ## More
 
 | | |
 |---|---|
-| [Diagnostics](https://github.com/jonnymuir/Heliograph/blob/main/docs/diagnostics.md) | Every problem Heliograph reports, by code |
+| [Diagnostics](https://github.com/jonnymuir/Heliograph/blob/main/docs/skills/diagnostics/SKILL.md) | Every problem Heliograph reports, by code |
 | [Edge cases](https://github.com/jonnymuir/Heliograph/blob/main/docs/edge-cases.md) | Every way a template can go wrong, and what happens |
 | [Benchmark letters](https://github.com/jonnymuir/Heliograph/tree/main/benchmarks) | Three real-looking letters with their templates, dictionaries and data |
 | [Design brief](https://github.com/jonnymuir/Heliograph/blob/main/docs/brief.md) and [plan](https://github.com/jonnymuir/Heliograph/blob/main/docs/plan.md) | Why it is built this way, and what comes next |

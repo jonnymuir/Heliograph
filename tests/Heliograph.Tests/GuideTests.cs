@@ -39,11 +39,11 @@ public class GuideTests
     }
 
     [Theory]
-    [InlineData("writing-a-template.md")]
-    [InlineData("using-heliograph.md")]
+    [InlineData("writing-a-template")]
+    [InlineData("using-heliograph")]
     public void Every_diagnostic_code_a_guide_mentions_is_a_real_one(string guide)
     {
-        var text = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "docs", guide));
+        var text = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "docs", "skills", guide, "SKILL.md"));
         var real = typeof(DiagnosticCodes).GetFields().Select(field => (string)field.GetRawConstantValue()!).ToHashSet();
 
         System.Text.RegularExpressions.Regex.Matches(text, @"HG\d{4}").Select(match => match.Value).Distinct()
