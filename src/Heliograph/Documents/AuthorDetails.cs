@@ -33,6 +33,17 @@ internal static class AuthorDetails
         }
     }
 
+    /// <summary>
+    /// The title in the document's properties, or null when it has none. It is not a name of a person and is kept:
+    /// a PDF made from the letter announces it to a screen reader.
+    /// </summary>
+    public static string? Title(DocxPackage package) =>
+        Properties(package, "/metadata/core-properties") is var (_, properties)
+        && properties.Descendants().FirstOrDefault(e => e.Name.LocalName == "title")?.Value is { } title
+        && !string.IsNullOrWhiteSpace(title)
+            ? title
+            : null;
+
     private static (string Name, XDocument Properties)? Properties(DocxPackage package, string relationshipSuffix)
     {
         var name = package.RelationshipsIn("_rels/.rels")

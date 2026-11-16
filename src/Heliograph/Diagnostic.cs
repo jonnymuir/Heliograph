@@ -56,6 +56,7 @@ public static class DiagnosticCodes
     public const string SmsNeedsUnicode = "HG1017";
     public const string EmailSubjectMissing = "HG1018";
     public const string EmailLinkNotSafe = "HG1019";
+    public const string DocumentHasNoTitle = "HG1020";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

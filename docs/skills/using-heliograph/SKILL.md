@@ -153,8 +153,8 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
 - It asks for PDF/UA, the standard for accessible PDF: a tagged file with headings, lists and
   table structure that says its language. The benchmark letters pass
   [veraPDF](https://verapdf.org/)'s PDF/UA check in CI.
-- **A PDF is only accessible if the template has a title** in its document properties. Heliograph
-  does not yet tell the author when it is missing: see the [brief](../../brief.md#open-decisions).
+- **A PDF is only accessible if the template has a title** in its document properties. Compile
+  warns when it is missing (`HG1020`) and stops nothing.
 - Each conversion has a folder and a LibreOffice profile of its own, removed afterwards, so
   conversions can run side by side. Starting LibreOffice takes a second or more each time.
 - A failure is a `PdfConversionException`. Its message never quotes the letter.
