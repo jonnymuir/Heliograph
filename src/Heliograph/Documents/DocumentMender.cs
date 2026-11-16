@@ -22,7 +22,7 @@ internal static class DocumentMender
         RemoveHalfBookmarks(elements);
 
         // A table cell must end with a paragraph: after a table nested in it, and when everything in it was hidden.
-        foreach (var cell in elements.Where(e => e.Name == Word + "tc" && e.Parent is not null && e.Elements().LastOrDefault(IsBlock)?.Name != Word + "p"))
+        foreach (var cell in elements.Where(e => e.Name == Word + "tc" && !EndsWithParagraph(e)))
         {
             cell.Add(new XElement(Word + "p"));
         }
@@ -32,6 +32,8 @@ internal static class DocumentMender
             story.Add(new XElement(Word + "p"));
         }
     }
+
+    private static bool EndsWithParagraph(XElement cell) => cell.Elements().LastOrDefault(IsBlock)?.Name == Word + "p";
 
     private static bool IsBlock(XElement element) => element.Name == Word + "p" || element.Name == Word + "tbl";
 

@@ -25,22 +25,9 @@ internal static class Repeats
         var rows = new Dictionary<XElement, ListUse>();
         foreach (var use in uses)
         {
-            var row = use.Element.Ancestors(Word + "tr").FirstOrDefault();
-            if (row is null)
+            if (Place(use, rows) is { } problem)
             {
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.ListFieldOutsideRow,
-                    $"\"{use.Field.Name}\" is part of the list \"{use.List.Name}\", so it can only be used in a row of a table.",
-                    "Put it in a table row. The row is repeated for each item in the list.", use.Location));
-            }
-            else if (rows.TryAdd(row, use) || rows[row].List == use.List)
-            {
-                continue;
-            }
-            else
-            {
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.RowMixesLists,
-                    $"This table row uses fields from two lists, \"{rows[row].List.Name}\" and \"{use.List.Name}\". A row can repeat for one list only.",
-                    "Put the fields of each list in a row, or a table, of their own.", use.Location));
+                diagnostics.Add(problem);
             }
         }
 
@@ -51,16 +38,42 @@ internal static class Repeats
                 diagnostics.Add(new Diagnostic(DiagnosticCodes.RowCannotRepeat,
                     $"This table row would repeat for each item in \"{use.List.Name}\", but {reason}.",
                     "Use an ordinary row for the list's fields.", use.Location));
-                continue;
             }
-
-            // A bookmark names one place. Copied into every row it would name many, so it is dropped.
-            row.Descendants().Where(e => e.Name == Word + "bookmarkStart" || e.Name == Word + "bookmarkEnd").ToList().ForEach(e => e.Remove());
-            var each = new XElement(Each, new XAttribute("list", use.List.Key));
-            row.AddBeforeSelf(each);
-            row.Remove();
-            each.Add(row);
+            else
+            {
+                Wrap(row, use.List);
+            }
         }
+    }
+
+    /// <summary>Records the row a use is in, or says why the use has no row it can repeat.</summary>
+    private static Diagnostic? Place(ListUse use, Dictionary<XElement, ListUse> rows)
+    {
+        if (use.Element.Ancestors(Word + "tr").FirstOrDefault() is not { } row)
+        {
+            return new Diagnostic(DiagnosticCodes.ListFieldOutsideRow,
+                $"\"{use.Field.Name}\" is part of the list \"{use.List.Name}\", so it can only be used in a row of a table.",
+                "Put it in a table row. The row is repeated for each item in the list.", use.Location);
+        }
+
+        if (rows.TryAdd(row, use) || rows[row].List == use.List)
+        {
+            return null;
+        }
+
+        return new Diagnostic(DiagnosticCodes.RowMixesLists,
+            $"This table row uses fields from two lists, \"{rows[row].List.Name}\" and \"{use.List.Name}\". A row can repeat for one list only.",
+            "Put the fields of each list in a row, or a table, of their own.", use.Location);
+    }
+
+    private static void Wrap(XElement row, Field list)
+    {
+        // A bookmark names one place. Copied into every row it would name many, so it is dropped.
+        row.Descendants().Where(e => e.Name == Word + "bookmarkStart" || e.Name == Word + "bookmarkEnd").ToList().ForEach(e => e.Remove());
+        var each = new XElement(Each, new XAttribute("list", list.Key));
+        row.AddBeforeSelf(each);
+        row.Remove();
+        each.Add(row);
     }
 
     /// <summary>

@@ -42,7 +42,7 @@ internal static class WordRules
 
     private static IEnumerable<string> Tables(List<XElement> elements)
     {
-        foreach (var cell in elements.Where(e => e.Name == W + "tc" && e.Elements().LastOrDefault(b => b.Name == W + "p" || b.Name == W + "tbl")?.Name != W + "p"))
+        foreach (var cell in elements.Where(e => e.Name == W + "tc" && LastBlock(e)?.Name != W + "p"))
         {
             yield return $"a table cell does not end with a paragraph: {Excerpt(cell.Parent!)}";
         }
@@ -57,6 +57,8 @@ internal static class WordRules
             yield return "a table row has no cells";
         }
     }
+
+    private static XElement? LastBlock(XElement cell) => cell.Elements().LastOrDefault(e => e.Name == W + "p" || e.Name == W + "tbl");
 
     /// <summary>A header, footer, note or text box must hold at least one paragraph or table.</summary>
     private static IEnumerable<string> Stories(List<XElement> elements) => elements

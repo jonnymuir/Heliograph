@@ -85,7 +85,7 @@ renders: a table row repeated for each of up to sixty contributions, the heading
 on each page, and a sentence in place of the table when there are none. Its letterhead and
 footer are written into the template until shared parts are built, which is next.
 
-In steps 2.1 and 2.2, The decision letter compiles and renders for
+The decision letter compiles and renders for
 all three samples: whole sections shown or hidden on a yes or no field, one condition inside
 another, money and numbers printed by type, and data for the other outcome left out. A condition
 can also sit inside a sentence.
