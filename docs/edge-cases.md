@@ -172,7 +172,15 @@ the template is not stopped, because the text may be what they meant.
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
 | An embedded file or object | Refused | S5 | Refused |
 
-## 4. Messages
+## 4. A letter that becomes a PDF
+
+| Case | What happens | Strategy | Status |
+|---|---|---|---|
+| The document has no title in its properties | The PDF is made, and fails PDF/UA: a screen reader has nothing to announce. The author is not told | Open decision in the [brief](brief.md#open-decisions) | Planned |
+| A file that is not a Word document is handed to the converter | Refused, without quoting it | | Refused |
+| LibreOffice is missing, will not start, or takes too long | The conversion fails with the reason. LibreOffice is stopped | | Works |
+
+## 5. Messages
 
 Emails and text messages are plain text, so they cannot be structurally broken. What can go wrong
 is that data becomes something more than text.
@@ -200,6 +208,7 @@ A case in the register is one somebody thought of. These tests do not depend on 
 | **The format's schema** | Every rendered file is validated with Microsoft's Open XML validator, and must have no problem the template did not have. | Rules Word enforces beyond the schema. It accepts a table cell with no paragraph, which Word reports as an unreadable file |
 | **Word's stricter rules** | Written by hand in the tests, apart from the engine: a cell ends with a paragraph, a table has rows, a header, footer, note or text box is not empty, a field that begins also ends, and nothing of the compiler's is left in the file. | Any rule nobody has written down. No copy of Word has checked them |
 | **LibreOffice** | Opens and saves benchmark letters and rendered files. | It is more forgiving than Word |
+| **veraPDF** | Checks the PDF of each benchmark letter against PDF/UA-1, in a container with no network. | What needs a person: whether the reading order and the headings make sense |
 
 A failure names a seed, so the document that caused it can be built again:
 `new RandomTemplate(seed)`. The first run of the model found the case above about a sentence

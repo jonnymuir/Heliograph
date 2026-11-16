@@ -21,12 +21,14 @@
   <ItemGroup>
     <Content Include="../../benchmarks/**/*" LinkBase="benchmarks" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../docs/*.md" LinkBase="docs" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/**/*.csproj" LinkBase="shipped" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../README.md" Link="docs/README-root.md" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Examples/*.cs" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Heliograph/Heliograph.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
   </ItemGroup>
 
 </Project>

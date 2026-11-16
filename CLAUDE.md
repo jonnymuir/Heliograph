@@ -34,6 +34,7 @@ Follow them; this file adds only what is specific to this repo.
 |---|---|
 | `src/Heliograph` | The core library: `Correspondence` (one compile and one render for every part), the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values, conditions and rows that repeat over a list) and renders it. No package dependencies. |
 | `src/Heliograph/Messages` | Part of the core library: plain-text templates. The SMS part, the email part, and the line-by-line engine they share. |
+| `src/Heliograph.Pdf.LibreOffice` | One route to PDF behind `IPdfConverter`: runs a local LibreOffice with no window and asks for PDF/UA. References the core only. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). The Open XML SDK is referenced here only, as an independent validator of rendered files. |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 
@@ -53,7 +54,8 @@ it, or the net has a hole there.
 
 The editor round-trip tests drive LibreOffice with no window. They find it in its usual install
 place, or at the path in `HELIOGRAPH_SOFFICE`. Without LibreOffice they are skipped, unless
-`HELIOGRAPH_REQUIRE_EDITOR=1`, which CI sets so they can never be skipped there. Never run the
+`HELIOGRAPH_REQUIRE_EDITOR=1`, which CI sets so they can never be skipped there. The PDF tests
+also run veraPDF in Docker, and are skipped the same way where Docker is not running. Never run the
 Python that ships inside LibreOffice on macOS: the system kills it and shows a crash report.
 
 ## Releasing
@@ -99,6 +101,10 @@ decide day-to-day code.
   upstream, in the data.
 - **Uploaded files are untrusted.** Macros, embedded objects, remote links and oversized archives
   are refused before anything else reads the file, each with a test.
+- **Nothing that ships carries someone else's program.** LibreOffice and veraPDF are run as
+  separate programs and never referenced, bundled or copied from. A package a shipped project
+  references gets a row in [docs/third-party.md](docs/third-party.md) with its licence; a test
+  fails until it has one. Nothing under the GPL or AGPL is referenced by a package that ships.
 - **Rendering never sends.** No network calls, no provider SDKs, no queues. If a feature needs to
   talk to the outside world, it belongs in the host.
 - **Rendering is deterministic.** The same template and data produce the same output. No clock,

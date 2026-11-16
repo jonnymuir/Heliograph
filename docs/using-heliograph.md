@@ -101,6 +101,27 @@ var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultur
 `Render` returns `Docx`, the finished file as bytes, or null with `Diagnostics` saying what is
 wrong with the data. Only fields the template uses for this recipient are checked.
 
+## PDF
+
+The core library makes no PDF. It defines `IPdfConverter`, and a host chooses a route.
+`Heliograph.Pdf.LibreOffice` is the first: it runs a LibreOffice installed on the same machine,
+with no window.
+
+```csharp
+IPdfConverter converter = new LibreOfficePdfConverter();
+byte[] pdf = await converter.ConvertAsync(render.Docx!);
+```
+
+- It asks for PDF/UA, the standard for accessible PDF: a tagged file with headings, lists and
+  table structure that says its language. The benchmark letters pass
+  [veraPDF](https://verapdf.org/)'s PDF/UA check in CI.
+- **A PDF is only accessible if the template has a title** in its document properties. Heliograph
+  does not yet tell the author when it is missing: see the [brief](brief.md#open-decisions).
+- Each conversion has a folder and a LibreOffice profile of its own, removed afterwards, so
+  conversions can run side by side. Starting LibreOffice takes a second or more each time.
+- A failure is a `PdfConversionException`. Its message never quotes the letter.
+- A PDF is not the same bytes on every run: the converter stamps a date and an identifier.
+
 ## Emails
 
 ```csharp

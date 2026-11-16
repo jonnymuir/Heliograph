@@ -203,3 +203,6 @@ another PDF route can be added without changing the core.
    support-system capability per correspondence, or one capability that takes it as an input.
 5. **Versioning**: how a correspondence changes while journeys that will use it are running, and
    how a host records which version a person was sent.
+6. **A document with no title.** A PDF needs one to meet PDF/UA, and it was the only rule the
+   benchmark letters failed. Warn at compile, refuse at compile, or fill it in from the first
+   heading. Word in Microsoft 365 may not let an author set it, which counts against refusing.

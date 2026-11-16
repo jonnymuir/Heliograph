@@ -157,6 +157,13 @@ NJF: your licence for ((Event name)) is approved. Pay £((Licence fee)) by ((Fee
   set, such as a curly quote or an accent the set lacks, holds 70. You are warned when the
   template itself has such a character. A recipient's name can still push one message over.
 
+## Give the document a title
+
+Set a title in the document's properties: **File > Properties > Description** in LibreOffice,
+**File > Info** in Word. A PDF made from the letter needs it to meet the accessibility standard,
+because a screen reader announces the title first. Write it for the recipient ("Your annual
+statement"), and do not put a tag in it.
+
 ## Where tags work
 
 | Place | Works |
