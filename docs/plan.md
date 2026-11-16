@@ -73,4 +73,7 @@ started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
-Step 1 is done. Step 2.1, the acknowledgement letter through the core, is next.
+Step 2.1 is done for the document part: the acknowledgement letter compiles against its
+dictionary, renders for both samples, refuses unsafe files, and survives a LibreOffice save,
+checked in CI. Comparing page images automatically is not built yet; the rendered pages were
+checked by eye. Step 2.2, the decision letter and conditions, is next.

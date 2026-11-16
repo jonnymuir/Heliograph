@@ -60,7 +60,8 @@ same call. Authors use their own tools. Delivery stays with the host.
 ## The dictionary
 
 The dictionary is the contract between the people who know the data and the people who write the
-words. It is a closed list of everything a template is allowed to refer to:
+words. It is a closed list of **fields**: everything a template is allowed to refer to. A **tag**
+is how an author writes a field in a document, `((Member name))`. The dictionary lists:
 
 - **Values**, each with a plain name, a description, a type (text, date, money, number, yes or
   no, address) and sample values. The type decides the formatting, so an author never writes a

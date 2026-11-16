@@ -19,11 +19,12 @@ person, address and reference is invented. Postcodes start `ZZ`, which no real p
 
 - `README.md`: the words of each part, the dictionary the correspondence needs, and what makes
   it hard.
+- `document.docx` and `dictionary.json`, once the letter has been built: the template as an
+  editor saved it, and its dictionary. The acknowledgement has both.
 - `samples/`: data for one recipient per file. Dates are ISO dates and money is a plain number,
   because the dictionary's types decide how they are printed, not the data and not the author.
 
-The `.docx` templates join these folders once the way a field is marked is decided
-([plan](../docs/plan.md), step 1).
+The other two templates follow in [plan](../docs/plan.md) step 2.
 
 ## How the drafts are written
 

@@ -32,7 +32,7 @@ Follow them; this file adds only what is specific to this repo.
 
 | Project | Purpose |
 |---|---|
-| `src/Heliograph` | The core library. Empty until the first design decisions land. |
+| `src/Heliograph` | The core library: the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template and renders it. No package dependencies. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 
@@ -45,6 +45,11 @@ node scripts/check-policies.mjs
 node scripts/check-doc-links.mjs
 ```
 
+The editor round-trip tests drive LibreOffice with no window. They find it in its usual install
+place, or at the path in `HELIOGRAPH_SOFFICE`. Without LibreOffice they are skipped, unless
+`HELIOGRAPH_REQUIRE_EDITOR=1`, which CI sets so they can never be skipped there. Never run the
+Python that ships inside LibreOffice on macOS: the system kills it and shows a crash report.
+
 ## Releasing
 
 Not yet released. The version lives in `src/Heliograph/Heliograph.csproj`. A publish workflow
@@ -56,6 +61,10 @@ to publish.
 The principles and constraints are in [docs/brief.md](docs/brief.md). These are the ones that
 decide day-to-day code.
 
+- **Use the two words exactly.** A field is a thing in the dictionary that a template can use. A
+  tag is how an author writes one, `((Member name))`. Code, diagnostics and docs keep to that.
+- **A new diagnostic code gets a row in [docs/diagnostics.md](docs/diagnostics.md).** A test fails
+  until it has one.
 - **The core takes no framework dependency and assumes no product.** No ASP.NET Core, no Umbraco,
   no Wayfinder reference in `src/Heliograph`. A file format, a PDF route, a store and a dictionary
   source each sit behind a seam with one implementation; adding another must not change the core.
