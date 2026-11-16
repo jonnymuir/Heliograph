@@ -3,18 +3,16 @@ using System.Xml.Linq;
 namespace Heliograph.Documents;
 
 /// <summary>
-/// Finds each tag, ((Field name)), in a part and swaps it for a slot the renderer fills. An editor may store one
-/// tag in several pieces of text, so a paragraph's text is joined before it is read.
+/// Finds each tag in a part and swaps it for something the renderer acts on. An editor may store one tag in several
+/// pieces of text, so a paragraph's text is joined before it is read.
 /// </summary>
 internal static class TagScanner
 {
     public static readonly XNamespace Word = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
-    /// <summary>The namespace of a slot. Private to a compiled template: it never appears in a file.</summary>
+    /// <summary>The namespace of what a compiled template holds in place of tags. It never appears in a file.</summary>
     public static readonly XNamespace Slot = "urn:heliograph:compiled";
 
-    private const string Open = "((";
-    private const string Close = "))";
     private const int ExcerptLength = 80;
 
     public static void Compile(XDocument part, string label, FieldDictionary dictionary, List<Diagnostic> diagnostics)
@@ -22,113 +20,93 @@ internal static class TagScanner
         // An uploaded file must not be able to plant a slot of its own.
         part.Descendants().Where(e => e.Name.Namespace == Slot).ToList().ForEach(e => e.Remove());
 
+        var scan = new PartScan(label, dictionary, diagnostics);
         var paragraphs = part.Descendants(Word + "p").ToList();
         for (var index = 0; index < paragraphs.Count; index++)
         {
-            var paragraph = paragraphs[index];
+            scan.Paragraph(paragraphs[index], index + 1);
+        }
 
+        Conditions.Wrap(scan.Markers, diagnostics);
+    }
+
+    /// <summary>The scan of one part: what it is checked against, and what it has found so far.</summary>
+    private sealed class PartScan(string label, FieldDictionary dictionary, List<Diagnostic> diagnostics)
+    {
+        public List<ConditionMarker> Markers { get; } = [];
+
+        public void Paragraph(XElement paragraph, int number)
+        {
             // A text box sits inside a paragraph and has paragraphs of its own, which get their own turn.
             var texts = paragraph.Descendants(Word + "t").Where(t => t.Ancestors(Word + "p").First() == paragraph).ToList();
             var joined = string.Concat(texts.Select(t => t.Value));
-            if (!joined.Contains(Open, StringComparison.Ordinal))
+            if (!joined.Contains(TagReader.Open, StringComparison.Ordinal))
             {
-                continue;
+                return;
             }
 
-            var location = new DiagnosticLocation(label, index + 1,
-                joined.Length <= ExcerptLength ? joined : joined[..ExcerptLength] + "...");
+            var location = new DiagnosticLocation(label, number, joined.Length <= ExcerptLength ? joined : joined[..ExcerptLength] + "...");
             var before = diagnostics.Count;
-            var tags = Find(joined, dictionary, location, diagnostics);
-            if (diagnostics.Count > before)
+            var tags = new TagReader(dictionary, location, diagnostics).Read(joined);
+            if (tags.Any(tag => tag.Kind != TagKind.Value))
             {
-                continue;
+                Condition(paragraph, tags, joined, location);
             }
-
-            // Last first, so replacing one tag does not move the text before it.
-            foreach (var tag in tags.AsEnumerable().Reverse())
+            else if (diagnostics.Count == before)
             {
-                Replace(texts, tag);
+                // Last first, so replacing one tag does not move the text before it.
+                tags.AsEnumerable().Reverse().ToList().ForEach(tag => Replace(texts, tag));
+                texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
             }
-
-            texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
         }
-    }
 
-    private static List<(int Start, int End, Field Field)> Find(
-        string text, FieldDictionary dictionary, DiagnosticLocation location, List<Diagnostic> diagnostics)
-    {
-        var tags = new List<(int, int, Field)>();
-        var position = 0;
-        while (text.IndexOf(Open, position, StringComparison.Ordinal) is var open and >= 0)
+        /// <summary>An ((if ...)) or ((end if)) must be the only thing in its paragraph, which then marks a boundary.</summary>
+        private void Condition(XElement paragraph, List<Tag> tags, string joined, DiagnosticLocation location)
         {
-            var close = text.IndexOf(Close, open + Open.Length, StringComparison.Ordinal);
-            if (close < 0)
+            if (tags.Count == 1 && joined.Trim().Length == tags[0].End - tags[0].Start)
             {
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.TagNotClosed,
-                    "A tag is opened with (( but never closed.",
-                    "Add )) after the field's name, in the same paragraph.", location));
-                break;
+                Markers.Add(new ConditionMarker(paragraph, tags[0], location));
+                return;
             }
 
-            var name = text[(open + Open.Length)..close].Trim();
-            position = close + Close.Length;
-            if (name.Length == 0)
-            {
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.TagHasNoName,
-                    "A tag has nothing between (( and )).",
-                    "Put the name of a field from the dictionary between the brackets.", location));
-            }
-            else if (dictionary.Find(name) is { } field)
-            {
-                tags.Add((open, position, field));
-            }
-            else
-            {
-                var nearest = FieldName.Nearest(name, dictionary.Fields.Select(e => e.Name));
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.UnknownField,
-                    $"The dictionary has no field called \"{name}\".",
-                    nearest is null ? "Use the name of a field from the dictionary." : $"Did you mean (({nearest}))?",
-                    location));
-            }
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.ConditionTagNotAlone,
+                "An ((if ...)) or ((end if)) tag shares its paragraph with other text or tags.",
+                "Put each ((if ...)) and ((end if)) on a line of its own, with nothing else in that paragraph.", location));
         }
-
-        return tags;
     }
 
     /// <summary>
     /// Puts a slot where the tag starts, in the run that holds its first character, so the value takes that run's
     /// formatting. The tag's own characters are removed from every piece of text they were spread across.
     /// </summary>
-    private static void Replace(List<XElement> texts, (int Start, int End, Field Field) tag)
+    private static void Replace(List<XElement> texts, Tag tag)
     {
         var offset = 0;
-        XElement? first = null;
+        var placed = false;
         foreach (var text in texts)
         {
-            var length = text.Value.Length;
-            var from = Math.Clamp(tag.Start - offset, 0, length);
-            var to = Math.Clamp(tag.End - offset, 0, length);
             var value = text.Value;
-            offset += length;
+            var from = Math.Clamp(tag.Start - offset, 0, value.Length);
+            var to = Math.Clamp(tag.End - offset, 0, value.Length);
+            offset += value.Length;
             if (from == to)
             {
                 continue;
             }
 
-            if (first is null)
-            {
-                first = text;
-                Keep(text, value[..from]);
-                var slot = new XElement(Slot + "value", new XAttribute("key", tag.Field.Key));
-                text.AddAfterSelf(slot);
-                if (to < length)
-                {
-                    slot.AddAfterSelf(Keep(new XElement(Word + "t"), value[to..]));
-                }
-            }
-            else
+            if (placed)
             {
                 Keep(text, value[to..]);
+                continue;
+            }
+
+            placed = true;
+            Keep(text, value[..from]);
+            var slot = new XElement(Slot + "value", new XAttribute("key", tag.Field!.Key));
+            text.AddAfterSelf(slot);
+            if (to < value.Length)
+            {
+                slot.AddAfterSelf(Keep(new XElement(Word + "t"), value[to..]));
             }
         }
     }

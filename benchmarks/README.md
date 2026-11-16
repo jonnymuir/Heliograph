@@ -20,7 +20,7 @@ person, address and reference is invented. Postcodes start `ZZ`, which no real p
 - `README.md`: the words of each part, the dictionary the correspondence needs, and what makes
   it hard.
 - `document.docx` and `dictionary.json`, once the letter has been built: the template as an
-  editor saved it, and its dictionary. The acknowledgement has both.
+  editor saved it, and its dictionary. The acknowledgement and the decision letter have both.
 - `document.word-365.docx`: the same template after a person edited and saved it in Word in
   Microsoft 365. The same tests run over it. It differs in wording where the person changed it.
 - `samples/`: data for one recipient per file. Dates are ISO dates and money is a plain number,

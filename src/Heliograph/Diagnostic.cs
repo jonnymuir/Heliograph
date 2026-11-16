@@ -25,6 +25,11 @@ public static class DiagnosticCodes
     public const string UnknownField = "HG1001";
     public const string TagNotClosed = "HG1002";
     public const string TagHasNoName = "HG1003";
+    public const string ConditionNotClosed = "HG1004";
+    public const string EndWithoutCondition = "HG1005";
+    public const string ConditionTagNotAlone = "HG1006";
+    public const string ConditionNeedsYesNo = "HG1007";
+    public const string YesNoPrinted = "HG1008";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

@@ -73,7 +73,19 @@ started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
-Step 2.1 is done for the document part: the acknowledgement letter compiles against its
+Steps 2.1 and 2.2 are done for the document part. The decision letter compiles and renders for
+all three samples: whole sections shown or hidden on a yes or no field, one condition inside
+another, money and numbers printed by type, and data for the other outcome left out.
+
+Known limits, each reported by a diagnostic or listed here until it is lifted:
+
+- A condition's tags must each be on a line of their own. A condition inside a sentence is not
+  supported yet, and the email and SMS parts will need it.
+- A yes or no field cannot be printed as "Yes" or "No".
+- Money takes its currency from the language and region the render is given.
+- Supplied text with several paragraphs is printed with line breaks, not as separate paragraphs.
+
+In step 2.1, the acknowledgement letter compiles against its
 dictionary, renders for both samples, refuses unsafe files, and survives a LibreOffice save,
 checked in CI. A copy saved by Word in Microsoft 365 compiles and renders too. Comparing page images automatically is not built yet; the rendered pages were
-checked by eye. Step 2.2, the decision letter and conditions, is next.
+checked by eye. Step 2.3, the annual statement with lists and shared parts, is next.
