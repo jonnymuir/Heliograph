@@ -7,7 +7,7 @@
     <Title>Heliograph</Title>
     <Version>0.0.0</Version>
     <Authors>Jonny Muir</Authors>
-    <Description>Compose outgoing correspondence once and render it for any channel: email, SMS, messaging apps, PDF and print. Rendering only; delivery belongs to the host. Zero framework dependency.</Description>
+    <Description>Write outgoing correspondence in the word processor you already use, check it against a dictionary of allowed data, and render it for post, PDF, email and text. Rendering only; delivery belongs to the host. Zero framework dependency.</Description>
     <PackageTags>Correspondence;Email;SMS;PDF;Templates</PackageTags>
     <PackageProjectUrl>https://github.com/jonnymuir/Heliograph</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jonnymuir/Heliograph</RepositoryUrl>
