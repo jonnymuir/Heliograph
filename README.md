@@ -21,7 +21,7 @@ A heliograph sent messages by flashing sunlight across long distances.
 | | |
 |---|---|
 | Word document templates (`.docx`) | Yes: values, conditions around paragraphs and inside sentences, in the body, tables, headers, footers and notes |
-| Lists that repeat a table row | Not yet |
+| Lists that repeat a table row | Yes |
 | A letterhead or footer shared between templates | Not yet |
 | Email and SMS parts | Not yet |
 | PDF output | Not yet |

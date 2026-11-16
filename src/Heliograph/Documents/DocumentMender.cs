@@ -15,11 +15,14 @@ internal static class DocumentMender
 
     public static void Mend(XDocument part)
     {
+        // A table whose every row repeated over an empty list has nothing left, and a table must have a row.
+        part.Descendants(Word + "tbl").Where(table => !table.Elements(Word + "tr").Any()).ToList().ForEach(table => table.Remove());
+
         var elements = part.Descendants().Where(e => e.Name.Namespace == Word).ToList();
         RemoveHalfBookmarks(elements);
 
-        // A table cell must end with a paragraph, even when everything in it was hidden.
-        foreach (var cell in elements.Where(e => e.Name == Word + "tc" && e.Elements().LastOrDefault()?.Name != Word + "p"))
+        // A table cell must end with a paragraph: after a table nested in it, and when everything in it was hidden.
+        foreach (var cell in elements.Where(e => e.Name == Word + "tc" && !EndsWithParagraph(e)))
         {
             cell.Add(new XElement(Word + "p"));
         }
@@ -29,6 +32,8 @@ internal static class DocumentMender
             story.Add(new XElement(Word + "p"));
         }
     }
+
+    private static bool EndsWithParagraph(XElement cell) => cell.Elements().LastOrDefault(IsBlock)?.Name == Word + "p";
 
     private static bool IsBlock(XElement element) => element.Name == Word + "p" || element.Name == Word + "tbl";
 

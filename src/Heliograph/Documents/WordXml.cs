@@ -10,6 +10,14 @@ internal static class WordXml
     /// <summary>The namespace of what a compiled template holds in place of tags. It never appears in a file.</summary>
     public static readonly XNamespace Slot = "urn:heliograph:compiled";
 
+    /// <summary>
+    /// What a stand-in carries so the renderer can find its field: the field's key and, for a field that belongs to
+    /// a list, the list's key. A key is only unique within its list, so both are needed.
+    /// </summary>
+    public static object[] FieldAttributes(Field field, Field? list) => list is null
+        ? [new XAttribute("key", field.Key)]
+        : [new XAttribute("key", field.Key), new XAttribute("list", list.Key)];
+
     /// <summary>An empty run with the same formatting.</summary>
     public static XElement LikeRun(XElement run) =>
         new(Word + "r", run.Element(Word + "rPr") is { } formatting ? new XElement(formatting) : null);

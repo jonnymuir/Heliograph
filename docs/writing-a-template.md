@@ -74,6 +74,30 @@ yes or no field that says it directly, such as `Licence refused` beside `Licence
 A field used only inside a condition does not need a value for people the condition hides it
 from.
 
+## Lists
+
+Some fields belong to a **list**, such as the payments on a statement. The dictionary shows them
+under their list. To print a list, make a table and put the list's fields in one row:
+
+```text
+| Date     | Description     | Amount (£) |     <- an ordinary row
+| ((Date)) | ((Description)) | ((Amount)) |     <- this row is repeated for each payment
+|          | Total paid      | £((Total paid)) | <- an ordinary row
+```
+
+There is nothing else to write. A row that uses a list's fields is repeated once for each item,
+in order, and the rows above and below it stay as they are. Set the table up as you normally
+would: mark the first row as a heading row so it repeats on each page, and stop rows breaking
+across pages.
+
+- Fields that are not part of the list can go in the repeated row too, and print the same in
+  every copy.
+- A condition inside the row is decided item by item: `((Description))((if Is refund)) (refund)((end if))`.
+- If the list is empty, the repeated row disappears. A table left with no rows at all is removed.
+  To say something in its place, put the table in a condition and the sentence in another.
+- A list's fields only work in a table row. The row cannot be a heading row, be merged with the
+  row above or below, or hold a footnote, and it cannot use fields from two lists.
+
 ## Where tags work
 
 | Place | Works |
@@ -100,6 +124,8 @@ The ones you are most likely to meet:
 | Used a yes or no field as a value | `HG1007` |
 | Put a condition's tags so that they cut a page number or a table of contents in half | `HG1011` |
 | Put a section break inside a condition | `HG1012` |
+| Used a list's field outside a table row | `HG1014` |
+| Used fields from two lists in one row | `HG1015` |
 | Left tracked changes or comments in the document | `HG0006`, `HG0007`. They would be sent to every recipient |
 
 **Warnings** do not stop anything. They point at something that may be a mistake: `{{Name}}` or
@@ -107,7 +133,7 @@ The ones you are most likely to meet:
 
 ## What you cannot do yet
 
-- Repeat a table row for each item in a list.
+- Repeat anything other than a table row for each item in a list: a bullet, say, or a paragraph.
 - Reuse one letterhead or footer across many templates.
 - Show or hide a whole table row or column.
 - Write the characters `((something))` so that they print as they are.

@@ -30,7 +30,7 @@ Each case below is handled by one of these. "Compile" means the author is told a
 | S4 | **Leave no tag behind.** After compiling, every part of the file is searched, text and attributes alike. A tag found anywhere it was not processed is reported with the place. | Compile |
 | S5 | **Refuse what cannot be honoured.** A file whose format or content cannot be handled safely is refused whole, with what to do. | Compile |
 | S6 | **Check structure before accepting.** A condition must not cut through anything that has a start and an end of its own: a table cell, a link, a field, a bookmark, a section. | Compile |
-| S7 | **Rehearse every outcome.** The compiler renders the template for every combination of its conditions, with the most awkward values each field's type allows, and checks each result against the rules Word enforces. A template that would fail for some recipient fails here instead. Up to six conditions, every combination is tried; beyond that, all yes, all no, and each one on its own. | Compile |
+| S7 | **Rehearse every outcome.** The compiler renders the template for every combination of its conditions, with the most awkward values each field's type allows and with lists that are empty, of one item and of two, and checks each result against the rules Word enforces. A template that would fail for some recipient fails here instead. Up to six conditions, every combination is tried; beyond that, all yes, all no, and each one on its own. | Compile |
 | S8 | **Mend what is always safe to mend.** Where the format demands something trivial, such as a paragraph in an emptied table cell, the renderer adds it. Half a bookmark is removed. | Render, proved by S7 |
 | S9 | **Strip what must never travel.** Names of people recorded in the file are emptied. | Compile |
 | S10 | **Check the checker.** In the tests, independent judges look at what the engine produces. See [How the register is tested](#how-the-register-is-tested). | Tests |
@@ -113,7 +113,6 @@ the template is not stopped, because the text may be what they meant.
 | A condition starts or ends in the middle of a field, such as a page number, a cross-reference or a table of contents | Refused | S6 | Refused |
 | A condition contains the start of a bookmark and not its end, or the reverse | The half left behind is removed. Not refused, because editors add bookmarks of their own that an author cannot see | S6 | Mended |
 | A condition contains a section break, or a tag line carries one | Refused | S6 | Refused |
-| A whole table row or column should appear only sometimes | Cannot be written: a tag lives in a paragraph, and a paragraph in a cell | | Planned with lists |
 | An unpaired tag: an end with no start, or a start with no end | Reported once, where the mistake is | S3 | Refused |
 
 ### 2.2 By filling in a value
@@ -130,19 +129,26 @@ the template is not stopped, because the text may be what they meant.
 | A tag inside text a field recalculates, such as a table of contents | Filled in, then overwritten when the field updates | S6 | Planned |
 | A content control bound to stored data holds a tag | The editor may replace the filled value with the stored one | S5 | Planned |
 
-### 2.3 By repeating content
+### 2.3 By repeating a row
 
-Not built. These are the cases the list work must answer.
-
-| Case | Strategy |
-|---|---|
-| A list with no items, one item, many items | S7 |
-| A repeated row that is part of a vertically merged cell | S6 |
-| A repeated row marked as a header row | S6 |
-| A repeated row that holds a bookmark, a picture or a footnote, each of which must be unique | S8 |
-| A repeated row that holds a condition, or a nested table | S7 |
-| Values from two different lists in one row | S6 |
-| A list's value used outside any row | S6 |
+| Case | What happens | Strategy | Status |
+|---|---|---|---|
+| A list with one item or many | A row for each, in order, between the rows above and below | | Works |
+| A list with no items | The repeated row disappears | | Works |
+| A table whose only rows repeat, over a list with no items | The table is removed, because a table must have a row | S8 | Mended |
+| A list inside content a condition hides | The list needs no value | | Works |
+| A condition inside a repeated row | Decided item by item | | Works |
+| A table in a table cell, where the cell would end with the table | The cell is given a paragraph after it, as the format requires | S8 | Mended |
+| A repeated row that is merged with the row above or below | Refused | S6 | Refused |
+| A repeated row marked as a heading row | Refused | S6 | Refused |
+| A repeated row that holds a footnote or an endnote | Refused | S6 | Refused |
+| A repeated row that holds a bookmark | The bookmark is dropped, because it names one place | S8 | Mended |
+| A repeated row that holds a picture | Each copy's picture is given a number of its own | S8 | Works, untested |
+| Fields from two different lists in one row | Refused | S6 | Refused |
+| A list's field outside any table row, or a list used as a value | Refused | S6 | Refused |
+| One item is missing a value, or the list is not a list of items | Reported at render, naming the item | | Works |
+| A bullet or a paragraph for each item, with no table | Cannot be written yet | | Planned |
+| A whole table row or column that appears only sometimes | Cannot be written. A row can repeat over a list of none or one, which is a way round it | | Planned |
 
 ### 2.4 By the file's own contents
 
@@ -171,7 +177,7 @@ A case in the register is one somebody thought of. These tests do not depend on 
 
 | Judge | What it does | What it cannot see |
 |---|---|---|
-| **A model of the letter** | Hundreds of templates are built at random: paragraphs and tables, conditions around and inside them to any depth, values everywhere, page-number fields, bookmarks whose two halves land anywhere, text chopped into runs. The generator works out from its own plan what each letter should say for each recipient, and that is compared with what the engine printed. A third of the templates are given one misplaced condition tag and must be refused. | Anything the generator does not build: links, footnotes, headers, pictures, section breaks, lists |
+| **A model of the letter** | Hundreds of templates are built at random: paragraphs and tables, conditions around and inside them to any depth, values everywhere, tables with a row that repeats over a list of none to three items, page-number fields, bookmarks whose two halves land anywhere, text chopped into runs. The generator works out from its own plan what each letter should say for each recipient, and that is compared with what the engine printed. A third of the templates are given one misplaced condition tag and must be refused. | Anything the generator does not build: links, footnotes, headers, pictures, section breaks |
 | **Chopping** | Each benchmark letter is chopped into runs at random points, with random formatting, and must read the same. | Structure, which chopping does not change |
 | **The format's schema** | Every rendered file is validated with Microsoft's Open XML validator, and must have no problem the template did not have. | Rules Word enforces beyond the schema. It accepts a table cell with no paragraph, which Word reports as an unreadable file |
 | **Word's stricter rules** | Written by hand in the tests, apart from the engine: a cell ends with a paragraph, a table has rows, a header, footer, note or text box is not empty, a field that begins also ends, and nothing of the compiler's is left in the file. | Any rule nobody has written down. No copy of Word has checked them |

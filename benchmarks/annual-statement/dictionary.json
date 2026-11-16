@@ -1,0 +1,27 @@
+{
+  "fields": [
+    { "name": "Member name", "key": "memberName", "type": "text" },
+    { "name": "Member address", "key": "memberAddress", "type": "address" },
+    { "name": "Member reference", "key": "memberReference", "type": "text" },
+    { "name": "Membership tier", "key": "membershipTier", "type": "text" },
+    { "name": "Statement start", "key": "statementStart", "type": "date" },
+    { "name": "Statement end", "key": "statementEnd", "type": "date" },
+    { "name": "Letter date", "key": "letterDate", "type": "date" },
+    {
+      "name": "Contributions", "key": "contributions", "type": "list",
+      "fields": [
+        { "name": "Date", "key": "date", "type": "date" },
+        { "name": "Description", "key": "description", "type": "text" },
+        { "name": "Amount", "key": "amount", "type": "money" },
+        { "name": "Running total", "key": "runningTotal", "type": "money" }
+      ]
+    },
+    { "name": "Total paid", "key": "totalPaid", "type": "money" },
+    { "name": "Amount due for the year", "key": "amountDueForYear", "type": "money" },
+    { "name": "Has contributions", "key": "hasContributions", "type": "yesNo" },
+    { "name": "No contributions", "key": "noContributions", "type": "yesNo" },
+    { "name": "Amount owed", "key": "amountOwed", "type": "money" },
+    { "name": "Owes money", "key": "owesMoney", "type": "yesNo" },
+    { "name": "Payment due date", "key": "paymentDueDate", "type": "date" }
+  ]
+}

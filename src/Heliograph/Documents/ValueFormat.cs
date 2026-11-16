@@ -19,6 +19,7 @@ internal static class ValueFormat
         [FieldType.Number] = ("a number", "as a number, such as 24"),
         [FieldType.Money] = ("an amount of money", "as a number, such as 45 or 45.5, with no currency sign"),
         [FieldType.YesNo] = ("true or false", "as true or false"),
+        [FieldType.List] = ("a list of items", "as a list of items, each an object with the list's own fields"),
     };
 
     /// <summary>The paragraphs to print, or null when the value is not of the field's type.</summary>

@@ -16,18 +16,25 @@ internal static class Rehearsal
 
     private static readonly RenderSettings Settings = new(CultureInfo.InvariantCulture);
     private static readonly string[] AddressLines = ["First line", "Second line"];
+    private static readonly int[] ShortLists = [0, 1];
 
     public static Diagnostic? Run(CompiledDocument document)
     {
         var conditions = document.ConditionFields;
-        foreach (var yes in Outcomes(conditions.Count))
+        var dictionary = document.Dictionary;
+
+        // Every outcome with two items in each list, then lists that are empty and lists of one, with everything shown.
+        var runs = Outcomes(conditions.Count).Select(yes => (yes, Items: 2))
+            .Concat(ShortLists.Select(items => (yes: (Func<int, bool>)(_ => true), Items: items)));
+        foreach (var (yes, items) in runs)
         {
             var answers = conditions.Select((field, index) => (field, IsYes: yes(index))).ToList();
-            var parts = document.RenderParts(new RecipientData(Data(document.Fields, answers), Settings));
+            var data = JsonSerializer.SerializeToElement(Data(dictionary.Fields, answers, items));
+            var parts = document.RenderParts(new RecipientData(data, Settings, dictionary));
             if (parts.Values.Select(WordStructure.Problem).FirstOrDefault(problem => problem is not null) is { } problem)
             {
                 return new Diagnostic(DiagnosticCodes.WouldRenderBrokenDocument,
-                    $"This template would produce a document that cannot be opened {When(answers)}: {problem}.",
+                    $"This template would produce a document that cannot be opened {When(answers, items)}: {problem}.",
                     "This is a fault in Heliograph, not in your template. Please report it with the template attached. "
                     + "Moving or removing the condition nearest the problem may work round it.");
             }
@@ -49,21 +56,23 @@ internal static class Rehearsal
         return all.Concat(onlyOne);
     }
 
-    private static JsonElement Data(IEnumerable<Field> fields, List<(Field Field, bool IsYes)> answers)
-    {
-        var values = fields.ToDictionary(field => field.Key, field => field.Type switch
+    /// <summary>A value for every field: the most awkward its type allows, and for a list, that many items.</summary>
+    private static Dictionary<string, object> Data(IEnumerable<Field> fields, List<(Field Field, bool IsYes)> answers, int items) =>
+        fields.ToDictionary(field => field.Key, field => field.Type switch
         {
             // Two paragraphs, so that every text tag is tried at splitting the paragraph it is in.
             FieldType.Text => (object)"First.\n\nSecond.",
             FieldType.Date => "2000-01-01",
             FieldType.Address => AddressLines,
             FieldType.YesNo => answers.FirstOrDefault(answer => answer.Field == field).IsYes,
+            FieldType.List => Enumerable.Range(0, items).Select(_ => Data(field.Fields!, answers, items)).ToArray(),
             _ => 1,
         });
-        return JsonSerializer.SerializeToElement(values);
-    }
 
-    private static string When(List<(Field Field, bool IsYes)> answers) => answers.Count == 0
-        ? "for any recipient"
-        : "when " + string.Join(", ", answers.Select(answer => $"\"{answer.Field.Name}\" is {(answer.IsYes ? "yes" : "no")}"));
+    private static string When(List<(Field Field, bool IsYes)> answers, int items)
+    {
+        var lists = items == 1 ? "each list has 1 item" : $"each list has {items} items";
+        var conditions = answers.Select(answer => $"\"{answer.Field.Name}\" is {(answer.IsYes ? "yes" : "no")}");
+        return "when " + string.Join(", ", conditions.Append(lists));
+    }
 }

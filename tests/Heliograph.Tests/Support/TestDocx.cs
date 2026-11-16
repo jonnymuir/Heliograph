@@ -208,6 +208,17 @@ internal sealed class TestDocx
             .Select(p => (string?)p.Element(w + "pPr")?.Element(w + "pStyle")?.Attribute(w + "val")).ToList();
     }
 
+    /// <summary>Every table row in the document body, as the text of each of its cells.</summary>
+    public static IReadOnlyList<string[]> TableRows(byte[] docx)
+    {
+        XNamespace w = Word;
+        return Body(docx).Descendants(w + "tr").Select(row => row.Elements(w + "tc").Select(cell => string.Join("\n",
+            cell.Elements(w + "p").Select(p => string.Concat(p.Descendants(w + "t").Select(t => t.Value))))).ToArray()).ToList();
+    }
+
+    /// <summary>Every table row in the document body as one line of text, with a bar between its cells.</summary>
+    public static IReadOnlyList<string> TableLines(byte[] docx) => [.. TableRows(docx).Select(row => string.Join(" | ", row))];
+
     /// <summary>How many paragraphs each table cell in the document body holds. A cell with none is not a valid cell.</summary>
     public static IReadOnlyList<int> CellParagraphCounts(byte[] docx)
     {

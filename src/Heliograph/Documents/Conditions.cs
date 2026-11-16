@@ -6,7 +6,7 @@ namespace Heliograph.Documents;
 /// A condition tag that stands for a boundary between paragraphs: one alone on its line, or one inside a sentence
 /// that found no partner there. <paramref name="Reported"/> is true when it has already been reported as wrong.
 /// </summary>
-internal sealed record ConditionMarker(XElement Paragraph, Tag Tag, DiagnosticLocation Location, bool Reported);
+internal sealed record ConditionMarker(XElement Paragraph, Tag Tag, Field? List, DiagnosticLocation Location, bool Reported);
 
 /// <summary>
 /// Pairs each ((if Field)) on a line of its own with its ((end if)) and wraps what lies between them, so the
@@ -32,7 +32,7 @@ internal static class Conditions
         {
             var between = start.Paragraph.NodesAfterSelf().TakeWhile(node => node != end.Paragraph).ToList();
             between.ForEach(node => node.Remove());
-            start.Paragraph.ReplaceWith(new XElement(Element, new XAttribute("key", start.Tag.Field!.Key), between));
+            start.Paragraph.ReplaceWith(new XElement(Element, WordXml.FieldAttributes(start.Tag.Field!, start.List), between));
             end.Paragraph.Remove();
         }
     }
