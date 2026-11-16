@@ -1,4 +1,34 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="CLAUDE.md" />
+    <File Path="README.md" />
+    <File Path="SECURITY.md" />
+    <File Path="docs/README.md" />
+    <File Path="docs/architecture.md" />
+    <File Path="docs/brief.md" />
+    <File Path="docs/plan.md" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <File Path="benchmarks/README.md" />
+  </Folder>
+  <Folder Name="/benchmarks/acknowledgement/">
+    <File Path="benchmarks/acknowledgement/README.md" />
+    <File Path="benchmarks/acknowledgement/samples/awkward-characters.json" />
+    <File Path="benchmarks/acknowledgement/samples/typical.json" />
+  </Folder>
+  <Folder Name="/benchmarks/decision-letter/">
+    <File Path="benchmarks/decision-letter/README.md" />
+    <File Path="benchmarks/decision-letter/samples/approved-dangerous-props.json" />
+    <File Path="benchmarks/decision-letter/samples/approved.json" />
+    <File Path="benchmarks/decision-letter/samples/refused.json" />
+  </Folder>
+  <Folder Name="/benchmarks/annual-statement/">
+    <File Path="benchmarks/annual-statement/README.md" />
+    <File Path="benchmarks/annual-statement/samples/no-contributions.json" />
+    <File Path="benchmarks/annual-statement/samples/refund-and-arrears.json" />
+    <File Path="benchmarks/annual-statement/samples/typical.json" />
+    <File Path="benchmarks/annual-statement/samples/weekly-payer.json" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Heliograph/Heliograph.csproj" />
   </Folder>
