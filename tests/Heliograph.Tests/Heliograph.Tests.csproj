@@ -18,6 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="../../benchmarks/**/*" LinkBase="benchmarks" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../docs/diagnostics.md" Link="docs/diagnostics.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/Heliograph/Heliograph.csproj" />
   </ItemGroup>
 

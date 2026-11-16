@@ -1,0 +1,12 @@
+{
+  "fields": [
+    { "name": "Applicant name", "key": "applicantName", "type": "text" },
+    { "name": "Applicant address", "key": "applicantAddress", "type": "address" },
+    { "name": "Application reference", "key": "applicationReference", "type": "text" },
+    { "name": "Event name", "key": "eventName", "type": "text" },
+    { "name": "Event date", "key": "eventDate", "type": "date" },
+    { "name": "Date received", "key": "dateReceived", "type": "date" },
+    { "name": "Decision due date", "key": "decisionDueDate", "type": "date" },
+    { "name": "Letter date", "key": "letterDate", "type": "date" }
+  ]
+}
