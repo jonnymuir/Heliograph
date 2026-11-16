@@ -34,9 +34,9 @@ public sealed class CompiledDocument
             ResolveConditions(part, recipient);
             foreach (var slot in part.Descendants(TagScanner.Slot + "value").ToList())
             {
-                if (recipient.Lines(_fields[(string)slot.Attribute("key")!]) is { } lines)
+                if (recipient.Paragraphs(_fields[(string)slot.Attribute("key")!]) is { } paragraphs)
                 {
-                    slot.ReplaceWith(ValueWriter.Elements(lines));
+                    ValueWriter.Write(slot, paragraphs);
                 }
             }
 

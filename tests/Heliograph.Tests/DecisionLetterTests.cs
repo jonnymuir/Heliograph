@@ -83,9 +83,13 @@ public class DecisionLetterTests
     {
         var reason = RenderParagraphs("refused").Single(paragraph => paragraph.StartsWith("The risk assessment", StringComparison.Ordinal));
 
-        reason.Should().Contain("audience area.\n\nOur insurer, SafetyNet Underwriting,");
-        reason.Should().Contain("\"cover excludes naked flame in venues under 200 m² & with fewer than 2 exits\"");
-        reason.Should().Contain("Do not write ((licence number)) or {{fields}} here");
+        reason.Should().Be("The risk assessment you sent does not cover the audience area.");
+        var paragraphs = RenderParagraphs("refused");
+        var first = paragraphs.ToList().IndexOf(reason);
+        paragraphs[first + 1].Should().Be("Our insurer, SafetyNet Underwriting, could not confirm cover for fire props indoors. "
+                                          + "They said: \"cover excludes naked flame in venues under 200 m² & with fewer than 2 exits\".");
+        paragraphs[first + 2].Should().Contain("Do not write ((licence number)) or {{fields}} here");
+        paragraphs[first + 3].Should().Be("If you think this decision is wrong");
     }
 
     [EditorFact]

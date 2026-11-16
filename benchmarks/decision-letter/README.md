@@ -50,7 +50,7 @@ never works one out from the other.
 > >
 > > ## What you need to do
 > >
-> > Pay the licence fee of **[Licence fee]** by **[Fee due date]**. Your licence is not valid
+> > Pay the licence fee of £**[Licence fee]** by **[Fee due date]**. Your licence is not valid
 > > until we receive it.
 > >
 > > *Only when [Dangerous props]:*
@@ -102,7 +102,7 @@ Subject, *only when [Licence refused]:* A decision on your juggling event licenc
 >
 > > Your licence has been approved. Your licence number is **[Licence number]**.
 > >
-> > Pay the fee of **[Licence fee]** by **[Fee due date]**. The attached letter has the details.
+> > Pay the fee of £**[Licence fee]** by **[Fee due date]**. The attached letter has the details.
 >
 > *Only when [Licence refused]:*
 >
@@ -115,7 +115,7 @@ Subject, *only when [Licence refused]:* A decision on your juggling event licenc
 ## SMS
 
 > *Only when [Licence approved]:* NJF: your licence for **[Event name]** is approved. Pay
-> **[Licence fee]** by **[Fee due date]**. Details are in your letter.
+> £**[Licence fee]** by **[Fee due date]**. Details are in your letter.
 >
 > *Only when [Licence refused]:* NJF: we have made a decision on your licence application
 > **[Application reference]**. Please read the letter we have sent you.
@@ -128,7 +128,9 @@ Subject, *only when [Licence refused]:* A decision on your juggling event licenc
 - Values that only exist for one outcome (`Licence number`, `Reason for refusal`) are absent
   from the data for the other. That must compile and render, because the content using them is
   hidden. Missing data for content that is shown must fail.
-- `Reason for refusal` is free text written by a caseworker, with several paragraphs. It must
-  keep its paragraphs and must not be able to add fields, markup or formatting.
+- `Reason for refusal` is free text written by a caseworker, with several paragraphs. Each must
+  become a real paragraph in the letter's own style, and the text must not be able to add fields,
+  markup or formatting.
 - A subject line, and an SMS, need a condition too.
-- Money prints as "£45.00" from the number 45.
+- Money prints as "45.00" from the number 45. The author writes the £ sign in the template, so the
+  currency is never chosen for them.

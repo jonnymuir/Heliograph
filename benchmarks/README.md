@@ -25,6 +25,7 @@ person, address and reference is invented. Postcodes start `ZZ`, which no real p
   Microsoft 365. The same tests run over it. It differs in wording where the person changed it.
 - `samples/`: data for one recipient per file. Dates are ISO dates and money is a plain number,
   because the dictionary's types decide how they are printed, not the data and not the author.
+  The one thing an author does write is the currency sign, beside the tag.
 
 The other two templates follow in [plan](../docs/plan.md) step 2.
 

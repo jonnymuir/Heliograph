@@ -81,9 +81,8 @@ Known limits, each reported by a diagnostic or listed here until it is lifted:
 
 - A condition's tags must each be on a line of their own. A condition inside a sentence is not
   supported yet, and the email and SMS parts will need it.
-- A yes or no field cannot be printed as "Yes" or "No".
-- Money takes its currency from the language and region the render is given.
-- Supplied text with several paragraphs is printed with line breaks, not as separate paragraphs.
+- Supplied text that falls inside a link cannot start a new paragraph there, so a blank line in it
+  prints as a blank line.
 
 In step 2.1, the acknowledgement letter compiles against its
 dictionary, renders for both samples, refuses unsafe files, and survives a LibreOffice save,

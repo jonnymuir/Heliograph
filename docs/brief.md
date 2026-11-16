@@ -65,7 +65,8 @@ is how an author writes a field in a document, `((Member name))`. The dictionary
 
 - **Values**, each with a plain name, a description, a type (text, date, money, number, yes or
   no, address) and sample values. The type decides the formatting, so an author never writes a
-  date or currency format.
+  date or number format. Money prints as a number to two decimal places; the author writes the
+  currency sign, so it is never chosen for them.
 - **Lists**, such as the rows of a statement, with their columns.
 - **Conditions**, yes or no answers a template can show or hide content on.
 - **Shared parts**, such as a letterhead, a footer or a signature block, that a template can

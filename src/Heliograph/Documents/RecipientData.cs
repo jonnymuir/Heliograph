@@ -12,21 +12,21 @@ internal sealed class RecipientData(JsonElement data, RenderSettings settings)
 
     public IReadOnlyList<Diagnostic> Diagnostics => [.. _diagnostics.Values];
 
-    /// <summary>The lines to print for a field, or null, with a diagnostic, when its value is missing or of the wrong type.</summary>
-    public IReadOnlyList<string>? Lines(Field field)
+    /// <summary>The paragraphs to print for a field, or null, with a diagnostic, when its value is missing or of the wrong type.</summary>
+    public IReadOnlyList<string[]>? Paragraphs(Field field)
     {
         if (Value(field) is not { } value)
         {
             return null;
         }
 
-        var lines = ValueWriter.Lines(field, value, settings);
-        if (lines is null)
+        var paragraphs = ValueFormat.Paragraphs(field, value, settings);
+        if (paragraphs is null)
         {
             WrongType(field);
         }
 
-        return lines;
+        return paragraphs;
     }
 
     /// <summary>Whether a yes or no field is yes. Anything else, including a missing or wrong value, is not, and is reported.</summary>
@@ -57,5 +57,5 @@ internal sealed class RecipientData(JsonElement data, RenderSettings settings)
     }
 
     private void WrongType(Field field) => _diagnostics.TryAdd(field.Key, new Diagnostic(DiagnosticCodes.ValueWrongType,
-        $"The value for \"{field.Name}\" is not {ValueWriter.Described(field.Type)}.", ValueWriter.Expected(field)));
+        $"The value for \"{field.Name}\" is not {ValueFormat.Described(field.Type)}.", ValueFormat.Expected(field)));
 }

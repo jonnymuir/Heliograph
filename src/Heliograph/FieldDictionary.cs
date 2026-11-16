@@ -71,7 +71,7 @@ public sealed record Field(string Name, string Key, FieldType Type);
 /// <summary>What kind of value a field holds. The type decides how the value is printed.</summary>
 public enum FieldType
 {
-    /// <summary>Text, printed as supplied. A new line in the text becomes a line break.</summary>
+    /// <summary>Text, printed as it was typed: a line break stays a line break, and a blank line starts a new paragraph.</summary>
     Text,
 
     /// <summary>A date, supplied as an ISO date (2027-06-19) and printed in words (19 June 2027).</summary>
@@ -83,9 +83,15 @@ public enum FieldType
     /// <summary>A number, supplied as a number and printed with the thousands separated (12,500).</summary>
     Number,
 
-    /// <summary>An amount of money, supplied as a number and printed with its currency and two decimal places (£45.00).</summary>
+    /// <summary>
+    /// An amount of money, supplied as a number and printed to two decimal places (45.00). It prints no currency
+    /// sign: the author writes that beside the tag, so it is never chosen or changed for them.
+    /// </summary>
     Money,
 
-    /// <summary>Yes or no, supplied as true or false. It is never printed: a template shows or hides content on it.</summary>
+    /// <summary>
+    /// Yes or no, supplied as true or false. It is never printed: a template shows or hides content on it. Where a
+    /// letter needs the words, the data supplies them as text.
+    /// </summary>
     YesNo,
 }

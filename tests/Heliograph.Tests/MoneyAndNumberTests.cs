@@ -13,14 +13,28 @@ public class MoneyAndNumberTests
     ]);
 
     [Theory]
-    [InlineData("45", "£45.00")]
-    [InlineData("120.5", "£120.50")]
-    [InlineData("1234567.891", "£1,234,567.89")]
-    [InlineData("-12.5", "-£12.50")]
-    [InlineData("0", "£0.00")]
-    public void Money_is_printed_with_its_currency_and_two_decimal_places(string amount, string printed)
+    [InlineData("45", "45.00")]
+    [InlineData("120.5", "120.50")]
+    [InlineData("1234567.891", "1,234,567.89")]
+    [InlineData("-12.5", "-12.50")]
+    [InlineData("0", "0.00")]
+    public void Money_is_printed_to_two_decimal_places_with_no_currency_sign(string amount, string printed)
     {
         Paragraphs("((Licence fee))", $$"""{ "licenceFee": {{amount}} }""").Should().Equal(printed);
+    }
+
+    [Fact]
+    public void The_author_writes_the_currency_sign_and_it_is_never_changed()
+    {
+        using var stream = TestDocx.With("Pay £((Licence fee)) or $((Licence fee)).").Build();
+        var document = DocumentTemplate.Compile(stream, Dictionary).Document!;
+        var data = Benchmark.Data("""{ "licenceFee": 45 }""");
+
+        foreach (var culture in new[] { "en-GB", "en-US", "ja-JP" })
+        {
+            var settings = new RenderSettings(System.Globalization.CultureInfo.GetCultureInfo(culture));
+            TestDocx.Paragraphs(document.Render(data, settings).Docx!).Should().Equal("Pay £45.00 or $45.00.");
+        }
     }
 
     [Theory]

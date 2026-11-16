@@ -112,7 +112,8 @@ internal sealed class TagReader(FieldDictionary dictionary, DiagnosticLocation l
         {
             diagnostics.Add(new Diagnostic(DiagnosticCodes.YesNoPrinted,
                 $"\"{field.Name}\" is a yes or no field, which cannot be printed.",
-                $"To show content only when it is yes, put ((if {field.Name})) before the content and ((end if)) after it.",
+                $"To show content only when it is yes, put ((if {field.Name})) before the content and ((end if)) after it. "
+                + "To print the words, ask for them to be supplied as a text field.",
                 location));
             return false;
         }
