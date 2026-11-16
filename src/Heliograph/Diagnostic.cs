@@ -19,9 +19,9 @@ public enum DiagnosticSeverity
 }
 
 /// <summary>A place in a document an author can find without tooling.</summary>
-/// <param name="Part">"document", "header", "footer", "footnotes" or "endnotes".</param>
-/// <param name="Paragraph">The paragraph's position in that part, counting from 1.</param>
-/// <param name="Excerpt">The start of the paragraph's text.</param>
+/// <param name="Part">In a document: "document", "header", "footer", "footnotes" or "endnotes". In a message: "sms".</param>
+/// <param name="Paragraph">The paragraph's position in that part, counting from 1. In a message, the line.</param>
+/// <param name="Excerpt">The start of the paragraph's or line's text.</param>
 public sealed record DiagnosticLocation(string Part, int Paragraph, string Excerpt);
 
 /// <summary>The stable codes. HG0 is a refused file, HG1 a template problem, HG2 a problem with one recipient's data.</summary>
@@ -53,6 +53,7 @@ public static class DiagnosticCodes
     public const string ListFieldOutsideRow = "HG1014";
     public const string RowMixesLists = "HG1015";
     public const string RowCannotRepeat = "HG1016";
+    public const string SmsNeedsUnicode = "HG1017";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";
