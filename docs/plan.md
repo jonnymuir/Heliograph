@@ -44,6 +44,12 @@ Each letter is a vertical slice: dictionary, compile with diagnostics, render, t
 2. Decision letter: conditions.
 3. Annual statement: lists, money, and a letterhead and footer swapped by a value.
 
+#### Before the annual statement
+
+Close the cases the [edge-case register](edge-cases.md) marks as planned, in this order: tags that
+are not recognised (strategies S1, S3, S4, S5), then structure (S6, S7, S8), then the independent
+checks in the tests (S10). Lists multiply every case, so the net goes in first.
+
 ### 3. Email and SMS parts
 
 One correspondence, three parts, one render call.

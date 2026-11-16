@@ -69,6 +69,10 @@ decide day-to-day code.
   table, a list or a link, the template is refused at compile with the place and a fix. Nothing
   is guessed and nothing broken is produced. Each awkward placement found gets a test in
   `AwkwardPlacementTests`.
+- **Catch it at compile, not at render.** Only a fault in one recipient's data may surface at
+  render. [docs/edge-cases.md](docs/edge-cases.md) is the register of every case and the strategy
+  that handles it. A case you find goes in the register in the same change, and its status moves
+  only when a test proves it.
 - **The core takes no framework dependency and assumes no product.** No ASP.NET Core, no Umbraco,
   no Wayfinder reference in `src/Heliograph`. A file format, a PDF route, a store and a dictionary
   source each sit behind a seam with one implementation; adding another must not change the core.
