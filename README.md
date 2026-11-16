@@ -22,6 +22,7 @@ A heliograph sent messages by flashing sunlight across long distances.
 |---|---|
 | Word document templates (`.docx`) | Yes: values, conditions around paragraphs and inside sentences, in the body, tables, headers, footers and notes |
 | Lists that repeat a table row | Yes |
+| One call that compiles and renders the letter, the email and the text together | Yes |
 | A letterhead or footer shared between templates | Not yet |
 | SMS part | Yes: the same tags and conditions, with the encoding and the number of messages it will be charged as |
 | Email part | Yes: a subject and a body in a small set of Markdown, rendered as accessible HTML and as plain text |
@@ -44,28 +45,39 @@ is the guide for authors.
 ## In code
 
 ```csharp
-var dictionary = FieldDictionary.Parse(File.ReadAllText(dictionaryPath));
+var dictionary = FieldDictionary.Parse(File.ReadAllText(Path.Combine(folder, "dictionary.json")));
 
-// Compile once. A template that does not compile comes back with every problem found.
-using var template = File.OpenRead(templatePath);
-var compilation = DocumentTemplate.Compile(template, dictionary);
+// A correspondence has a part for each channel it is sent on. Leave out any you do not use.
+using var document = File.OpenRead(Path.Combine(folder, "document.docx"));
+var compilation = Correspondence.Compile(new CorrespondenceSource
+{
+    Document = document,
+    Email = File.ReadAllText(Path.Combine(folder, "email.md")),
+    Sms = File.ReadAllText(Path.Combine(folder, "sms.txt")),
+}, dictionary);
+
+// Compile once. Every problem in every part comes back together, with where it is and how to fix it.
 foreach (var problem in compilation.Diagnostics)
 {
     Console.WriteLine($"{problem.Severity} {problem.Code}: {problem.Message} {problem.Fix}");
 }
 
-if (compilation.Document is not { } document)
+if (compilation.Correspondence is not { } correspondence)
 {
     return;
 }
 
 // Render as often as you like, from any thread: once for each recipient.
 var recipient = JsonDocument.Parse(File.ReadAllText(recipientPath)).RootElement;
-var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultureInfo("en-GB")));
-if (render.Docx is { } letter)
+var rendered = correspondence.Render(recipient, new RenderSettings(CultureInfo.GetCultureInfo("en-GB")));
+if (rendered.Diagnostics.Count > 0)
 {
-    File.WriteAllBytes(letterPath, letter);
+    return; // The data was wrong, so nothing is produced. The diagnostics say what to supply.
 }
+
+File.WriteAllBytes(Path.Combine(output, "letter.docx"), rendered.Docx!);
+File.WriteAllText(Path.Combine(output, "email.html"), rendered.Email!.Html);
+File.WriteAllText(Path.Combine(output, "sms.txt"), rendered.Sms!.Text);
 ```
 
 [Using Heliograph](https://github.com/jonnymuir/Heliograph/blob/main/docs/using-heliograph.md)

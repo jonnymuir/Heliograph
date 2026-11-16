@@ -18,24 +18,23 @@ public class GuideTests
     }
 
     [Fact]
-    public void The_code_in_the_README_renders_a_letter()
+    public void The_code_in_the_README_renders_a_letter_an_email_and_a_text()
     {
-        var folder = Directory.CreateTempSubdirectory("heliograph-readme-");
+        var output = Directory.CreateTempSubdirectory("heliograph-readme-");
         try
         {
-            var letter = Path.Combine(folder.FullName, "letter.docx");
-
             Quickstart.Run(
-                Benchmark.PathTo("acknowledgement", "dictionary.json"),
-                Benchmark.PathTo("acknowledgement", "document.docx"),
+                Path.GetDirectoryName(Benchmark.PathTo("acknowledgement", "dictionary.json"))!,
                 Benchmark.PathTo("acknowledgement", Path.Combine("samples", "typical.json")),
-                letter);
+                output.FullName);
 
-            TestDocx.Paragraphs(File.ReadAllBytes(letter)).Should().Contain("Dear Alex Applicant,");
+            TestDocx.Paragraphs(File.ReadAllBytes(Path.Combine(output.FullName, "letter.docx"))).Should().Contain("Dear Alex Applicant,");
+            File.ReadAllText(Path.Combine(output.FullName, "email.html")).Should().Contain("Dear Alex Applicant,");
+            File.ReadAllText(Path.Combine(output.FullName, "sms.txt")).Should().StartWith("NJF: we have your licence application");
         }
         finally
         {
-            folder.Delete(recursive: true);
+            output.Delete(recursive: true);
         }
     }
 

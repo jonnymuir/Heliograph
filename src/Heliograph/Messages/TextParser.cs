@@ -9,6 +9,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
 
     private readonly Stack<(List<TextBlock> Outer, Field? Field, DiagnosticLocation Location)> _open = new();
     private readonly List<(int Line, string Text)> _wording = [];
+    private readonly NearMiss _nearMiss = new(dictionary);
     private List<TextBlock> _blocks = [];
 
     public IEnumerable<(int Line, string Text)> Wording => _wording;
@@ -30,6 +31,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
             return;
         }
 
+        LooksLikeATag(text, tags, location);
         var position = 0;
         var nodes = Nodes(text, ref position, new Queue<Tag>(tags));
         _wording.Add((number, string.Concat(Literals(nodes))));
@@ -43,6 +45,25 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
         }
 
         _blocks.Add(new TextLine(nodes, lists.FirstOrDefault(), location));
+    }
+
+    /// <summary>
+    /// Points out text that looks like a tag for a real field but is not one, as the document compiler does. A
+    /// link's words sit in square brackets on purpose, so those are not counted.
+    /// </summary>
+    private void LooksLikeATag(string text, List<Tag> tags, DiagnosticLocation location)
+    {
+        var characters = text.ToCharArray();
+        tags.ForEach(tag => Array.Fill(characters, ' ', tag.Start, tag.End - tag.Start));
+        var written = new string(characters).Replace("](", " ", StringComparison.Ordinal).Replace('[', ' ');
+        if (_nearMiss.In(written) is { } field)
+        {
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.LooksLikeATag,
+                $"This looks like a tag for \"{field.Name}\", but it is not written as one, so it will be printed as it is.",
+                $"If it is meant to be filled in, write it as (({field.Name})), with two round brackets each side. "
+                + "If it is ordinary text, nothing needs to change.",
+                location, DiagnosticSeverity.Warning));
+        }
     }
 
     /// <summary>The finished blocks. A condition still open is reported where it was opened.</summary>

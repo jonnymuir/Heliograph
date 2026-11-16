@@ -134,6 +134,15 @@ public class EmailTests
     }
 
     [Fact]
+    public void Text_that_looks_like_a_tag_is_pointed_out_in_an_email_too_but_a_links_words_are_not()
+    {
+        EmailTemplate.Compile("S", "Dear {{Member name}},", Dictionary).Diagnostics
+            .Should().ContainSingle().Which.Code.Should().Be(DiagnosticCodes.LooksLikeATag);
+        EmailTemplate.Compile("S", "See [Member name](https://www.example.org/((Reference))) (Notes).", Dictionary).Diagnostics
+            .Should().ContainSingle("only (Notes) is in brackets that are not a link's").Which.Message.Should().Contain("Notes");
+    }
+
+    [Fact]
     public void A_condition_round_a_whole_link_is_allowed()
     {
         var compilation = EmailTemplate.Compile("S", "Hi.((if Owes money)) [Pay](https://pay.example.org)((end if))", Dictionary);

@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.Json;
-using Heliograph.Documents;
 
 namespace Heliograph.Tests.Examples;
 
@@ -10,31 +9,42 @@ namespace Heliograph.Tests.Examples;
 /// </summary>
 public static class Quickstart
 {
-    public static void Run(string dictionaryPath, string templatePath, string recipientPath, string letterPath)
+    public static void Run(string folder, string recipientPath, string output)
     {
         // <readme>
-        var dictionary = FieldDictionary.Parse(File.ReadAllText(dictionaryPath));
+        var dictionary = FieldDictionary.Parse(File.ReadAllText(Path.Combine(folder, "dictionary.json")));
 
-        // Compile once. A template that does not compile comes back with every problem found.
-        using var template = File.OpenRead(templatePath);
-        var compilation = DocumentTemplate.Compile(template, dictionary);
+        // A correspondence has a part for each channel it is sent on. Leave out any you do not use.
+        using var document = File.OpenRead(Path.Combine(folder, "document.docx"));
+        var compilation = Correspondence.Compile(new CorrespondenceSource
+        {
+            Document = document,
+            Email = File.ReadAllText(Path.Combine(folder, "email.md")),
+            Sms = File.ReadAllText(Path.Combine(folder, "sms.txt")),
+        }, dictionary);
+
+        // Compile once. Every problem in every part comes back together, with where it is and how to fix it.
         foreach (var problem in compilation.Diagnostics)
         {
             Console.WriteLine($"{problem.Severity} {problem.Code}: {problem.Message} {problem.Fix}");
         }
 
-        if (compilation.Document is not { } document)
+        if (compilation.Correspondence is not { } correspondence)
         {
             return;
         }
 
         // Render as often as you like, from any thread: once for each recipient.
         var recipient = JsonDocument.Parse(File.ReadAllText(recipientPath)).RootElement;
-        var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultureInfo("en-GB")));
-        if (render.Docx is { } letter)
+        var rendered = correspondence.Render(recipient, new RenderSettings(CultureInfo.GetCultureInfo("en-GB")));
+        if (rendered.Diagnostics.Count > 0)
         {
-            File.WriteAllBytes(letterPath, letter);
+            return; // The data was wrong, so nothing is produced. The diagnostics say what to supply.
         }
+
+        File.WriteAllBytes(Path.Combine(output, "letter.docx"), rendered.Docx!);
+        File.WriteAllText(Path.Combine(output, "email.html"), rendered.Email!.Html);
+        File.WriteAllText(Path.Combine(output, "sms.txt"), rendered.Sms!.Text);
 
         // </readme>
     }
