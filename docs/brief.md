@@ -189,20 +189,29 @@ another PDF route can be added without changing the core.
   author or a recipient's data can write turns into anything else.
 - **The dictionary is a JSON file.** It needs no extra library, and every host and agent can
   read and write it.
+- **A dictionary has a name and is shared.** Each correspondence says which dictionary it uses.
+  One per service is the usual case, so a Wayfinder blueprint supplies one dictionary for all
+  its letters; one per letter still works. A change to a dictionary compiles again everything
+  that uses it.
+- **A correspondence has a draft and numbered versions.** An author works on the draft.
+  Publishing makes a numbered version that never changes. A render takes the latest published
+  version, or a named one, and says which it used, so the host can record what a person was
+  sent.
+- **In Umbraco, one sign-in for agents.** The plumbing that lets an MCP client sign in through
+  the backoffice moves out of Wayfinder.Umbraco into one small package that Wayfinder.Umbraco
+  and Heliograph.Umbraco both use. Each maps its own MCP endpoint.
+- **Prereleases go to nuget.org while both repos are built**, so Heliograph.Umbraco restores the
+  engine the way any site would.
 - **The principles and constraints above.**
 
 ## Open decisions
 
 1. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
    own document with a comment at each problem would put them where the work is.
-2. **The dictionary's home and reach.** One per correspondence, one per service, or shared; and
-   who maintains it when it is not generated.
-3. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
+2. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
-4. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+3. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-5. **Versioning**: how a correspondence changes while journeys that will use it are running, and
-   how a host records which version a person was sent.
-6. **A document with no title.** A PDF needs one to meet PDF/UA, and it was the only rule the
+4. **A document with no title.** A PDF needs one to meet PDF/UA, and it was the only rule the
    benchmark letters failed. Warn at compile, refuse at compile, or fill it in from the first
    heading. Word in Microsoft 365 may not let an author set it, which counts against refusing.

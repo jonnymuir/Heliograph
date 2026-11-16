@@ -34,6 +34,9 @@ jobs:
         env:
           HELIOGRAPH_REQUIRE_EDITOR: "1"
         run: dotnet test Heliograph.slnx -c Release --no-build
+      # Proves the packages can be built, so a release never finds out first.
+      - name: Pack
+        run: dotnet pack Heliograph.slnx -c Release --no-build -o artifacts
       - name: Size budgets
         run: node scripts/check-policies.mjs
       - name: Doc links

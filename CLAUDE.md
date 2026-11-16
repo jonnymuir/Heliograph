@@ -60,9 +60,14 @@ Python that ships inside LibreOffice on macOS: the system kills it and shows a c
 
 ## Releasing
 
-Not yet released. The version lives in `src/Heliograph/Heliograph.csproj`. A publish workflow
-using NuGet Trusted Publishing is added with the first release; until then `/release` has nothing
-to publish.
+Every package under `src/` is released together at one version, which each `.csproj` carries.
+A tag `v<version>` runs `.github/workflows/package-release.yml`: it checks the tag against every
+project, runs the tests with a real LibreOffice, and publishes to nuget.org through Trusted
+Publishing. A version with a hyphen is a prerelease.
+
+Until `0.1.0`, prereleases (`0.1.0-alpha.N`) go out as the engine grows, so that
+Heliograph.Umbraco can restore from nuget.org. To publish one: bump the version in every project
+in a PR, merge it, then tag the merge commit. Nothing stable has been released.
 
 ## Rules specific to this repo
 
