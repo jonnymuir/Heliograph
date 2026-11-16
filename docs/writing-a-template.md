@@ -1,0 +1,119 @@
+# Writing a template
+
+For anyone who writes the letters: a content designer, a service designer, or an AI agent doing
+the job for them. You need a word processor and nothing else. Word, Word in Microsoft 365 and
+LibreOffice all work, with nothing installed.
+
+A template is an ordinary Word document (`.docx`). Lay it out however you like: headings, tables,
+lists, headers, footers, pictures, page numbers. Where the letter should change from one person
+to the next, you write a **tag**.
+
+## Tags
+
+A tag is the name of a **field** in double round brackets:
+
+```text
+Dear ((Applicant name)),
+```
+
+The fields you can use are listed in the **dictionary** for your correspondence. Use the names
+exactly as the dictionary gives them. Capitals and extra spaces do not matter, and it does not
+matter if your word processor turns a straight quote or a hyphen into a curly quote or a dash.
+
+A tag takes the formatting of the text it starts in. To print a name in bold, make the tag bold.
+
+### How each kind of field is printed
+
+You never write a date or number format. The field's type decides.
+
+| Type | The data holds | The letter shows |
+|---|---|---|
+| Text | `Alex Applicant` | Alex Applicant |
+| Date | `2027-06-19` | 19 June 2027 |
+| Number | `12500` | 12,500 |
+| Money | `45` | 45.00 |
+| Address | a list of lines | each line under the last |
+| Yes or no | `true` or `false` | nothing: see [Conditions](#conditions) |
+
+**Write the currency yourself.** A money field prints the number and no sign, so that the
+currency is never chosen for you: `£((Licence fee))` prints £45.00. In a table of amounts, put the
+currency in the column heading.
+
+**Text keeps its shape.** If the text supplied has a line break, the letter has one. If it has a
+blank line, the letter starts a new paragraph there, in the same style as the paragraph your tag
+is in.
+
+## Conditions
+
+To show something only to some people, put it between `((if ...))` and `((end if))`. The field
+must be a yes or no field.
+
+**Around whole paragraphs, lists and tables**, put each tag on a line of its own. Both lines
+disappear from the finished letter, so nothing is left behind:
+
+```text
+((if Dangerous props))
+Fire, knives and other dangerous props
+Because your event includes dangerous props, you must:
+  • have a trained fire marshal present
+  • keep the audience 5 metres away
+((end if))
+```
+
+**Inside a sentence**, put both tags in the same paragraph:
+
+```text
+Pay £((Licence fee)) by ((Fee due date))((if Dangerous props)), and bring your fire plan((end if)).
+```
+
+A condition can go inside another. The inner content is shown only when both are yes.
+
+A template never says "not". If you need to show something when a thing is *not* so, ask for a
+yes or no field that says it directly, such as `Licence refused` beside `Licence approved`.
+
+A field used only inside a condition does not need a value for people the condition hides it
+from.
+
+## Where tags work
+
+| Place | Works |
+|---|---|
+| The body, tables, lists, text boxes | Yes |
+| Headers and footers, including first-page and even-page ones | Yes |
+| Footnotes and endnotes | Yes |
+| Inside a link's visible text | Yes |
+| A picture's description, a link's address, the document's title, a chart | No. You are told, because the tag would be left exactly as typed |
+
+## What stops a template being accepted
+
+When you upload a template it is **compiled**: checked against the dictionary and against the
+rules below. You get back every problem at once, each with where it is and what to do. The full
+list is in [diagnostics.md](diagnostics.md).
+
+The ones you are most likely to meet:
+
+| You did this | You are told |
+|---|---|
+| Misspelt a field's name | `HG1001`, with the nearest real field |
+| Opened `((` and never closed it | `HG1002` |
+| Forgot an `((end if))`, or put it in a different table cell from its `((if ...))` | `HG1004` |
+| Used a yes or no field as a value | `HG1007` |
+| Put a condition's tags so that they cut a page number or a table of contents in half | `HG1011` |
+| Put a section break inside a condition | `HG1012` |
+| Left tracked changes or comments in the document | `HG0006`, `HG0007`. They would be sent to every recipient |
+
+**Warnings** do not stop anything. They point at something that may be a mistake: `{{Name}}` or
+`(Name))` where you may have meant `((Name))`, or hidden text, which travels inside the file.
+
+## What you cannot do yet
+
+- Repeat a table row for each item in a list.
+- Reuse one letterhead or footer across many templates.
+- Show or hide a whole table row or column.
+- Write the characters `((something))` so that they print as they are.
+
+## Before you upload
+
+1. Accept or reject every tracked change, and turn tracking off.
+2. Delete every comment.
+3. Save as "Word Document (.docx)". Not `.doc`, not `.docm`, not "Strict Open XML".

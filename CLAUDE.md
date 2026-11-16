@@ -70,6 +70,11 @@ decide day-to-day code.
   tag is how an author writes one, `((Member name))`. Code, diagnostics and docs keep to that.
 - **A new diagnostic code gets a row in [docs/diagnostics.md](docs/diagnostics.md).** A test fails
   until it has one.
+- **A change an author or a developer would notice changes their guide in the same PR.**
+  [docs/writing-a-template.md](docs/writing-a-template.md) is for authors and
+  [docs/using-heliograph.md](docs/using-heliograph.md) for developers. Both list what is not built
+  yet: take a line out when you build it. The code in the README is compiled and run from
+  `tests/Heliograph.Tests/Examples/Quickstart.cs`, and a test fails if the two differ.
 - **A rendered file must always be a valid Word document.** Where a tag's placement would break a
   table, a list or a link, the template is refused at compile with the place and a fix. Nothing
   is guessed and nothing broken is produced. Each awkward placement found gets a test in
