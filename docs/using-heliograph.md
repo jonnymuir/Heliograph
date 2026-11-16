@@ -101,6 +101,39 @@ var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultur
 `Render` returns `Docx`, the finished file as bytes, or null with `Diagnostics` saying what is
 wrong with the data. Only fields the template uses for this recipient are checked.
 
+## Stored correspondence
+
+`Correspondence.Compile` works on files you hand it. `CorrespondenceLibrary` is for a system that
+keeps correspondence for authors: it is what the API, the MCP server and Heliograph.Umbraco are
+built on, so a person and an agent get the same operations.
+
+```csharp
+var library = new CorrespondenceLibrary(store, dictionaries, TimeProvider.System);
+
+var save = await library.SaveDraftAsync("decision-letter", content, expectedRevision: 0);
+var publish = await library.PublishAsync("decision-letter");          // refused if it does not compile
+var render = await library.RenderAsync("decision-letter", recipient, settings);
+// render.Version is the version this person was sent. Record it with what you send.
+```
+
+- **An author works on a draft.** A draft is saved even when it does not compile, with its
+  diagnostics, so unfinished work is kept. `CheckAsync` compiles it again and `PreviewAsync`
+  renders it with sample data.
+- **Publishing makes a numbered version that never changes.** It keeps the dictionary as it was
+  that day, so a later change to the dictionary cannot change what the version renders.
+- **Only a published version is rendered for a recipient.** `RenderAsync` takes the newest, or
+  the one you name, and says which it used.
+- **A dictionary has a name and is shared.** Each correspondence names the one it uses.
+  `CheckDictionaryAsync` compiles every draft that uses a dictionary, so whoever changes it sees
+  what breaks before anything is published.
+- **A save says the revision it started from.** If someone else saved first, nothing is saved
+  and `HG3006` says so.
+
+You supply two things. `ICorrespondenceStore` keeps drafts and versions: files, a database, a
+document library. `IDictionarySource` supplies each dictionary as JSON, from wherever the data is
+known. Both only keep and return; the rules are in the library. Put your own authorisation in
+front of every one of these operations.
+
 ## PDF
 
 The core library makes no PDF. It defines `IPdfConverter`, and a host chooses a route.

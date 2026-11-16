@@ -64,3 +64,18 @@ needed.
 |---|---|---|
 | `HG2001` | The data has no value, or a null value, for a field the template uses. | Supply the value under the field's key. |
 | `HG2002` | The value is not of the field's type: text that is not a string, a date that is not an ISO date (`2027-06-19`), an address that is not a list of text lines, a number or an amount of money that is not a number, a yes or no that is not `true` or `false`. | Supply the value in the form the fix describes. |
+
+## Stored correspondence (HG3)
+
+Reported by `CorrespondenceLibrary`, which keeps drafts and published versions in the host's
+store. None of these has a place in a file.
+
+| Code | Meaning | What to do |
+|---|---|---|
+| `HG3001` | There is no correspondence with this key. | List the correspondence to see the keys that exist. |
+| `HG3002` | The correspondence has no published version, or not the version asked for. A draft is never rendered for a recipient. | Publish it, or ask for a version that exists. |
+| `HG3003` | The correspondence names a dictionary that does not exist. | Choose one of the dictionaries that exist. |
+| `HG3004` | The dictionary the correspondence names cannot be read. The message says why. | Whoever maintains the dictionary corrects it. |
+| `HG3005` | The correspondence has no parts. It is saved as a draft and cannot be published. | Add a document, an email or a text message. |
+| `HG3006` | Someone else saved the draft after this copy was read, so this copy was not saved. | Read it again, make the change to that copy, and save it. |
+| `HG3007` | The key cannot be used: it is not lower-case letters, digits and hyphens, starting with a letter. | Use a key such as `decision-letter`. |

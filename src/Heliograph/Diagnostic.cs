@@ -24,7 +24,7 @@ public enum DiagnosticSeverity
 /// <param name="Excerpt">The start of the paragraph's or line's text.</param>
 public sealed record DiagnosticLocation(string Part, int Paragraph, string Excerpt);
 
-/// <summary>The stable codes. HG0 is a refused file, HG1 a template problem, HG2 a problem with one recipient's data.</summary>
+/// <summary>The stable codes. HG0 is a refused file, HG1 a template problem, HG2 a problem with one recipient's data, HG3 a problem with stored correspondence.</summary>
 public static class DiagnosticCodes
 {
     public const string NotAWordDocument = "HG0001";
@@ -59,6 +59,14 @@ public static class DiagnosticCodes
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";
+
+    public const string CorrespondenceNotFound = "HG3001";
+    public const string NotPublished = "HG3002";
+    public const string DictionaryNotFound = "HG3003";
+    public const string DictionaryNotValid = "HG3004";
+    public const string NoParts = "HG3005";
+    public const string ChangedElsewhere = "HG3006";
+    public const string KeyNotValid = "HG3007";
 }
 
 internal static class DiagnosticLists
