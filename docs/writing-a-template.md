@@ -98,6 +98,49 @@ across pages.
 - A list's fields only work in a table row. The row cannot be a heading row, be merged with the
   row above or below, or hold a footnote, and it cannot use fields from two lists.
 
+## Emails
+
+The email part is a subject and a body. Kept as one file, the first line is the subject:
+
+```text
+Subject: Your licence for ((Event name))
+
+Dear ((Applicant name)),
+
+# Your licence has been approved
+
+Your licence number is **((Licence number))**. Pay £((Licence fee)) by ((Fee due date)).
+
+- Bring this email
+- Bring your [risk assessment](https://www.example.org/risk)
+
+Licensing Team
+National Juggling Federation
+```
+
+The body uses a small, fixed set of Markdown, chosen because every email program shows it
+properly and screen readers can use it:
+
+| You write | You get |
+|---|---|
+| `# Heading` and `## Smaller heading` | Real headings |
+| `- item` or `* item` | A bulleted list |
+| `1. item` | A numbered list. The numbers are worked out for you |
+| `**words**` | Bold |
+| `[words](https://...)` | A link |
+| `---` on a line of its own | A rule across the page |
+| A blank line | A new paragraph |
+| A new line | A line break in the same paragraph |
+
+- Tags and conditions work as everywhere else. A subject can use them too, but stays one line.
+- A line that uses a list's fields is repeated for each item, so `- ((Date)): £((Amount))` makes
+  a bullet for each.
+- A link's address must start with `https://`, `http://`, `mailto:` or `tel:`, written by you. A
+  tag can fill in the rest: `[Pay](https://pay.example.org/((Reference)))`.
+- Nothing else is Markdown. Anything a recipient's data holds is printed as plain text, whatever
+  it looks like.
+- Every email is also produced as plain text, for programs that want it.
+
 ## Text messages
 
 The SMS part of a correspondence is plain text. Tags, and conditions inside a sentence, work as

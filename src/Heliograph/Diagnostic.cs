@@ -19,7 +19,7 @@ public enum DiagnosticSeverity
 }
 
 /// <summary>A place in a document an author can find without tooling.</summary>
-/// <param name="Part">In a document: "document", "header", "footer", "footnotes" or "endnotes". In a message: "sms".</param>
+/// <param name="Part">In a document: "document", "header", "footer", "footnotes" or "endnotes". In a message: "sms", "email" or "email subject".</param>
 /// <param name="Paragraph">The paragraph's position in that part, counting from 1. In a message, the line.</param>
 /// <param name="Excerpt">The start of the paragraph's or line's text.</param>
 public sealed record DiagnosticLocation(string Part, int Paragraph, string Excerpt);
@@ -54,6 +54,8 @@ public static class DiagnosticCodes
     public const string RowMixesLists = "HG1015";
     public const string RowCannotRepeat = "HG1016";
     public const string SmsNeedsUnicode = "HG1017";
+    public const string EmailSubjectMissing = "HG1018";
+    public const string EmailLinkNotSafe = "HG1019";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

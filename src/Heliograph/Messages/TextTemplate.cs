@@ -15,9 +15,12 @@ internal sealed record IfNode(Field Field, List<TextNode> Nodes) : TextNode;
 internal abstract record TextBlock;
 
 /// <summary>A line. When it uses a list's fields it is repeated for each item of <paramref name="RepeatsOver"/>.</summary>
-internal sealed record TextLine(List<TextNode> Nodes, Field? RepeatsOver) : TextBlock;
+internal sealed record TextLine(List<TextNode> Nodes, Field? RepeatsOver, DiagnosticLocation Location) : TextBlock;
 
 internal sealed record TextCondition(Field Field, List<TextBlock> Blocks) : TextBlock;
+
+/// <summary>One line of a rendered message, with the line of the template it came from.</summary>
+internal sealed record RenderedLine(TextLine Source, List<TextPiece> Pieces);
 
 /// <summary>A piece of a rendered line. <paramref name="IsData"/> marks what came from the recipient's data, not the author.</summary>
 internal readonly record struct TextPiece(string Text, bool IsData);
@@ -41,20 +44,30 @@ internal sealed class TextTemplate
     /// <summary>The text the author wrote, without tags, line by line, for checks on the wording itself.</summary>
     public IEnumerable<(int Line, string Text)> Wording { get; private init; } = [];
 
-    public static TextTemplate Parse(string source, string part, FieldDictionary dictionary, List<Diagnostic> diagnostics)
+    /// <summary>Every line of the template, including those inside conditions.</summary>
+    public IEnumerable<TextLine> Lines => All(_blocks);
+
+    /// <summary>
+    /// Reads a template. <paramref name="linesBefore"/> is how many lines of the author's file come before this
+    /// text, so that a problem is reported at the line the author will find it on.
+    /// </summary>
+    public static TextTemplate Parse(string source, string part, FieldDictionary dictionary, List<Diagnostic> diagnostics, int linesBefore = 0)
     {
         var parser = new TextParser(part, dictionary, diagnostics);
         var lines = source.ReplaceLineEndings("\n").TrimEnd('\n').Split('\n');
         for (var index = 0; index < lines.Length; index++)
         {
-            parser.Line(lines[index], index + 1);
+            parser.Line(lines[index], linesBefore + index + 1);
         }
 
         return new TextTemplate(parser.Finish(), dictionary) { Wording = parser.Wording };
     }
 
+    private static IEnumerable<TextLine> All(IEnumerable<TextBlock> blocks) => blocks.SelectMany(block =>
+        block is TextCondition condition ? All(condition.Blocks) : [(TextLine)block]);
+
     /// <summary>The message for one recipient, as lines, each a list of pieces.</summary>
-    public List<List<TextPiece>> Render(RecipientData recipient)
+    public List<RenderedLine> Render(RecipientData recipient)
     {
         var writer = new Writer(recipient, _dictionary);
         writer.Blocks(_blocks);
@@ -64,7 +77,7 @@ internal sealed class TextTemplate
     /// <summary>Writes the lines of one recipient's message.</summary>
     private sealed class Writer(RecipientData recipient, FieldDictionary dictionary)
     {
-        public List<List<TextPiece>> Lines { get; } = [];
+        public List<RenderedLine> Lines { get; } = [];
 
         public void Blocks(List<TextBlock> blocks)
         {
@@ -89,25 +102,25 @@ internal sealed class TextTemplate
             var line = (TextLine)block;
             if (line.RepeatsOver is not { } list)
             {
-                Line(line.Nodes, null);
+                Line(line, null);
                 return;
             }
 
             var items = recipient.Items(list) ?? [];
             for (var number = 1; number <= items.Count; number++)
             {
-                Line(line.Nodes, new ItemScope(list, items[number - 1], number));
+                Line(line, new ItemScope(list, items[number - 1], number));
             }
         }
 
-        private void Line(List<TextNode> nodes, ItemScope? item)
+        private void Line(TextLine line, ItemScope? item)
         {
             var pieces = new List<TextPiece>();
 
             // A line that was all condition leaves no blank line behind once a condition in it is hidden.
-            if (!Evaluate(nodes, item, pieces) || pieces.Any(piece => !string.IsNullOrWhiteSpace(piece.Text)))
+            if (!Evaluate(line.Nodes, item, pieces) || pieces.Any(piece => !string.IsNullOrWhiteSpace(piece.Text)))
             {
-                Lines.Add(pieces);
+                Lines.Add(new RenderedLine(line, pieces));
             }
         }
 

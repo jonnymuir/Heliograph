@@ -42,7 +42,7 @@ internal sealed class TextParser(string part, FieldDictionary dictionary, List<D
             return;
         }
 
-        _blocks.Add(new TextLine(nodes, lists.FirstOrDefault()));
+        _blocks.Add(new TextLine(nodes, lists.FirstOrDefault(), location));
     }
 
     /// <summary>The finished blocks. A condition still open is reported where it was opened.</summary>

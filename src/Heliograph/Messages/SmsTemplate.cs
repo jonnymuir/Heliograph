@@ -81,7 +81,7 @@ public sealed class CompiledSms
             return new SmsRender(null, default, 0, recipient.Diagnostics);
         }
 
-        var text = string.Join('\n', lines.Select(line => string.Concat(line.Select(piece => piece.Text))));
+        var text = string.Join('\n', lines.Select(line => string.Concat(line.Pieces.Select(piece => piece.Text))));
         var (encoding, segments) = SmsLength.Measure(text);
         return new SmsRender(text, encoding, segments, []);
     }
