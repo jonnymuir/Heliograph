@@ -20,10 +20,10 @@ internal static class ValueWriter
     public static void Write(XElement slot, IReadOnlyList<string[]> paragraphs)
     {
         var run = slot.Parent!;
-        var first = run.Name == Word + "r" ? run.Parent : null;
+        var first = run.Name == Word + "r" && !InsideField(slot) ? run.Parent : null;
         if (paragraphs.Count == 1 || first?.Name != Word + "p")
         {
-            // Not directly in a paragraph (inside a link, say), so a paragraph cannot be split here: a blank line instead.
+            // Not directly in a paragraph (inside a link or a field, say), so a paragraph cannot be split here: a blank line instead.
             slot.ReplaceWith(Elements([.. paragraphs.SelectMany((lines, index) => index == 0 ? lines : lines.Prepend(""))]));
             return;
         }
@@ -40,6 +40,14 @@ internal static class ValueWriter
             previous.AddAfterSelf(paragraph);
             previous = paragraph;
         }
+    }
+
+    /// <summary>Whether a field has begun before this point and not yet ended. Splitting a paragraph there would cut the field in two.</summary>
+    private static bool InsideField(XElement slot)
+    {
+        var marks = slot.Document!.Descendants(Word + "fldChar").Where(mark => mark.IsBefore(slot))
+            .Select(mark => (string?)mark.Attribute(Word + "fldCharType")).ToList();
+        return marks.Count(type => type == "begin") > marks.Count(type => type == "end");
     }
 
     /// <summary>The paragraph that takes everything after the slot. A section break belongs to it, as the last one.</summary>

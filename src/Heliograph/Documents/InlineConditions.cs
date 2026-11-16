@@ -73,6 +73,12 @@ internal static class InlineConditions
             }
 
             var between = start.NodesAfterSelf().TakeWhile(node => node != marker).ToList();
+            if (ConditionContent.Problem(between, "", location) is { } problem)
+            {
+                diagnostics.Add(problem);
+                continue;
+            }
+
             between.ForEach(node => node.Remove());
             start.ReplaceWith(new XElement(Conditions.Element, start.Attribute("key"), new XAttribute("inline", true), between));
             marker.Remove();

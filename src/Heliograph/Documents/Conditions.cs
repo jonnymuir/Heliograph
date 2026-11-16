@@ -20,6 +20,7 @@ internal static class Conditions
     public static void Wrap(IEnumerable<ConditionMarker> markers, List<Diagnostic> diagnostics)
     {
         var pairs = Pair(markers, diagnostics);
+        diagnostics.AddRange(pairs.SelectMany(Problems));
         if (diagnostics.Errors() > 0)
         {
             // The template will not compile, and a condition already reported as wrong has no field to wrap on.
@@ -34,6 +35,19 @@ internal static class Conditions
             start.Paragraph.ReplaceWith(new XElement(Element, new XAttribute("key", start.Tag.Field!.Key), between));
             end.Paragraph.Remove();
         }
+    }
+
+    /// <summary>What is wrong with a matched pair: with either tag line, or with what lies between them.</summary>
+    private static IEnumerable<Diagnostic> Problems((ConditionMarker Start, ConditionMarker End) pair)
+    {
+        var between = pair.Start.Paragraph.NodesAfterSelf().TakeWhile(node => node != pair.End.Paragraph).ToList();
+        Diagnostic?[] found =
+        [
+            ConditionContent.TagLineProblem(pair.Start),
+            ConditionContent.TagLineProblem(pair.End),
+            ConditionContent.Problem(between, On(pair.Start.Tag), pair.Start.Location),
+        ];
+        return found.OfType<Diagnostic>().Take(1);
     }
 
     /// <summary>Matches each end to the condition it closes, and reports every tag left without a partner.</summary>

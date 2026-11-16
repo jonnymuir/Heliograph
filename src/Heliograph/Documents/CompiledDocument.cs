@@ -17,6 +17,16 @@ public sealed class CompiledDocument
         _fields = dictionary.Fields.ToDictionary(field => field.Key);
     }
 
+    /// <summary>Every field in the dictionary the template was compiled against.</summary>
+    internal IReadOnlyCollection<Field> Fields => _fields.Values;
+
+    /// <summary>The yes or no fields the template's conditions depend on, each once.</summary>
+    internal IReadOnlyList<Field> ConditionFields => [.. _parts.Values
+        .SelectMany(part => part.Descendants(Conditions.Element))
+        .Select(condition => (string)condition.Attribute("key")!)
+        .Distinct()
+        .Select(key => _fields[key])];
+
     /// <summary>
     /// Fills the template in for one recipient. The data is a JSON object keyed by the dictionary's keys. When
     /// the data is wrong, no document is produced and every problem is reported.
@@ -26,6 +36,15 @@ public sealed class CompiledDocument
         ArgumentNullException.ThrowIfNull(settings);
 
         var recipient = new RecipientData(data, settings);
+        var rendered = RenderParts(recipient);
+        return recipient.Diagnostics.Count == 0
+            ? new DocumentRender(_package.Save(rendered), [])
+            : new DocumentRender(null, recipient.Diagnostics);
+    }
+
+    /// <summary>Each part filled in for one recipient, before it is packed into a file.</summary>
+    internal Dictionary<string, XDocument> RenderParts(RecipientData recipient)
+    {
         var rendered = new Dictionary<string, XDocument>();
         foreach (var (name, template) in _parts)
         {
@@ -43,9 +62,7 @@ public sealed class CompiledDocument
             rendered[name] = part;
         }
 
-        return recipient.Diagnostics.Count == 0
-            ? new DocumentRender(_package.Save(rendered), [])
-            : new DocumentRender(null, recipient.Diagnostics);
+        return rendered;
     }
 }
 

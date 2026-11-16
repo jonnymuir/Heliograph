@@ -37,8 +37,13 @@ internal sealed class RandomTemplate
         ("((Applicant address))", "12 Tumble Lane\nClubtown\nZZ1 1ZZ"),
     ];
 
+    private const string FieldStart = "<w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText> PAGE </w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"separate\"/></w:r>";
+    private const string FieldEnd = "<w:r><w:fldChar w:fldCharType=\"end\"/></w:r>";
+
     private readonly Random _random;
     private readonly List<Block> _blocks;
+    private readonly Stack<int> _openBookmarks = new();
+    private int _bookmarks;
 
     public RandomTemplate(int seed)
     {
@@ -47,6 +52,9 @@ internal sealed class RandomTemplate
         // One template in three is given a single mistake: a condition tag with no partner, or with one in the wrong place.
         MistakeAt = _random.Next(3) == 0 ? _random.Next(1, 12) : 0;
         _blocks = Blocks(depth: 0);
+
+        // A bookmark still open is closed at the very end, however deep inside conditions and tables it was opened.
+        _blocks.AddRange(_openBookmarks.Select(id => new Bookmark(id, IsStart: false)));
         HasMistake = MistakeAt > 0 && _choices >= MistakeAt;
     }
 
@@ -118,6 +126,12 @@ internal sealed class RandomTemplate
                 _ when Mistake() => BlockMistake(depth),
                 < 10 when depth < 3 => new Condition(Pick(YesNoFields), Blocks(depth + 1)),
                 < 14 when depth < 2 => NewTable(depth),
+                < 17 => new PageLine(),
+
+                // A bookmark's two halves are dropped wherever the generator happens to be, so a condition or a
+                // table often holds one and not the other. Never last, because a table cell must end with a paragraph.
+                < 20 when count > 1 => new Bookmark(OpenBookmark(), IsStart: true),
+                < 23 when count > 1 && _openBookmarks.Count > 0 => new Bookmark(_openBookmarks.Pop(), IsStart: false),
                 _ => new Paragraph(Sentence(depth: 0)),
             });
         }
@@ -125,11 +139,21 @@ internal sealed class RandomTemplate
         return blocks;
     }
 
-    /// <summary>A condition tag on a line of its own with no partner, or a pair that opens inside a table and closes after it.</summary>
-    private Block BlockMistake(int depth) => _random.Next(3) switch
+    private int OpenBookmark()
+    {
+        _openBookmarks.Push(++_bookmarks);
+        return _bookmarks;
+    }
+
+    /// <summary>
+    /// A condition tag on a line of its own with no partner, a pair that opens inside a table and closes after it,
+    /// or a pair that ends in the middle of a field.
+    /// </summary>
+    private Block BlockMistake(int depth) => _random.Next(4) switch
     {
         0 => new Paragraph([new Stray($"((if {Pick(YesNoFields)}))")]),
         1 => new Paragraph([new Stray("((end if))")]),
+        2 => new CutField(Pick(YesNoFields)),
         _ => new Straddle(Pick(YesNoFields), NewTable(Math.Max(depth, 1))),
     };
 
@@ -264,6 +288,33 @@ internal sealed class RandomTemplate
 
         public override IEnumerable<string> Expected(int answers) =>
             Yes(answers, Field) ? Blocks.SelectMany(block => block.Expected(answers)) : [];
+    }
+
+    /// <summary>A line with a whole page-number field in it, which a condition may show or hide but must not cut.</summary>
+    private sealed record PageLine : Block
+    {
+        public override string Xml(Func<string, string> paragraph) =>
+            $"<w:p><w:r><w:t xml:space=\"preserve\">Page </w:t></w:r>{FieldStart}<w:r><w:t>1</w:t></w:r>{FieldEnd}<w:r><w:t xml:space=\"preserve\"> of this letter.</w:t></w:r></w:p>";
+
+        public override IEnumerable<string> Expected(int answers) => ["Page 1 of this letter."];
+    }
+
+    /// <summary>One half of a bookmark, sitting between paragraphs. It prints nothing.</summary>
+    private sealed record Bookmark(int Id, bool IsStart) : Block
+    {
+        public override string Xml(Func<string, string> paragraph) =>
+            IsStart ? $"<w:bookmarkStart w:id=\"{Id}\" w:name=\"mark{Id}\"/>" : $"<w:bookmarkEnd w:id=\"{Id}\"/>";
+
+        public override IEnumerable<string> Expected(int answers) => [];
+    }
+
+    /// <summary>The mistake of a condition that holds the start of a field whose end comes after the condition.</summary>
+    private sealed record CutField(string Field) : Block
+    {
+        public override string Xml(Func<string, string> paragraph) =>
+            paragraph($"((if {Field}))") + $"<w:p>{FieldStart}<w:r><w:t>1</w:t></w:r></w:p>" + paragraph("((end if))") + $"<w:p>{FieldEnd}</w:p>";
+
+        public override IEnumerable<string> Expected(int answers) => throw new InvalidOperationException("A template with a mistake has no finished letter.");
     }
 
     /// <summary>The mistake of opening a condition in a table's first cell and closing it after the table.</summary>

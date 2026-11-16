@@ -42,9 +42,7 @@ internal static class ConditionResolver
             paragraph.Remove();
         }
 
-        // A table cell must end with a paragraph, even when everything in it was hidden.
-        var emptied = part.Descendants(Word + "tc").Where(cell => cell.Elements().LastOrDefault()?.Name != Word + "p").ToList();
-        emptied.ForEach(cell => cell.Add(new XElement(Word + "p")));
+        DocumentMender.Mend(part);
     }
 
     /// <summary>Whether a paragraph shows nothing: no text, no picture, no break, and no section break to carry.</summary>

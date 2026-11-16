@@ -29,7 +29,7 @@ internal static class WordRules
     private static IEnumerable<string> Problems(XDocument part)
     {
         var elements = part.Descendants().ToList();
-        return Leftovers(elements).Concat(Tables(elements)).Concat(Stories(elements)).Concat(Fields(elements));
+        return Leftovers(elements).Concat(Tables(elements)).Concat(Stories(elements)).Concat(Fields(elements)).Concat(Bookmarks(elements));
     }
 
     private static IEnumerable<string> Leftovers(List<XElement> elements)
@@ -81,6 +81,17 @@ internal static class WordRules
         if (depth != 0)
         {
             yield return "a field begins and never ends";
+        }
+    }
+
+    /// <summary>A bookmark has a start and an end with the same number. Half of one is debris.</summary>
+    private static IEnumerable<string> Bookmarks(List<XElement> elements)
+    {
+        var starts = elements.Where(e => e.Name == W + "bookmarkStart").Select(e => (string?)e.Attribute(W + "id")).ToHashSet();
+        var ends = elements.Where(e => e.Name == W + "bookmarkEnd").Select(e => (string?)e.Attribute(W + "id")).ToHashSet();
+        if (!starts.SetEquals(ends))
+        {
+            yield return "a bookmark has a start with no end, or an end with no start";
         }
     }
 
