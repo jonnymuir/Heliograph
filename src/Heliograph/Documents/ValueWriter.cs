@@ -10,7 +10,7 @@ namespace Heliograph.Documents;
 /// </summary>
 internal static class ValueWriter
 {
-    private static readonly XNamespace Word = TagScanner.Word;
+    private static readonly XNamespace Word = WordXml.Word;
 
     /// <summary>
     /// One paragraph goes into the slot's run. More than one splits the paragraph the slot is in: the text before
@@ -33,8 +33,8 @@ internal static class ValueWriter
         var previous = first;
         for (var index = 1; index < paragraphs.Count; index++)
         {
-            var paragraph = index == paragraphs.Count - 1 ? last : LikeParagraph(first);
-            var text = LikeRun(run);
+            var paragraph = index == paragraphs.Count - 1 ? last : WordXml.LikeParagraph(first);
+            var text = WordXml.LikeRun(run);
             text.Add(Elements(paragraphs[index]));
             (paragraph.Element(Word + "pPr") is { } properties ? properties.AddAfterSelf : (Action<object>)paragraph.AddFirst)(text);
             previous.AddAfterSelf(paragraph);
@@ -45,11 +45,11 @@ internal static class ValueWriter
     /// <summary>The paragraph that takes everything after the slot. A section break belongs to it, as the last one.</summary>
     private static XElement Tail(XElement paragraph, XElement run, XElement slot)
     {
-        var tail = LikeParagraph(paragraph);
-        var rest = LikeRun(run);
-        Move(slot.NodesAfterSelf(), rest);
+        var tail = WordXml.LikeParagraph(paragraph);
+        var rest = WordXml.LikeRun(run);
+        WordXml.Move(slot.NodesAfterSelf(), rest);
         tail.Add(rest);
-        Move(run.NodesAfterSelf(), tail);
+        WordXml.Move(run.NodesAfterSelf(), tail);
         if (paragraph.Element(Word + "pPr")?.Element(Word + "sectPr") is { } section)
         {
             section.Remove();
@@ -65,31 +65,6 @@ internal static class ValueWriter
         paragraph.AddFirst(properties);
         return properties;
     }
-
-    private static void Move(IEnumerable<XNode> nodes, XElement to)
-    {
-        foreach (var node in nodes.ToList())
-        {
-            node.Remove();
-            to.Add(node);
-        }
-    }
-
-    /// <summary>An empty paragraph with the same style and layout, but not the section break, which only one may hold.</summary>
-    private static XElement LikeParagraph(XElement paragraph)
-    {
-        var like = new XElement(Word + "p");
-        if (paragraph.Element(Word + "pPr") is { } properties)
-        {
-            like.Add(new XElement(properties.Name, properties.Elements().Where(e => e.Name != Word + "sectPr")));
-        }
-
-        return like;
-    }
-
-    /// <summary>An empty run with the same formatting.</summary>
-    private static XElement LikeRun(XElement run) =>
-        new(Word + "r", run.Element(Word + "rPr") is { } formatting ? new XElement(formatting) : null);
 
     /// <summary>The elements that print lines inside a run: text, with a line break between lines.</summary>
     private static IEnumerable<XElement> Elements(string[] lines)

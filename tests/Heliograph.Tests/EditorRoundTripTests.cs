@@ -22,4 +22,20 @@ public class EditorRoundTripTests
         TestDocx.HeaderAndFooterParagraphs(after).Where(text => text.Length > 0)
             .Should().Contain(TestDocx.HeaderAndFooterParagraphs(before).Where(text => text.Length > 0));
     }
+
+    [EditorFact]
+    public void A_letter_with_a_table_cell_emptied_by_a_condition_still_opens_in_LibreOffice()
+    {
+        var dictionary = new FieldDictionary([new Field("Owes money", "owesMoney", FieldType.YesNo)]);
+        using var stream = new TestDocx().RawParagraph(
+            "<w:tbl><w:tr><w:tc><w:p><w:r><w:t>((if Owes money))</w:t></w:r></w:p><w:p><w:r><w:t>You owe us.</w:t></w:r></w:p>"
+            + "<w:p><w:r><w:t>((end if))</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Kept.</w:t></w:r></w:p></w:tc></w:tr></w:tbl>")
+            .Paragraph("After.").Build();
+        var rendered = DocumentTemplate.Compile(stream, dictionary).Document!
+            .Render(Benchmark.Data("""{ "owesMoney": false }"""), Benchmark.British).Docx!;
+
+        var reopened = LibreOffice.OpenAndSave(rendered);
+
+        TestDocx.Paragraphs(reopened).Should().Contain("Kept.").And.Contain("After.").And.NotContain("You owe us.");
+    }
 }

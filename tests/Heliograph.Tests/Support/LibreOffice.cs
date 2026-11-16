@@ -25,6 +25,22 @@ internal static class LibreOffice
 
     public static bool Required => Environment.GetEnvironmentVariable(RequiredVariable) == "1";
 
+    /// <summary>Opens a .docx held in memory in LibreOffice and saves it again. It throws if LibreOffice cannot read it.</summary>
+    public static byte[] OpenAndSave(byte[] docx)
+    {
+        var work = Directory.CreateTempSubdirectory("heliograph-rendered-");
+        try
+        {
+            var path = Path.Combine(work.FullName, "rendered.docx");
+            File.WriteAllBytes(path, docx);
+            return OpenAndSave(path);
+        }
+        finally
+        {
+            work.Delete(recursive: true);
+        }
+    }
+
     /// <summary>Opens the file in LibreOffice and saves it again as .docx, returning what LibreOffice wrote.</summary>
     public static byte[] OpenAndSave(string docxPath)
     {

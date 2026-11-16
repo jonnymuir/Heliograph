@@ -170,7 +170,9 @@ another PDF route can be added without changing the core.
   `((Member name))`, matched without regard to capitals or extra spaces. It is the only way of
   marking that an author can add in every editor and that survived a save in both LibreOffice
   and Microsoft 365. A tag an editor has stored in several pieces is joined before it is read.
-- **A condition has a start and an end tag**: `((if Owes money))` and `((end if))`.
+- **A condition has a start and an end tag**: `((if Owes money))` and `((end if))`. Each on a
+  line of its own, they govern the paragraphs, lists and tables between them. In the same
+  paragraph, they govern part of a sentence.
 - **A table row repeats without a marker.** A row that uses values from a list repeats once for
   each item, because the dictionary already says those values belong to the list. The compiler
   reports which rows it will repeat and the preview shows them.

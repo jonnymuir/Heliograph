@@ -75,12 +75,13 @@ started together by an Aspire host. Then its own first release.
 
 Steps 2.1 and 2.2 are done for the document part. The decision letter compiles and renders for
 all three samples: whole sections shown or hidden on a yes or no field, one condition inside
-another, money and numbers printed by type, and data for the other outcome left out.
+another, money and numbers printed by type, and data for the other outcome left out. A condition
+can also sit inside a sentence.
 
 Known limits, each reported by a diagnostic or listed here until it is lifted:
 
-- A condition's tags must each be on a line of their own. A condition inside a sentence is not
-  supported yet, and the email and SMS parts will need it.
+- A whole table row or column cannot be shown or hidden by a condition, because a tag lives in a
+  paragraph and a paragraph lives in a cell. A table, or the content of a cell, can.
 - Supplied text that falls inside a link cannot start a new paragraph there, so a blank line in it
   prints as a blank line.
 

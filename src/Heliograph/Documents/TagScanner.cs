@@ -8,10 +8,11 @@ namespace Heliograph.Documents;
 /// </summary>
 internal static class TagScanner
 {
-    public static readonly XNamespace Word = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    private static readonly XNamespace Word = WordXml.Word;
+    private static readonly XNamespace Slot = WordXml.Slot;
 
-    /// <summary>The namespace of what a compiled template holds in place of tags. It never appears in a file.</summary>
-    public static readonly XNamespace Slot = "urn:heliograph:compiled";
+    /// <summary>The element a compiled template holds where a value is printed.</summary>
+    public static readonly XName Value = WordXml.Slot + "value";
 
     private const int ExcerptLength = 80;
 
@@ -48,35 +49,29 @@ internal static class TagScanner
             var location = new DiagnosticLocation(label, number, joined.Length <= ExcerptLength ? joined : joined[..ExcerptLength] + "...");
             var before = diagnostics.Count;
             var tags = new TagReader(dictionary, location, diagnostics).Read(joined);
-            if (tags.Any(tag => tag.Kind != TagKind.Value))
+            if (IsConditionAloneOnItsLine(tags, joined))
             {
-                Condition(paragraph, tags, joined, location);
-            }
-            else if (diagnostics.Count == before)
-            {
-                // Last first, so replacing one tag does not move the text before it.
-                tags.AsEnumerable().Reverse().ToList().ForEach(tag => Replace(texts, tag));
-                texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
-            }
-        }
-
-        /// <summary>An ((if ...)) or ((end if)) must be the only thing in its paragraph, which then marks a boundary.</summary>
-        private void Condition(XElement paragraph, List<Tag> tags, string joined, DiagnosticLocation location)
-        {
-            if (tags.Count == 1 && joined.Trim().Length == tags[0].End - tags[0].Start)
-            {
-                Markers.Add(new ConditionMarker(paragraph, tags[0], location));
+                // Alone on its line, the tag marks a boundary between paragraphs.
+                Markers.Add(new ConditionMarker(paragraph, tags[0], location, Reported: diagnostics.Count > before));
                 return;
             }
 
-            diagnostics.Add(new Diagnostic(DiagnosticCodes.ConditionTagNotAlone,
-                "An ((if ...)) or ((end if)) tag shares its paragraph with other text or tags.",
-                "Put each ((if ...)) and ((end if)) on a line of its own, with nothing else in that paragraph.", location));
+            Markers.AddRange(InlineConditions.Unpaired(tags, location, diagnostics)
+                .Select(tag => new ConditionMarker(paragraph, tag, location, Reported: true)));
+            if (diagnostics.Count > before)
+            {
+                return;
+            }
+
+            // Last first, so replacing one tag does not move the text before it.
+            tags.AsEnumerable().Reverse().ToList().ForEach(tag => Replace(texts, tag));
+            texts.Where(t => t.Value.Length == 0).ToList().ForEach(t => t.Remove());
+            InlineConditions.Wrap(paragraph, location, diagnostics);
         }
     }
 
     /// <summary>
-    /// Puts a slot where the tag starts, in the run that holds its first character, so the value takes that run's
+    /// Puts a stand-in where the tag starts, in the run that holds its first character, so a value takes that run's
     /// formatting. The tag's own characters are removed from every piece of text they were spread across.
     /// </summary>
     private static void Replace(List<XElement> texts, Tag tag)
@@ -102,7 +97,7 @@ internal static class TagScanner
 
             placed = true;
             Keep(text, value[..from]);
-            var slot = new XElement(Slot + "value", new XAttribute("key", tag.Field!.Key));
+            var slot = Standing(tag);
             text.AddAfterSelf(slot);
             if (to < value.Length)
             {
@@ -110,6 +105,17 @@ internal static class TagScanner
             }
         }
     }
+
+    private static bool IsConditionAloneOnItsLine(List<Tag> tags, string paragraphText) =>
+        tags is [{ Kind: not TagKind.Value } only] && paragraphText.Trim().Length == only.End - only.Start;
+
+    /// <summary>The element that stands in for a tag until the template is rendered.</summary>
+    private static XElement Standing(Tag tag) => tag.Kind switch
+    {
+        TagKind.If => new XElement(InlineConditions.Start, new XAttribute("key", tag.Field!.Key)),
+        TagKind.EndIf => new XElement(InlineConditions.End),
+        _ => new XElement(Value, new XAttribute("key", tag.Field!.Key)),
+    };
 
     private static XElement Keep(XElement text, string value)
     {
