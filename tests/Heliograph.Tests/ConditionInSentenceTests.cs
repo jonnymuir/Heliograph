@@ -75,15 +75,21 @@ public class ConditionInSentenceTests
         Paragraphs(docx, """{ "owesMoney": false, "isAMember": true }""").Should().Equal("Before.", "B", "After.");
     }
 
-    [Theory]
-    [InlineData("((if Owes money))A((end if))((if Is a member))((end if))")]
-    [InlineData("((if Is a member))((end if))((if Owes money))A((end if))")]
-    [InlineData("((if Is a member))((if Owes money))A((end if))((end if)) ")]
-    public void A_paragraph_left_empty_goes_whichever_order_its_conditions_come_in(string paragraph)
+    [Fact]
+    public void A_paragraph_left_empty_goes_whichever_order_its_conditions_come_in()
     {
-        var docx = TestDocx.With("Before.", paragraph, "After.");
+        string[] sentences =
+        [
+            "((if Owes money))A((end if))((if Is a member))((end if))",
+            "((if Is a member))((end if))((if Owes money))A((end if))",
+            "((if Is a member))((if Owes money))A((end if))((end if)) ",
+        ];
 
-        Paragraphs(docx, """{ "owesMoney": false, "isAMember": true }""").Should().Equal("Before.", "After.");
+        foreach (var sentence in sentences)
+        {
+            Paragraphs(TestDocx.With("Before.", sentence, "After."), """{ "owesMoney": false, "isAMember": true }""")
+                .Should().Equal(["Before.", "After."], sentence);
+        }
     }
 
     [Fact]

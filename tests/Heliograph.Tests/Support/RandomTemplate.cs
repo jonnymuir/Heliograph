@@ -66,7 +66,7 @@ internal sealed class RandomTemplate
         }
         """);
 
-    public byte[] Docx() => new TestDocx().RawParagraph(string.Concat(_blocks.Select(Xml))).Build().ToArray();
+    public byte[] Docx() => new TestDocx().RawParagraph(string.Concat(_blocks.Select(block => block.Xml(ParagraphXml)))).Build().ToArray();
 
     /// <summary>The text of every paragraph the finished letter should have, in order, for one recipient.</summary>
     public IReadOnlyList<string> Expected(int answers) => [.. _blocks.SelectMany(block => block.Expected(answers))];
@@ -168,18 +168,6 @@ internal sealed class RandomTemplate
         return tokens;
     }
 
-    private string Xml(Block block) => block switch
-    {
-        Paragraph paragraph => ParagraphXml(string.Concat(paragraph.Tokens.Select(token => token.Written))),
-        Condition condition => ParagraphXml($"((if {condition.Field}))") + string.Concat(condition.Blocks.Select(Xml)) + ParagraphXml("((end if))"),
-        Straddle straddle => InFirstCell(Xml(straddle.Table), ParagraphXml($"((if {straddle.Field}))")) + ParagraphXml("((end if))"),
-        Table table => "<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>"
-                       + string.Concat(table.Rows.Select(row => "<w:tr>" + string.Concat(row.Select(cell =>
-                           "<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>" + string.Concat(cell.Select(Xml)) + "</w:tc>")) + "</w:tr>"))
-                       + "</w:tbl>",
-        _ => throw new InvalidOperationException(),
-    };
-
     private static string InFirstCell(string table, string paragraph)
     {
         const string cellStart = "</w:tcPr>";
@@ -245,11 +233,16 @@ internal sealed class RandomTemplate
 
     private abstract record Block
     {
+        /// <summary>The block as WordprocessingML. <paramref name="paragraph"/> writes one paragraph of text.</summary>
+        public abstract string Xml(Func<string, string> paragraph);
+
         public abstract IEnumerable<string> Expected(int answers);
     }
 
     private sealed record Paragraph(List<Token> Tokens) : Block
     {
+        public override string Xml(Func<string, string> paragraph) => paragraph(string.Concat(Tokens.Select(token => token.Written)));
+
         public override IEnumerable<string> Expected(int answers)
         {
             var hidden = false;
@@ -266,6 +259,9 @@ internal sealed class RandomTemplate
 
     private sealed record Condition(string Field, List<Block> Blocks) : Block
     {
+        public override string Xml(Func<string, string> paragraph) =>
+            paragraph($"((if {Field}))") + string.Concat(Blocks.Select(block => block.Xml(paragraph))) + paragraph("((end if))");
+
         public override IEnumerable<string> Expected(int answers) =>
             Yes(answers, Field) ? Blocks.SelectMany(block => block.Expected(answers)) : [];
     }
@@ -273,11 +269,20 @@ internal sealed class RandomTemplate
     /// <summary>The mistake of opening a condition in a table's first cell and closing it after the table.</summary>
     private sealed record Straddle(string Field, Table Table) : Block
     {
+        public override string Xml(Func<string, string> paragraph) =>
+            InFirstCell(Table.Xml(paragraph), paragraph($"((if {Field}))")) + paragraph("((end if))");
+
         public override IEnumerable<string> Expected(int answers) => throw new InvalidOperationException("A template with a mistake has no finished letter.");
     }
 
     private sealed record Table(List<List<List<Block>>> Rows) : Block
     {
+        private const string Start = "<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>";
+        private const string CellStart = "<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>";
+
+        public override string Xml(Func<string, string> paragraph) => Start + string.Concat(Rows.Select(row =>
+            "<w:tr>" + string.Concat(row.Select(cell => CellStart + string.Concat(cell.Select(block => block.Xml(paragraph))) + "</w:tc>")) + "</w:tr>")) + "</w:tbl>";
+
         // A cell always keeps one paragraph, empty if everything in it was hidden.
         public override IEnumerable<string> Expected(int answers) => Rows.SelectMany(row => row.SelectMany(cell =>
             cell.SelectMany(block => block.Expected(answers)).DefaultIfEmpty("")));
