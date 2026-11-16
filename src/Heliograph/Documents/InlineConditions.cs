@@ -60,29 +60,34 @@ internal static class InlineConditions
             if (marker.Name == Start)
             {
                 open.Push(marker);
-                continue;
             }
-
-            var start = open.Pop();
-            if (start.Parent != marker.Parent)
-            {
-                diagnostics.Add(new Diagnostic(DiagnosticCodes.ConditionNotClosed,
-                    "A condition starts and ends in different parts of the sentence, such as inside and outside a link.",
-                    "Move ((if ...)) and ((end if)) so that both are inside the link, or both outside it.", location));
-                continue;
-            }
-
-            var between = start.NodesAfterSelf().TakeWhile(node => node != marker).ToList();
-            if (ConditionContent.Problem(between, "", location) is { } problem)
+            else if (WrapPair(open.Pop(), marker, location) is { } problem)
             {
                 diagnostics.Add(problem);
-                continue;
             }
-
-            between.ForEach(node => node.Remove());
-            start.ReplaceWith(new XElement(Conditions.Element, start.Attribute("key"), new XAttribute("inline", true), between));
-            marker.Remove();
         }
+    }
+
+    /// <summary>Wraps what lies between one start and its end, or says why it cannot be a condition.</summary>
+    private static Diagnostic? WrapPair(XElement start, XElement end, DiagnosticLocation location)
+    {
+        if (start.Parent != end.Parent)
+        {
+            return new Diagnostic(DiagnosticCodes.ConditionNotClosed,
+                "A condition starts and ends in different parts of the sentence, such as inside and outside a link.",
+                "Move ((if ...)) and ((end if)) so that both are inside the link, or both outside it.", location);
+        }
+
+        var between = start.NodesAfterSelf().TakeWhile(node => node != end).ToList();
+        if (ConditionContent.Problem(between, "", location) is { } problem)
+        {
+            return problem;
+        }
+
+        between.ForEach(node => node.Remove());
+        start.ReplaceWith(new XElement(Conditions.Element, start.Attribute("key"), new XAttribute("inline", true), between));
+        end.Remove();
+        return null;
     }
 
     /// <summary>Moves a marker out of its run to sit between two runs: what came before it, and what came after.</summary>

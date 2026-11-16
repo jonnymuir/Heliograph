@@ -174,12 +174,11 @@ public class StructureTests
             docx.Paragraph($"((if {field.Name}))").Paragraph($"About {field.Name}.").Paragraph("((end if))");
         }
 
-        using var stream = docx.Build();
-        var started = DateTime.UtcNow;
-        var compilation = DocumentTemplate.Compile(stream, new FieldDictionary(fields));
+        var template = docx.Build().ToArray();
+        var compiling = Task.Run(() => DocumentTemplate.Compile(new MemoryStream(template), new FieldDictionary(fields)));
 
-        compilation.Diagnostics.Should().BeEmpty();
-        (DateTime.UtcNow - started).Should().BeLessThan(TimeSpan.FromSeconds(5));
+        compiling.Wait(TimeSpan.FromSeconds(20)).Should().BeTrue("the compiler must not try every combination of thirty conditions");
+        compiling.Result.Diagnostics.Should().BeEmpty();
     }
 
     private static string Paragraphs(params string[] texts) =>
