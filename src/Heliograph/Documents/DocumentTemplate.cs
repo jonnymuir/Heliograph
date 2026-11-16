@@ -10,7 +10,7 @@ public static class DocumentTemplate
     /// Checks a .docx against the dictionary. A template that compiles can be rendered; one that does not comes
     /// back with every problem found, each with its place and a fix.
     /// </summary>
-    public static DocumentCompilation Compile(Stream docx, DataDictionary dictionary)
+    public static DocumentCompilation Compile(Stream docx, FieldDictionary dictionary)
     {
         ArgumentNullException.ThrowIfNull(docx);
         ArgumentNullException.ThrowIfNull(dictionary);
@@ -38,7 +38,7 @@ public static class DocumentTemplate
             foreach (var (name, label) in parts)
             {
                 var xml = package.Xml(name)!;
-                FieldScanner.Compile(xml, label, dictionary, diagnostics);
+                TagScanner.Compile(xml, label, dictionary, diagnostics);
                 compiled[name] = xml;
             }
 

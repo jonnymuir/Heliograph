@@ -23,8 +23,8 @@ public static class DiagnosticCodes
     public const string TooLarge = "HG0005";
 
     public const string UnknownField = "HG1001";
-    public const string FieldNotClosed = "HG1002";
-    public const string FieldHasNoName = "HG1003";
+    public const string TagNotClosed = "HG1002";
+    public const string TagHasNoName = "HG1003";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

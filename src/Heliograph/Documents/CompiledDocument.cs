@@ -8,13 +8,13 @@ public sealed class CompiledDocument
 {
     private readonly DocxPackage _package;
     private readonly IReadOnlyDictionary<string, XDocument> _parts;
-    private readonly Dictionary<string, DictionaryEntry> _entries;
+    private readonly Dictionary<string, Field> _fields;
 
-    internal CompiledDocument(DocxPackage package, IReadOnlyDictionary<string, XDocument> parts, DataDictionary dictionary)
+    internal CompiledDocument(DocxPackage package, IReadOnlyDictionary<string, XDocument> parts, FieldDictionary dictionary)
     {
         _package = package;
         _parts = parts;
-        _entries = dictionary.Entries.ToDictionary(entry => entry.Key);
+        _fields = dictionary.Fields.ToDictionary(field => field.Key);
     }
 
     /// <summary>
@@ -31,10 +31,10 @@ public sealed class CompiledDocument
         {
             // A copy, so the compiled template is never changed and can be shared.
             var part = new XDocument(template);
-            foreach (var slot in part.Descendants(FieldScanner.Slot + "value").ToList())
+            foreach (var slot in part.Descendants(TagScanner.Slot + "value").ToList())
             {
-                var entry = _entries[(string)slot.Attribute("key")!];
-                if (Lines(entry, data, settings, diagnostics) is { } lines)
+                var field = _fields[(string)slot.Attribute("key")!];
+                if (Lines(field, data, settings, diagnostics) is { } lines)
                 {
                     slot.ReplaceWith(ValueWriter.Elements(lines));
                 }
@@ -49,30 +49,30 @@ public sealed class CompiledDocument
     }
 
     private static IReadOnlyList<string>? Lines(
-        DictionaryEntry entry, JsonElement data, RenderSettings settings, Dictionary<string, Diagnostic> diagnostics)
+        Field field, JsonElement data, RenderSettings settings, Dictionary<string, Diagnostic> diagnostics)
     {
-        if (data.ValueKind != JsonValueKind.Object || !data.TryGetProperty(entry.Key, out var value)
+        if (data.ValueKind != JsonValueKind.Object || !data.TryGetProperty(field.Key, out var value)
                                                    || value.ValueKind == JsonValueKind.Null)
         {
-            diagnostics.TryAdd(entry.Key, new Diagnostic(DiagnosticCodes.ValueMissing,
-                $"The data has no value for \"{entry.Name}\".", $"Supply {entry.Key} in the data."));
+            diagnostics.TryAdd(field.Key, new Diagnostic(DiagnosticCodes.ValueMissing,
+                $"The data has no value for \"{field.Name}\".", $"Supply {field.Key} in the data."));
             return null;
         }
 
-        var lines = ValueWriter.Lines(entry, value, settings);
+        var lines = ValueWriter.Lines(field, value, settings);
         if (lines is null)
         {
-            diagnostics.TryAdd(entry.Key, new Diagnostic(DiagnosticCodes.ValueWrongType,
-                $"The value for \"{entry.Name}\" is not {Described(entry.Type)}.", ValueWriter.Expected(entry)));
+            diagnostics.TryAdd(field.Key, new Diagnostic(DiagnosticCodes.ValueWrongType,
+                $"The value for \"{field.Name}\" is not {Described(field.Type)}.", ValueWriter.Expected(field)));
         }
 
         return lines;
     }
 
-    private static string Described(EntryType type) => type switch
+    private static string Described(FieldType type) => type switch
     {
-        EntryType.Date => "a date",
-        EntryType.Address => "an address",
+        FieldType.Date => "a date",
+        FieldType.Address => "an address",
         _ => "text",
     };
 }

@@ -12,8 +12,8 @@ internal static class Benchmark
     public static string PathTo(string letter, string file) =>
         Path.Combine(AppContext.BaseDirectory, "benchmarks", letter, file);
 
-    public static DataDictionary Dictionary(string letter) =>
-        DataDictionary.Parse(File.ReadAllText(PathTo(letter, "dictionary.json")));
+    public static FieldDictionary Dictionary(string letter) =>
+        FieldDictionary.Parse(File.ReadAllText(PathTo(letter, "dictionary.json")));
 
     public static JsonElement Sample(string letter, string sample) =>
         JsonDocument.Parse(File.ReadAllText(PathTo(letter, Path.Combine("samples", sample + ".json")))).RootElement;

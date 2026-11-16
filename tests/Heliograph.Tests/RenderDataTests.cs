@@ -6,12 +6,12 @@ namespace Heliograph.Tests;
 /// <summary>What happens when the data for one recipient is wrong, or tries to be more than data.</summary>
 public class RenderDataTests
 {
-    private static readonly DataDictionary Dictionary = new(
+    private static readonly FieldDictionary Dictionary = new(
     [
-        new DictionaryEntry("Applicant name", "applicantName", EntryType.Text),
-        new DictionaryEntry("Event date", "eventDate", EntryType.Date),
-        new DictionaryEntry("Applicant address", "applicantAddress", EntryType.Address),
-        new DictionaryEntry("Notes", "notes", EntryType.Text),
+        new Field("Applicant name", "applicantName", FieldType.Text),
+        new Field("Event date", "eventDate", FieldType.Date),
+        new Field("Applicant address", "applicantAddress", FieldType.Address),
+        new Field("Notes", "notes", FieldType.Text),
     ]);
 
     [Fact]

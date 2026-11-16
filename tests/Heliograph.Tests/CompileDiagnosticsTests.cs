@@ -6,10 +6,10 @@ namespace Heliograph.Tests;
 /// <summary>What an author is told when a template is wrong, and what is quietly accepted.</summary>
 public class CompileDiagnosticsTests
 {
-    private static readonly DataDictionary Dictionary = new(
+    private static readonly FieldDictionary Dictionary = new(
     [
-        new DictionaryEntry("Applicant name", "applicantName", EntryType.Text),
-        new DictionaryEntry("Event date", "eventDate", EntryType.Date),
+        new Field("Applicant name", "applicantName", FieldType.Text),
+        new Field("Event date", "eventDate", FieldType.Date),
     ]);
 
     [Fact]
@@ -52,19 +52,19 @@ public class CompileDiagnosticsTests
     }
 
     [Fact]
-    public void A_field_that_is_opened_and_never_closed_is_reported()
+    public void A_tag_that_is_opened_and_never_closed_is_reported()
     {
         var diagnostic = Compile(TestDocx.With("Dear ((Applicant name,")).Diagnostics.Single();
 
-        diagnostic.Code.Should().Be(DiagnosticCodes.FieldNotClosed);
+        diagnostic.Code.Should().Be(DiagnosticCodes.TagNotClosed);
     }
 
     [Fact]
-    public void A_field_with_no_name_is_reported()
+    public void A_tag_with_nothing_in_it_is_reported()
     {
         var diagnostic = Compile(TestDocx.With("Dear (( )),")).Diagnostics.Single();
 
-        diagnostic.Code.Should().Be(DiagnosticCodes.FieldHasNoName);
+        diagnostic.Code.Should().Be(DiagnosticCodes.TagHasNoName);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class CompileDiagnosticsTests
     }
 
     [Fact]
-    public void A_field_an_editor_has_stored_in_several_pieces_is_still_read()
+    public void A_tag_an_editor_has_stored_in_several_pieces_is_still_read()
     {
         var compilation = Compile(new TestDocx().Paragraph("Dear ((Appli", "cant na", "me)),"));
 

@@ -11,25 +11,25 @@ internal static class ValueWriter
 {
     private static readonly string[] LineEndings = ["\r\n", "\n", "\r"];
 
-    /// <summary>The lines to print, or null when the value is not of the entry's type.</summary>
-    public static IReadOnlyList<string>? Lines(DictionaryEntry entry, JsonElement value, RenderSettings settings) => entry.Type switch
+    /// <summary>The lines to print, or null when the value is not of the field's type.</summary>
+    public static IReadOnlyList<string>? Lines(Field field, JsonElement value, RenderSettings settings) => field.Type switch
     {
-        EntryType.Text when value.ValueKind == JsonValueKind.String => value.GetString()!.Split(LineEndings, StringSplitOptions.None),
-        EntryType.Date when value.ValueKind == JsonValueKind.String && DateOnly.TryParseExact(
+        FieldType.Text when value.ValueKind == JsonValueKind.String => value.GetString()!.Split(LineEndings, StringSplitOptions.None),
+        FieldType.Date when value.ValueKind == JsonValueKind.String && DateOnly.TryParseExact(
                 value.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             => [date.ToString("d MMMM yyyy", settings.Culture)],
-        EntryType.Address when value.ValueKind == JsonValueKind.Array
+        FieldType.Address when value.ValueKind == JsonValueKind.Array
                                && value.EnumerateArray().All(line => line.ValueKind == JsonValueKind.String)
             => [.. value.EnumerateArray().Select(line => line.GetString()!)],
         _ => null,
     };
 
     /// <summary>How to supply a value of this type, for the fix on a wrong-type diagnostic.</summary>
-    public static string Expected(DictionaryEntry entry) => entry.Type switch
+    public static string Expected(Field field) => field.Type switch
     {
-        EntryType.Date => $"Supply {entry.Key} as a date in the form 2027-06-19.",
-        EntryType.Address => $"Supply {entry.Key} as a list of address lines, each of them text.",
-        _ => $"Supply {entry.Key} as text.",
+        FieldType.Date => $"Supply {field.Key} as a date in the form 2027-06-19.",
+        FieldType.Address => $"Supply {field.Key} as a list of address lines, each of them text.",
+        _ => $"Supply {field.Key} as text.",
     };
 
     /// <summary>
@@ -42,12 +42,12 @@ internal static class ValueWriter
         {
             if (index > 0)
             {
-                yield return new XElement(FieldScanner.Word + "br");
+                yield return new XElement(TagScanner.Word + "br");
             }
 
             if (Printable(lines[index]) is { Length: > 0 } text)
             {
-                yield return new XElement(FieldScanner.Word + "t", new XAttribute(XNamespace.Xml + "space", "preserve"), text);
+                yield return new XElement(TagScanner.Word + "t", new XAttribute(XNamespace.Xml + "space", "preserve"), text);
             }
         }
     }

@@ -1,5 +1,5 @@
 {
-  "entries": [
+  "fields": [
     { "name": "Applicant name", "key": "applicantName", "type": "text" },
     { "name": "Applicant address", "key": "applicantAddress", "type": "address" },
     { "name": "Application reference", "key": "applicationReference", "type": "text" },

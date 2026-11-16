@@ -8,7 +8,7 @@ namespace Heliograph.Tests;
 public class UnsafeFileTests
 {
     private const string OfficeRelationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-    private static readonly DataDictionary Dictionary = new([new DictionaryEntry("Applicant name", "applicantName", EntryType.Text)]);
+    private static readonly FieldDictionary Dictionary = new([new Field("Applicant name", "applicantName", FieldType.Text)]);
 
     [Fact]
     public void A_file_that_is_not_a_Word_document_is_refused()
