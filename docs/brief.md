@@ -102,7 +102,7 @@ Wayfinder blueprint's fields), the dictionary is generated from that source, not
 | Part | The template is | The output is |
 |---|---|---|
 | Document (post, PDF, print) | A word-processor file in Office Open XML (`.docx`, ISO/IEC 29500) | The merged `.docx`, and a PDF through a converter the host chooses |
-| Email | A subject and a body in CommonMark | Sanitised HTML in one accessible layout, with a plain-text alternative |
+| Email | A subject, and a body in a small, fixed set of Markdown | HTML in one accessible layout, with a plain-text alternative |
 | SMS | Plain text | Plain text, with its length, encoding and number of segments |
 
 Each is the first implementation behind a seam, not a limit. OpenDocument, a messaging app or
@@ -183,6 +183,10 @@ another PDF route can be added without changing the core.
 - **A generated sheet lists every tag in the dictionary, ready to copy**, and the compiler names
   the nearest match for one that is misspelt. That is how an author avoids typing from memory in
   an unmodified editor.
+- **The email body is a small, fixed set of Markdown**, not all of CommonMark: headings, lists, a
+  rule, bold and links. Every piece of it is valid CommonMark. A fixed set needs no library, can
+  be shown by every email program, and makes the HTML safe by construction, because nothing an
+  author or a recipient's data can write turns into anything else.
 - **The dictionary is a JSON file.** It needs no extra library, and every host and agent can
   read and write it.
 - **The principles and constraints above.**

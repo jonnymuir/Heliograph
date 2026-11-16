@@ -30,8 +30,15 @@ internal sealed class TagReader(FieldDictionary dictionary, DiagnosticLocation l
     {
         var tags = new List<Tag>();
         var position = 0;
-        while (text.IndexOf(Open, position, StringComparison.Ordinal) is var open and >= 0)
+        while (text.IndexOf(Open, position, StringComparison.Ordinal) is var found and >= 0)
         {
+            // In "(see ((Reference)))" or a link "](((Reference)))", the tag is the innermost pair of brackets.
+            var open = found;
+            while (open + Open.Length < text.Length && text[open + Open.Length] == '(')
+            {
+                open++;
+            }
+
             var close = text.IndexOf(Close, open + Open.Length, StringComparison.Ordinal);
             if (close < 0)
             {

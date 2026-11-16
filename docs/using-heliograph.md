@@ -89,6 +89,24 @@ wrong with the data. Only fields the template uses for this recipient are checke
 The full example, which a test compiles and runs, is in the
 [README](https://github.com/jonnymuir/Heliograph#in-code).
 
+## Emails
+
+```csharp
+var compilation = EmailTemplate.Compile(File.ReadAllText(emailPath), dictionary);   // first line "Subject: ..."
+var compilation = EmailTemplate.Compile(subject, body, dictionary);                 // or the two apart
+var render = compilation.Email!.Render(recipient, settings);
+```
+
+`Render` returns `Subject`, `Html` and `Text`. `Html` is a whole document with inline styles, in
+the render's language. `Text` is the same body as plain text. Send both, as the two alternatives
+of one message.
+
+- The subject is always one line. Control characters from the data become spaces, so data cannot
+  add a header.
+- Everything is escaped. The only markup is what the template's author wrote.
+- A value inside a link's address is percent-encoded, so it can fill in part of an address and
+  never change where the link goes.
+
 ## Text messages
 
 The SMS part is a string, compiled and rendered the same way.

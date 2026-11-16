@@ -56,6 +56,7 @@ the template is not stopped, because the text may be what they meant.
 | The editor turned `'` into `’`, `"` into `”` or `-` into `–` inside the name | Read as the same field | S1 | Works |
 | An invisible character in the name (soft hyphen, zero-width space), usually from pasting | Read as the same field | S1 | Works |
 | The tag is stored in several pieces | Joined and read | S2 | Works |
+| The tag is inside ordinary brackets, `(((Name)))` | Read: the tag is the innermost pair | S2 | Works |
 | Formatting changes half-way through the tag | Read. The value prints in the formatting the tag starts with | S2 | Works |
 | A spelling or grammar mark, or a bookmark, sits inside the tag | Read | S2 | Works |
 | A tab or a line break sits inside the tag | Reported as an unknown field, with the nearest field suggested | S2 | Refused |
@@ -170,6 +171,23 @@ the template is not stopped, because the text may be what they meant.
 | Hidden text | Pointed out, as a warning. Sent, still hidden | S3 | Works |
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
 | An embedded file or object | Refused | S5 | Refused |
+
+## 4. Messages
+
+Emails and text messages are plain text, so they cannot be structurally broken. What can go wrong
+is that data becomes something more than text.
+
+| Case | What happens | Strategy | Status |
+|---|---|---|---|
+| Data that looks like a tag, like HTML or like Markdown | Printed as text | | Works |
+| Data at the start of a line that looks like a heading or a bullet | Printed as text: structure comes only from the template | | Works |
+| A line break in data used in an email's subject | Becomes a space, so data cannot add a header | | Works |
+| A link whose address starts with a value, or with `javascript:` or `data:` | Refused | S6 | Refused |
+| A link whose address has a condition inside it | Refused: for some recipients it could become an unsafe address | S6 | Refused |
+| A value inside a link's address | Percent-encoded | | Works |
+| A curly quote or other costly character in a text message template | Pointed out, as a warning | S3 | Works |
+| A recipient's name that pushes a text message over its limit | Not preventable at compile. The render says how many messages it will be | | Works |
+| An email longer than a mail program will show in full | Not checked | | Planned |
 
 ## How the register is tested
 

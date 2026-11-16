@@ -24,7 +24,7 @@ A heliograph sent messages by flashing sunlight across long distances.
 | Lists that repeat a table row | Yes |
 | A letterhead or footer shared between templates | Not yet |
 | SMS part | Yes: the same tags and conditions, with the encoding and the number of messages it will be charged as |
-| Email part | Not yet |
+| Email part | Yes: a subject and a body in a small set of Markdown, rendered as accessible HTML and as plain text |
 | PDF output | Not yet |
 | A package on nuget.org | Not yet. Reference the project from a checkout |
 

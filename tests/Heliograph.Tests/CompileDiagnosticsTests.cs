@@ -102,6 +102,15 @@ public class CompileDiagnosticsTests
     }
 
     [Fact]
+    public void A_tag_inside_ordinary_brackets_is_still_a_tag()
+    {
+        var compilation = Compile(TestDocx.With("Your name (((Applicant name))) and date ( ((Event date)) )."));
+
+        compilation.Diagnostics.Should().BeEmpty();
+        Render(compilation).Should().Contain("Your name (Alex Applicant) and date ( 19 June 2027 ).");
+    }
+
+    [Fact]
     public void Text_around_a_field_is_kept()
     {
         var compilation = Compile(new TestDocx().Paragraph("Before ", "((Applicant name)) after, and on ", "((Event date))", "."));
