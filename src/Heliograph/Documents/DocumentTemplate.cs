@@ -63,9 +63,15 @@ public static class DocumentTemplate
         }
 
         diagnostics.AddRange(TemplateSweep.Run(package, compiled, parts.Select(part => part.Name).ToHashSet(), dictionary));
-        return diagnostics.Errors() > 0
-            ? new DocumentCompilation(null, diagnostics)
-            : new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), diagnostics);
+        if (diagnostics.Errors() > 0)
+        {
+            return new DocumentCompilation(null, diagnostics);
+        }
+
+        var document = new CompiledDocument(package, compiled, dictionary);
+        return Rehearsal.Run(document) is { } broken
+            ? new DocumentCompilation(null, [.. diagnostics, broken])
+            : new DocumentCompilation(document, diagnostics);
     }
 
     private static Diagnostic Refused(DocxRefusal? refusal) => refusal switch

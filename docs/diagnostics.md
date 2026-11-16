@@ -42,6 +42,9 @@ paragraph's text.
 | `HG1007` | A yes or no field is used as a value. It cannot be printed. | Wrap the content in `((if Field))` and `((end if))`, or have the words supplied as a text field. |
 | `HG1008` | A tag is somewhere tags are not filled in: a picture's description, a field's code, the address of a link, the document's title, a chart. It would be left exactly as typed. An error when it names a real field or is a condition tag; a warning when it only looks like a tag. | Move it into the text of the document, or remove it. |
 | `HG1009` | Warning. Text looks like a tag for a real field but is not written as one: the field's name with the wrong brackets, such as `{{Name}}` or `[[Name]]`, or with one bracket missing. It will be printed as it is. | Write it as `((Name))`. If it is ordinary text, leave it. |
+| `HG1011` | A condition starts or ends in the middle of a field, such as a page number, a cross-reference or a table of contents. Hiding it would leave half a field. | Move the tags so the whole field is inside the condition, or outside it. |
+| `HG1012` | A condition contains a section break, or one of its tags is on the line that carries one. Hiding it would merge two sections, changing page size, margins, headers and footers. | Move the section break outside the condition, and off the tags' lines. |
+| `HG1013` | The compiler rehearsed the template for every outcome of its conditions, and one would produce a document that cannot be opened. The message says which outcome and what is wrong. This is a fault in Heliograph, caught before any letter is made. | Report it with the template. Moving the nearest condition may work round it. |
 | `HG1010` | Warning. The document has hidden text, which is sent to every recipient inside the file. Reported once for each part. | Delete it if recipients should not have it. |
 
 ## Data that is wrong for one recipient (HG2)

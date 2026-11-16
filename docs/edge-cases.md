@@ -30,8 +30,8 @@ Each case below is handled by one of these. "Compile" means the author is told a
 | S4 | **Leave no tag behind.** After compiling, every part of the file is searched, text and attributes alike. A tag found anywhere it was not processed is reported with the place. | Compile |
 | S5 | **Refuse what cannot be honoured.** A file whose format or content cannot be handled safely is refused whole, with what to do. | Compile |
 | S6 | **Check structure before accepting.** A condition must not cut through anything that has a start and an end of its own: a table cell, a link, a field, a bookmark, a section. | Compile |
-| S7 | **Rehearse every outcome.** The compiler renders the template for every combination of its conditions, with the most awkward values each field's type allows, and checks each result. A template that would fail for some recipient fails here instead. | Compile |
-| S8 | **Mend what is always safe to mend.** Where the format demands something trivial, such as a paragraph in an emptied table cell, the renderer adds it. | Render, proved by S7 |
+| S7 | **Rehearse every outcome.** The compiler renders the template for every combination of its conditions, with the most awkward values each field's type allows, and checks each result against the rules Word enforces. A template that would fail for some recipient fails here instead. Up to six conditions, every combination is tried; beyond that, all yes, all no, and each one on its own. | Compile |
+| S8 | **Mend what is always safe to mend.** Where the format demands something trivial, such as a paragraph in an emptied table cell, the renderer adds it. Half a bookmark is removed. | Render, proved by S7 |
 | S9 | **Strip what must never travel.** Names of people recorded in the file are emptied. | Compile |
 | S10 | **Check the checker.** In the tests, independent judges look at what the engine produces. See [How the register is tested](#how-the-register-is-tested). | Tests |
 
@@ -103,16 +103,16 @@ the template is not stopped, because the text may be what they meant.
 | A condition inside a condition | Inner content needs both | | Works |
 | A condition hides some items of a list | The rest stay a list | | Works |
 | A condition hides everything in a table cell | The cell keeps an empty paragraph | S8 | Mended |
-| A condition hides everything in a header, a footer, a text box or a footnote | The format requires a paragraph there | S8 | Planned |
+| A condition hides everything in a header, a footer, a text box or a footnote | It keeps an empty paragraph | S8 | Mended |
 | A sentence that was all condition is hidden | Its paragraph is removed, leaving no gap | | Works |
 | A sentence holds several conditions and ends up empty | Its paragraph is removed, whichever order the conditions come in | | Works |
 | A condition opens in one table cell or row and closes in another, or opens in a table and closes outside | Refused | S6 | Refused |
 | A condition opens inside a link and closes outside it | Refused | S6 | Refused |
 | A condition opens inside a content control and closes outside it | Refused, with a message that mentions a link | S6 | Refused |
 | A condition opens in the body and closes in a header or footer | Each is reported as unpaired | S6 | Refused |
-| A condition starts or ends in the middle of a field, such as a page number, a cross-reference or a table of contents | The field is cut in two and the file may not open | S6 | Planned |
-| A condition contains the start of a bookmark and not its end, or the reverse | A cross-reference to it breaks | S6 | Planned |
-| A condition contains a section break, or a tag line carries one | Sections merge, changing page size, margins and headers | S6 | Planned |
+| A condition starts or ends in the middle of a field, such as a page number, a cross-reference or a table of contents | Refused | S6 | Refused |
+| A condition contains the start of a bookmark and not its end, or the reverse | The half left behind is removed. Not refused, because editors add bookmarks of their own that an author cannot see | S6 | Mended |
+| A condition contains a section break, or a tag line carries one | Refused | S6 | Refused |
 | A whole table row or column should appear only sometimes | Cannot be written: a tag lives in a paragraph, and a paragraph in a cell | | Planned with lists |
 | An unpaired tag: an end with no start, or a start with no end | Reported once, where the mistake is | S3 | Refused |
 
@@ -124,7 +124,7 @@ the template is not stopped, because the text may be what they meant.
 | Characters the format cannot hold, such as control characters | Dropped | | Works |
 | Text with a blank line, in an ordinary paragraph, a heading, a list item or a table cell | New paragraphs in the same style | | Works |
 | Text with a blank line, where the tag is inside a link | A blank line, not a new paragraph | | Works |
-| Text with a blank line, where the tag is inside a field's result | The paragraph is split through the field | S7 | Planned |
+| Text with a blank line, where the tag is inside a field's result | A blank line, not a new paragraph | S7 | Works |
 | A paragraph that carries a section break is split by a value | The break stays on the last paragraph | | Works, untested |
 | An empty value | Prints nothing. A paragraph that held only the tag stays as a blank line | | Works |
 | A tag inside text a field recalculates, such as a table of contents | Filled in, then overwritten when the field updates | S6 | Planned |
@@ -171,7 +171,7 @@ A case in the register is one somebody thought of. These tests do not depend on 
 
 | Judge | What it does | What it cannot see |
 |---|---|---|
-| **A model of the letter** | Hundreds of templates are built at random: paragraphs and tables, conditions around and inside them to any depth, values everywhere, text chopped into runs. The generator works out from its own plan what each letter should say for each recipient, and that is compared with what the engine printed. A third of the templates are given one misplaced condition tag and must be refused. | Anything the generator does not build: links, fields, footnotes, pictures, lists |
+| **A model of the letter** | Hundreds of templates are built at random: paragraphs and tables, conditions around and inside them to any depth, values everywhere, page-number fields, bookmarks whose two halves land anywhere, text chopped into runs. The generator works out from its own plan what each letter should say for each recipient, and that is compared with what the engine printed. A third of the templates are given one misplaced condition tag and must be refused. | Anything the generator does not build: links, footnotes, headers, pictures, section breaks, lists |
 | **Chopping** | Each benchmark letter is chopped into runs at random points, with random formatting, and must read the same. | Structure, which chopping does not change |
 | **The format's schema** | Every rendered file is validated with Microsoft's Open XML validator, and must have no problem the template did not have. | Rules Word enforces beyond the schema. It accepts a table cell with no paragraph, which Word reports as an unreadable file |
 | **Word's stricter rules** | Written by hand in the tests, apart from the engine: a cell ends with a paragraph, a table has rows, a header, footer, note or text box is not empty, a field that begins also ends, and nothing of the compiler's is left in the file. | Any rule nobody has written down. No copy of Word has checked them |
@@ -180,6 +180,11 @@ A case in the register is one somebody thought of. These tests do not depend on 
 A failure names a seed, so the document that caused it can be built again:
 `new RandomTemplate(seed)`. The first run of the model found the case above about a sentence
 with several conditions.
+
+The rehearsal (S7) cannot be reached by a test while the engine is right, because everything it
+would catch is refused or mended first. It was proved by breaking the engine: with the mend for
+an emptied table cell removed, a template that empties a cell is refused at compile, naming the
+outcome and the broken rule.
 
 ## What can only be known at render time
 

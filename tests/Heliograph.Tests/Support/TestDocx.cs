@@ -17,6 +17,7 @@ internal sealed class TestDocx
     private readonly List<string> _documentRelationships = [];
     private string? _header;
     private string? _footer;
+    private string? _rawHeader;
     private string? _author;
     private string _title = "Decision letter";
     private string _wordNamespace = Word;
@@ -52,6 +53,14 @@ internal sealed class TestDocx
     public TestDocx Header(string text)
     {
         _header = text;
+        return this;
+    }
+
+    /// <summary>A header built from raw WordprocessingML, for one with more than a single line of text.</summary>
+    public TestDocx RawHeader(string xml)
+    {
+        _header = "";
+        _rawHeader = xml;
         return this;
     }
 
@@ -150,7 +159,7 @@ internal sealed class TestDocx
             Add(zip, "word/document.xml", $"<w:document xmlns:w=\"{_wordNamespace}\"><w:body>{string.Concat(_paragraphs)}</w:body></w:document>");
             if (_header is not null)
             {
-                Add(zip, "word/header1.xml", $"<w:hdr xmlns:w=\"{Word}\">{ParagraphXml([_header])}</w:hdr>");
+                Add(zip, "word/header1.xml", $"<w:hdr xmlns:w=\"{Word}\">{_rawHeader ?? ParagraphXml([_header])}</w:hdr>");
             }
 
             if (_footer is not null)

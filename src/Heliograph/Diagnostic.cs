@@ -47,6 +47,9 @@ public static class DiagnosticCodes
     public const string TagNotFilledIn = "HG1008";
     public const string LooksLikeATag = "HG1009";
     public const string HasHiddenText = "HG1010";
+    public const string ConditionCutsThroughField = "HG1011";
+    public const string ConditionHoldsSectionBreak = "HG1012";
+    public const string WouldRenderBrokenDocument = "HG1013";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";
