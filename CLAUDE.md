@@ -101,6 +101,10 @@ decide day-to-day code.
   upstream, in the data.
 - **Uploaded files are untrusted.** Macros, embedded objects, remote links and oversized archives
   are refused before anything else reads the file, each with a test.
+- **Nothing that ships carries someone else's program.** LibreOffice and veraPDF are run as
+  separate programs and never referenced, bundled or copied from. A package a shipped project
+  references gets a row in [docs/third-party.md](docs/third-party.md) with its licence; a test
+  fails until it has one. Nothing under the GPL or AGPL is referenced by a package that ships.
 - **Rendering never sends.** No network calls, no provider SDKs, no queues. If a feature needs to
   talk to the outside world, it belongs in the host.
 - **Rendering is deterministic.** The same template and data produce the same output. No clock,
