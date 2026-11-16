@@ -26,7 +26,7 @@ public class UnrecognisedTagTests
     [Theory]
     [InlineData("((Member’s start - end))")]
     [InlineData("((Member‘s start – end))")]
-    [InlineData("((Member's start — end))")]
+    [InlineData("((Member's start \u2014 end))")]
     [InlineData("((Mem­ber's start​ - end))")]
     [InlineData("((﻿Member's start - end⁠))")]
     public void A_name_the_editor_has_restyled_or_that_was_pasted_with_invisible_characters_is_still_found(string tag)
