@@ -112,8 +112,10 @@ another PDF route can be added without changing the core.
    as the acceptance test: an acknowledgement, a decision letter with conditional paragraphs, and
    an annual statement with a multi-page table of money, totals, and a letterhead and footer that
    change by department. A content designer builds each in a stock editor with no developer.
-2. **Editor round trip.** Each benchmark letter is edited and saved in Word on the desktop, Word
-   in Microsoft 365 and LibreOffice, and still compiles and renders the same.
+2. **Editor round trip.** Each benchmark letter still compiles and renders the same after an
+   editor has saved it. LibreOffice is checked on every change. Word in Microsoft 365 is checked
+   through files a person has saved there. Word on the desktop is expected to work and is
+   unproven until someone with Word supplies a saved file.
 3. **No silent failure.** Every way a template can be wrong (unknown field, misspelt field,
    unclosed section, a list used as a value, a missing shared part) has a diagnostic with a
    location and a suggested fix, and a test that proves it.
@@ -162,24 +164,32 @@ another PDF route can be added without changing the core.
 - **LibreOffice is the first PDF converter and the reference editor for automated tests.** It
   sits behind the conversion seam like any other route. Its tagged PDF output is checked in
   [the plan](plan.md), step 1.
+- **A field is marked with a text tag**: the plain dictionary name in double brackets, such as
+  `((Member name))`, matched without regard to capitals or extra spaces. It is the only way of
+  marking that an author can add in every editor and that survived a save in both LibreOffice
+  and Microsoft 365. A tag an editor has stored in several pieces is joined before it is read.
+- **A condition has a start and an end tag**: `((if Owes money))` and `((end if))`.
+- **A table row repeats without a marker.** A row that uses values from a list repeats once for
+  each item, because the dictionary already says those values belong to the list. The compiler
+  reports which rows it will repeat and the preview shows them.
+- **Content controls are not used.** A LibreOffice save drops repeating sections and shrinks a
+  condition to its first few words. **Merge fields are not used in the first release**: they
+  survive both editors, but Word in Microsoft 365 cannot insert one. The reader for markers sits
+  behind a seam, so they could be recognised later.
+- **A generated sheet lists every tag in the dictionary, ready to copy**, and the compiler names
+  the nearest match for one that is misspelt. That is how an author avoids typing from memory in
+  an unmodified editor.
 - **The principles and constraints above.**
 
 ## Open decisions
 
-1. **How a field is marked in a document.** It must be insertable without typing from memory,
-   work in every stock editor, and survive being saved by each. Candidates: tags in the text
-   (offered by a picker or a generated field sheet to copy from), the word processor's own merge
-   fields, content controls. They differ most in how they handle repeats and conditions.
-2. **How the dictionary reaches an author inside an unmodified editor.** Candidates: a picker in
-   the workbench to copy from, a generated reference document, a generated starter template, a
-   sample data file the editor's own mail merge can read.
-3. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
+1. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
    own document with a comment at each problem would put them where the work is.
-4. **The dictionary's home and reach.** One per correspondence, one per service, or shared; who
+2. **The dictionary's home and reach.** One per correspondence, one per service, or shared; who
    maintains it when it is not generated; and its file format.
-5. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
+3. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
-6. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+4. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-7. **Versioning**: how a correspondence changes while journeys that will use it are running, and
+5. **Versioning**: how a correspondence changes while journeys that will use it are running, and
    how a host records which version a person was sent.
