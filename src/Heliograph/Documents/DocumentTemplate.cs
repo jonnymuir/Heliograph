@@ -62,7 +62,7 @@ public static class DocumentTemplate
             compiled[name] = xml;
         }
 
-        TemplateSweep.Run(package, compiled, parts.Select(part => part.Name).ToHashSet(), dictionary, diagnostics);
+        diagnostics.AddRange(TemplateSweep.Run(package, compiled, parts.Select(part => part.Name).ToHashSet(), dictionary));
         return diagnostics.Errors() > 0
             ? new DocumentCompilation(null, diagnostics)
             : new DocumentCompilation(new CompiledDocument(package, compiled, dictionary), diagnostics);

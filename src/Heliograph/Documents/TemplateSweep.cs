@@ -13,19 +13,18 @@ internal static partial class TemplateSweep
     private static readonly XName Text = WordXml.Word + "t";
     private static readonly XName Paragraph = WordXml.Word + "p";
 
-    public static void Run(DocxPackage package, IReadOnlyDictionary<string, XDocument> compiled, ISet<string> textParts,
-        FieldDictionary dictionary, List<Diagnostic> diagnostics)
+    /// <summary>What the sweep finds. <paramref name="textParts"/> names the parts whose paragraphs were compiled.</summary>
+    public static IEnumerable<Diagnostic> Run(DocxPackage package, IReadOnlyDictionary<string, XDocument> compiled,
+        ISet<string> textParts, FieldDictionary dictionary)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var name in package.Names.Where(IsXml))
         {
             var document = compiled.GetValueOrDefault(name) ?? package.Xml(name)!;
-            foreach (var tag in Strings(document, textParts.Contains(name)).SelectMany(text => Tag().Matches(text)).Select(m => m.Groups[1].Value))
+            var tags = Strings(document, textParts.Contains(name)).SelectMany(text => Tag().Matches(text)).Select(m => m.Groups[1].Value);
+            foreach (var tag in tags.Where(tag => seen.Add(FieldName.Normalise(tag))))
             {
-                if (seen.Add(FieldName.Normalise(tag)))
-                {
-                    diagnostics.Add(Report(tag, Place(name), dictionary));
-                }
+                yield return Report(tag, Place(name), dictionary);
             }
         }
     }

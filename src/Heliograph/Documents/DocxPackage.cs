@@ -122,28 +122,29 @@ internal sealed class DocxPackage
     /// </summary>
     public IReadOnlyList<(string Name, string Label)>? TextParts()
     {
-        var main = RelationshipsIn("_rels/.rels")
-            .Where(r => !r.External && r.Type.EndsWith(OfficeDocumentRelationship, StringComparison.Ordinal))
-            .Select(r => r.Target.TrimStart('/'))
-            .FirstOrDefault();
-        if (main is null || !Has(main) || !DeclaredContentTypes().Any(t => t.PartName == main && t.ContentType == MainDocumentType))
+        if (MainDocument() is not { } main)
         {
             return null;
         }
 
         var folder = main.Contains('/', StringComparison.Ordinal) ? main[..(main.LastIndexOf('/') + 1)] : "";
-        var parts = new List<(string, string)> { (main, "document") };
-        foreach (var (type, target, external) in RelationshipsIn($"{folder}_rels/{main[folder.Length..]}.rels"))
-        {
-            var label = TextPartLabels.FirstOrDefault(known => type.EndsWith("/" + known.Key, StringComparison.Ordinal)).Value;
-            var name = target.StartsWith('/') ? target.TrimStart('/') : folder + target;
-            if (label is not null && !external && Has(name))
-            {
-                parts.Add((name, label));
-            }
-        }
+        var others = RelationshipsIn($"{folder}_rels/{main[folder.Length..]}.rels")
+            .Where(r => !r.External)
+            .Select(r => (Name: r.Target.StartsWith('/') ? r.Target.TrimStart('/') : folder + r.Target,
+                Label: TextPartLabels.FirstOrDefault(known => r.Type.EndsWith("/" + known.Key, StringComparison.Ordinal)).Value))
+            .Where(part => part.Label is not null && Has(part.Name));
+        return [(main, "document"), .. others];
+    }
 
-        return parts;
+    /// <summary>The name of the main document part, when the package says it has one and that it is a Word document.</summary>
+    private string? MainDocument()
+    {
+        var main = RelationshipsIn("_rels/.rels")
+            .Where(r => !r.External && r.Type.EndsWith(OfficeDocumentRelationship, StringComparison.Ordinal))
+            .Select(r => r.Target.TrimStart('/'))
+            .FirstOrDefault();
+        var isWord = main is not null && Has(main) && DeclaredContentTypes().Any(t => t.PartName == main && t.ContentType == MainDocumentType);
+        return isWord ? main : null;
     }
 
     /// <summary>Writes the package with some parts replaced: same order, same timestamps, same bytes for the same input.</summary>
