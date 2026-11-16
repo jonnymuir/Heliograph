@@ -164,7 +164,7 @@ public class StructureTests
     }
 
     [Fact]
-    public void A_template_with_more_conditions_than_could_ever_be_tried_in_every_combination_still_compiles_promptly()
+    public async Task A_template_with_more_conditions_than_could_ever_be_tried_in_every_combination_still_compiles_promptly()
     {
         // Thirty conditions have a thousand million combinations.
         var fields = Enumerable.Range(1, 30).Select(n => new Field($"Flag {n}", $"flag{n}", FieldType.YesNo)).ToList();
@@ -177,8 +177,10 @@ public class StructureTests
         var template = docx.Build().ToArray();
         var compiling = Task.Run(() => DocumentTemplate.Compile(new MemoryStream(template), new FieldDictionary(fields)));
 
-        compiling.Wait(TimeSpan.FromSeconds(20)).Should().BeTrue("the compiler must not try every combination of thirty conditions");
-        compiling.Result.Diagnostics.Should().BeEmpty();
+        var finished = await Task.WhenAny(compiling, Task.Delay(TimeSpan.FromSeconds(20)));
+
+        finished.Should().BeSameAs(compiling, "the compiler must not try every combination of thirty conditions");
+        (await compiling).Diagnostics.Should().BeEmpty();
     }
 
     private static string Paragraphs(params string[] texts) =>
