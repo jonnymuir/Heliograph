@@ -159,6 +159,9 @@ another PDF route can be added without changing the core.
   call. They do not share a body: a good email is not derived from a letter.
 - **Heliograph builds no editor.** Authors use existing word processors. Heliograph supplies the
   dictionary, the compiler and the preview around them.
+- **LibreOffice is the first PDF converter and the reference editor for automated tests.** It
+  sits behind the conversion seam like any other route. Its tagged PDF output is checked in
+  [the plan](plan.md), step 1.
 - **The principles and constraints above.**
 
 ## Open decisions
@@ -174,11 +177,9 @@ another PDF route can be added without changing the core.
    own document with a comment at each problem would put them where the work is.
 4. **The dictionary's home and reach.** One per correspondence, one per service, or shared; who
    maintains it when it is not generated; and its file format.
-5. **The first PDF converter**, chosen with its licence, its accessible (tagged) output and where
-   personal data goes during conversion.
-6. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
+5. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
-7. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+6. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-8. **Versioning**: how a correspondence changes while journeys that will use it are running, and
+7. **Versioning**: how a correspondence changes while journeys that will use it are running, and
    how a host records which version a person was sent.
