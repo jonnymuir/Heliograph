@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Heliograph/Heliograph.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
   </ItemGroup>
 
 </Project>

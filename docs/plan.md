@@ -32,8 +32,7 @@ Two things keep this honest:
 Done. The [benchmark letters](../benchmarks/README.md) are written, and a spike put three ways of
 marking a field through LibreOffice and Microsoft 365. The choices are recorded in the
 [brief](brief.md#decided). LibreOffice's PDF export carries headings, table structure, the
-language and the PDF/UA marker; it has not been run through a PDF/UA validator, which belongs to
-step 4.
+language and the PDF/UA marker.
 
 ### 2. The core, one letter at a time
 
@@ -57,8 +56,9 @@ One correspondence, three parts, one render call.
 
 ### 4. PDF
 
-The LibreOffice converter as its own package, behind the conversion seam. Decide here whether it
-starts LibreOffice as a local process, calls it in a container, or supports both.
+Done. `Heliograph.Pdf.LibreOffice` sits behind the conversion seam and starts LibreOffice as a
+local process. Calling it in a container is another implementation of the same seam, not built.
+Each benchmark letter's PDF passes veraPDF's PDF/UA-1 check in CI.
 
 ### 5. API, MCP, reference app and workbench
 
@@ -80,9 +80,13 @@ started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
+Step 4 is done: a rendered letter converts to a tagged PDF that passes an independent PDF/UA
+check, once the template has a title. What to do about a template without one is an open
+decision. The API, MCP server, reference app and workbench are next (step 5).
+
 Step 3 is done. The SMS and email parts are built, with the same tags, conditions and lists as
 a document. Each benchmark letter has a text message and an email, and one call compiles and
-renders all three parts together. PDF is next (step 4). Shared parts wait on a design decision.
+renders all three parts together. Shared parts wait on a design decision.
 
 Step 2 is done for the document part, apart from shared parts. The annual statement compiles and
 renders: a table row repeated for each of up to sixty contributions, the heading row repeating

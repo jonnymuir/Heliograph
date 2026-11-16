@@ -26,7 +26,7 @@ A heliograph sent messages by flashing sunlight across long distances.
 | A letterhead or footer shared between templates | Not yet |
 | SMS part | Yes: the same tags and conditions, with the encoding and the number of messages it will be charged as |
 | Email part | Yes: a subject and a body in a small set of Markdown, rendered as accessible HTML and as plain text |
-| PDF output | Not yet |
+| PDF output | Yes: an accessible, tagged PDF through `Heliograph.Pdf.LibreOffice`, checked against PDF/UA by an independent validator |
 | A package on nuget.org | Not yet. Reference the project from a checkout |
 
 ## A template
