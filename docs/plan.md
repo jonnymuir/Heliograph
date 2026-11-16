@@ -32,8 +32,8 @@ Two things keep this honest:
 By trying, not by argument. Output: the choices recorded in the brief, and the benchmark letters
 in the repo.
 
-1. Write the three benchmark letters as content: the words, the dictionary each one needs, and
-   sample data. Fictional people and organisations only.
+1. Write the three [benchmark letters](../benchmarks/README.md) as content: the words, the
+   dictionary each one needs, and sample data. Fictional people and organisations only.
 2. Spike each way of marking a field (tags in the text, merge fields, content controls) on the
    statement letter, the hardest one. For each: can it be inserted without typing from memory,
    does it survive a LibreOffice save, a Word save and a Microsoft 365 save, and can it express a
@@ -57,12 +57,15 @@ One correspondence, three parts, one render call.
 
 ### 4. PDF
 
-The LibreOffice converter as its own package, behind the conversion seam.
+The LibreOffice converter as its own package, behind the conversion seam. Decide here whether it
+starts LibreOffice as a local process, calls it in a container, or supports both.
 
 ### 5. API, MCP, reference app and workbench
 
 The same operations for people and agents, the standalone host with its demo outbox, and the
-evaluation that checks an agent can write a template that compiles. The DAST and performance
+evaluation that checks an agent can write a template that compiles. A .NET Aspire host starts the
+reference app, a local mailbox and the PDF converter with one command, as Wayfinder's does, and
+the whole-system tests boot the same definition. The DAST and performance
 workflows return here, because there is now an app to scan and load.
 
 ### 6. First release
@@ -72,9 +75,10 @@ workflows return here, because there is now an app to scan and load.
 ### 7. Heliograph.Umbraco
 
 Storage and uSync, the backoffice screens, and the reference site where a Wayfinder blueprint
-supplies the dictionary and a stage sends a letter by calling Heliograph as a support system.
-Then its own first release.
+supplies the dictionary and a stage sends a letter by calling Heliograph as a support system,
+started together by an Aspire host. Then its own first release.
 
 ## Where we are
 
-Step 1.1 is next.
+The benchmark letters are written as content (step 1.1). Step 1.2, the field-marking spike on the
+annual statement, is next.

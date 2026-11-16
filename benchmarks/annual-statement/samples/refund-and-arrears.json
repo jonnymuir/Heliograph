@@ -1,0 +1,79 @@
+{
+  "memberName": "Siobhán O'Hare-Ng",
+  "memberAddress": [
+    "Flat 3, The Old Circus & Fairground",
+    "9 <Upper> Catch Street",
+    "Little Throwing-on-the-Wold",
+    "Clubshire",
+    "ZZ9 9ZZ"
+  ],
+  "memberReference": "M-0042181",
+  "membershipTier": "Fire & knife endorsed",
+  "regionalOffice": "northern",
+  "statementStart": "2025-12-01",
+  "statementEnd": "2026-11-30",
+  "letterDate": "2026-12-05",
+  "contributions": [
+    {
+      "date": "2025-12-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 25
+    },
+    {
+      "date": "2026-01-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 50
+    },
+    {
+      "date": "2026-02-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 75
+    },
+    {
+      "date": "2026-02-17",
+      "description": "Refund: charged twice in February",
+      "amount": -12.5,
+      "runningTotal": 62.5
+    },
+    {
+      "date": "2026-03-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 87.5
+    },
+    {
+      "date": "2026-04-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 112.5
+    },
+    {
+      "date": "2026-05-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 137.5
+    },
+    {
+      "date": "2026-06-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 162.5
+    },
+    {
+      "date": "2026-07-02",
+      "description": "Monthly contribution",
+      "amount": 25,
+      "runningTotal": 187.5
+    }
+  ],
+  "totalPaid": 187.5,
+  "amountDueForYear": 300,
+  "hasContributions": true,
+  "noContributions": false,
+  "amountOwed": 112.5,
+  "owesMoney": true,
+  "paymentDueDate": "2027-01-04"
+}
