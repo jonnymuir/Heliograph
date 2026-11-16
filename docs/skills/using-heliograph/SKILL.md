@@ -1,3 +1,8 @@
+---
+name: using-heliograph
+description: How to call Heliograph from code. Covers the dictionary, compiling and rendering each part or a whole correspondence, stored correspondence with drafts and published versions, PDF, diagnostics, what the library guarantees and what the host must do. Use when writing or reviewing code that hosts Heliograph.
+---
+
 # Using Heliograph
 
 For a developer, or an agent writing code for one, putting Heliograph into a system. It is a .NET
@@ -11,7 +16,7 @@ It is not on nuget.org yet. Until it is, reference the project from a checkout o
 | | What | Who writes it |
 |---|---|---|
 | **Dictionary** | The closed list of fields a template may use | Whoever knows the data. Generate it where you can |
-| **Template** | A `.docx` with tags in it | A content designer. See [writing-a-template.md](writing-a-template.md) |
+| **Template** | A `.docx` with tags in it | A content designer. See [Writing a template](../writing-a-template/SKILL.md) |
 | **Data** | One JSON object for each recipient, keyed by the dictionary's keys | Your system, at run time |
 
 ## The dictionary
@@ -149,7 +154,7 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
   table structure that says its language. The benchmark letters pass
   [veraPDF](https://verapdf.org/)'s PDF/UA check in CI.
 - **A PDF is only accessible if the template has a title** in its document properties. Heliograph
-  does not yet tell the author when it is missing: see the [brief](brief.md#open-decisions).
+  does not yet tell the author when it is missing: see the [brief](../../brief.md#open-decisions).
 - Each conversion has a folder and a LibreOffice profile of its own, removed afterwards, so
   conversions can run side by side. Starting LibreOffice takes a second or more each time.
 - A failure is a `PdfConversionException`. Its message never quotes the letter.
@@ -191,7 +196,7 @@ your provider's job.
 Every problem has a stable `Code`, a `Message` and a `Fix` in plain words, a `Severity` (`Error`
 or `Warning`), and, for a problem in a template, a `Location`: the part, the paragraph number in
 it, and the start of the paragraph's text. Show all of them to whoever uploaded the template.
-They are written for that person. Every code is explained in [diagnostics.md](diagnostics.md).
+They are written for that person. Every code is explained in [Diagnostics](../diagnostics/SKILL.md).
 
 | Codes | When | Meaning |
 |---|---|---|

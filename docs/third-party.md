@@ -6,11 +6,11 @@ a dependency that is not listed here.
 
 ## What ships
 
-Packages a shipped project references. Today there are none.
+Packages a shipped project references. The core library and the PDF converter reference none.
 
 | Package | Licence | Used by |
 |---|---|---|
-| *(none)* | | |
+| `ModelContextProtocol.AspNetCore` | Apache 2.0 | `Heliograph.Mcp`. A NuGet dependency, restored by the host; nothing of it is copied into this repo. Apache 2.0 is permissive and sits under MIT code without changing its licence. |
 
 ## What is run, and never shipped
 

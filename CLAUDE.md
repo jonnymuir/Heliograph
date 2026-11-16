@@ -35,7 +35,9 @@ Follow them; this file adds only what is specific to this repo.
 | `src/Heliograph` | The core library: `Correspondence` (one compile and one render for every part), the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values, conditions and rows that repeat over a list) and renders it. No package dependencies. |
 | `src/Heliograph/Library` | Part of the core library: `CorrespondenceLibrary`, the operations on stored correspondence (draft, check, preview, publish, render a version), over two seams the host supplies, `ICorrespondenceStore` and `IDictionarySource`. |
 | `src/Heliograph/Messages` | Part of the core library: plain-text templates. The SMS part, the email part, and the line-by-line engine they share. |
+| `src/Heliograph.Mcp` | The authoring operations as MCP tools over HTTP, three prompts, and every guide in `docs/skills` as a resource. One `MapCorrespondenceAuthoringMcp()` call, closed unless the caller is signed in. The only project that references ASP.NET Core. |
 | `src/Heliograph.Pdf.LibreOffice` | One route to PDF behind `IPdfConverter`: runs a local LibreOffice with no window and asks for PDF/UA. References the core only. |
+| `tests/Heliograph.Mcp.Tests` | The MCP server through a real MCP client against an in-memory host: what an agent is offered, told and refused. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). The Open XML SDK is referenced here only, as an independent validator of rendered files. |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 
@@ -77,11 +79,11 @@ decide day-to-day code.
 
 - **Use the two words exactly.** A field is a thing in the dictionary that a template can use. A
   tag is how an author writes one, `((Member name))`. Code, diagnostics and docs keep to that.
-- **A new diagnostic code gets a row in [docs/diagnostics.md](docs/diagnostics.md).** A test fails
+- **A new diagnostic code gets a row in [docs/skills/diagnostics](docs/skills/diagnostics/SKILL.md).** A test fails
   until it has one.
 - **A change an author or a developer would notice changes their guide in the same PR.**
-  [docs/writing-a-template.md](docs/writing-a-template.md) is for authors and
-  [docs/using-heliograph.md](docs/using-heliograph.md) for developers. Both list what is not built
+  [docs/skills/writing-a-template](docs/skills/writing-a-template/SKILL.md) is for authors and
+  [docs/skills/using-heliograph](docs/skills/using-heliograph/SKILL.md) for developers. Both list what is not built
   yet: take a line out when you build it. The code in the README is compiled and run from
   `tests/Heliograph.Tests/Examples/Quickstart.cs`, and a test fails if the two differ.
 - **A rendered file must always be a valid Word document.** Where a tag's placement would break a
@@ -100,6 +102,10 @@ decide day-to-day code.
 - **Every way a template can be wrong has a diagnostic**: a stable code, the place in the file,
   plain words and a suggested fix, with a test. A failure that only shows at render time is a
   defect in the compiler.
+- **A guide is a skill.** Guides for people who use Heliograph live in `docs/skills/<name>/SKILL.md`,
+  with a `name` and a `description` at the top. People read them, agents load them as skills, and
+  `Heliograph.Mcp` serves them as resources: one file. Never write a second copy for agents. See
+  [docs/skills/README.md](docs/skills/README.md).
 - **Person and agent parity.** An operation offered on a screen is offered over the API and MCP,
   and returns the same diagnostics. Don't add a capability to one and not the others.
 - **A template is data, not code.** No scripts, macros or expressions. An author can insert a
