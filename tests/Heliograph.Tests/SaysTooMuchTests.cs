@@ -102,7 +102,8 @@ public class SaysTooMuchTests
     [Fact]
     public void The_benchmark_template_a_person_saved_in_Microsoft_365_has_none_of_these()
     {
-        Benchmark.Compile("acknowledgement", "document.word-365.docx").Diagnostics.Should().BeEmpty();
+        Benchmark.Compile("acknowledgement", "document.word-365.docx").Diagnostics
+            .Should().OnlyContain(diagnostic => diagnostic.Code == DiagnosticCodes.DocumentHasNoTitle);
     }
 
     private static Diagnostic Refusal(TestDocx docx)

@@ -33,6 +33,31 @@ public class PdfTests
         PdfValidator.FailuresAsPdfUa(pdf).Should().BeEmpty();
     }
 
+    [Fact]
+    public void A_document_with_no_title_is_pointed_out_when_it_is_compiled_and_still_compiles()
+    {
+        var dictionary = new FieldDictionary([new Field("Member name", "memberName", FieldType.Text)]);
+
+        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").Untitled().Build(), dictionary);
+
+        compilation.Succeeded.Should().BeTrue();
+        var warning = compilation.Diagnostics.Should().ContainSingle().Subject;
+        (warning.Code, warning.Severity).Should().Be((DiagnosticCodes.DocumentHasNoTitle, DiagnosticSeverity.Warning));
+        warning.Fix.Should().Contain("File > Properties").And.Contain("File > Info");
+    }
+
+    [Fact]
+    public void A_document_with_a_title_is_not_warned_about_and_its_letters_keep_the_title()
+    {
+        var dictionary = new FieldDictionary([new Field("Member name", "memberName", FieldType.Text)]);
+
+        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").Author("Casey Caseworker", title: "Your annual statement").Build(), dictionary);
+
+        compilation.Diagnostics.Should().BeEmpty();
+        var render = compilation.Document!.Render(Benchmark.Data("""{ "memberName": "Alex" }"""), Benchmark.British);
+        TestDocx.Property(render.Docx!, "title").Should().Be("Your annual statement");
+    }
+
     [EditorFact]
     public async Task A_long_statement_runs_over_several_pages()
     {

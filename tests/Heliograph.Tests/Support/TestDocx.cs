@@ -19,7 +19,7 @@ internal sealed class TestDocx
     private string? _footer;
     private string? _rawHeader;
     private string? _author;
-    private string _title = "Decision letter";
+    private string? _title = "Decision letter";
     private string _wordNamespace = Word;
     private readonly List<string> _rootRelationships = [];
     private string _mainContentType = MainType;
@@ -89,6 +89,13 @@ internal sealed class TestDocx
         return this;
     }
 
+    /// <summary>Leaves the document's properties without a title, as a document nobody has given one.</summary>
+    public TestDocx Untitled()
+    {
+        _title = null;
+        return this;
+    }
+
     /// <summary>Uses another namespace for the document's own elements, as "Strict Open XML" does.</summary>
     public TestDocx WordNamespace(string wordNamespace)
     {
@@ -140,18 +147,16 @@ internal sealed class TestDocx
                 + "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
                 + "<Default Extension=\"xml\" ContentType=\"application/xml\"/>"
                 + $"<Override PartName=\"/word/document.xml\" ContentType=\"{_mainContentType}\"/>"
+                + "<Override PartName=\"/docProps/core.xml\" ContentType=\"application/vnd.openxmlformats-package.core-properties+xml\"/>"
                 + overrides + string.Concat(_contentTypes) + "</Types>");
             Add(zip, "_rels/.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                 + $"<Relationship Id=\"rId1\" Type=\"{OfficeRelationships}/officeDocument\" Target=\"word/document.xml\"/>"
-                + (_author is null ? "" : "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties\" Target=\"docProps/core.xml\"/>")
+                + "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties\" Target=\"docProps/core.xml\"/>"
                 + string.Concat(_rootRelationships) + "</Relationships>");
-            if (_author is not null)
-            {
-                Add(zip, "docProps/core.xml",
-                    "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
-                    + $"<dc:title>{_title}</dc:title><dc:creator>{_author}</dc:creator><cp:lastModifiedBy>{_author}</cp:lastModifiedBy></cp:coreProperties>");
-            }
+            Add(zip, "docProps/core.xml",
+                "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
+                + $"<dc:title>{_title}</dc:title><dc:creator>{_author}</dc:creator><cp:lastModifiedBy>{_author}</cp:lastModifiedBy></cp:coreProperties>");
 
             Add(zip, "word/_rels/document.xml.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"

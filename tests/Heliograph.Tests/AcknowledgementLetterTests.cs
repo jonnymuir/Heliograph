@@ -87,7 +87,8 @@ public class AcknowledgementLetterTests
     {
         var compilation = Benchmark.Compile(Letter, "document.word-365.docx");
 
-        compilation.Diagnostics.Should().BeEmpty();
+        // It was saved with no title, which is pointed out and stops nothing.
+        compilation.Diagnostics.Should().ContainSingle().Which.Code.Should().Be(DiagnosticCodes.DocumentHasNoTitle);
         var render = compilation.Document!.Render(Benchmark.Sample(Letter, "typical"), Benchmark.British);
         var paragraphs = TestDocx.Paragraphs(render.Docx!);
         paragraphs.Should().Contain("Hi Alex Applicant,");

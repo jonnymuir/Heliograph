@@ -63,6 +63,11 @@ public static class DocumentTemplate
         }
 
         diagnostics.AddRange(TemplateSweep.Run(package, compiled, parts.Select(part => part.Name).ToHashSet(), dictionary));
+        if (AuthorDetails.Title(package) is null)
+        {
+            diagnostics.Add(NoTitle());
+        }
+
         if (diagnostics.Errors() > 0)
         {
             return new DocumentCompilation(null, diagnostics);
@@ -86,6 +91,13 @@ public static class DocumentTemplate
     private static Diagnostic NotAWordDocument() => new(DiagnosticCodes.NotAWordDocument,
         "This file is not a Word document (.docx) that can be read.",
         "Open it in your word processor, save it as a Word document (.docx), and upload that.");
+
+    private static Diagnostic NoTitle() => new(DiagnosticCodes.DocumentHasNoTitle,
+        "This document has no title in its properties. A PDF made from it will not meet the standard for accessible PDF, "
+        + "because a screen reader announces the title first.",
+        "Set a title that says what the letter is, such as \"Your annual statement\": File > Properties > Description in "
+        + "LibreOffice, File > Info in Word. Then save and upload it again.",
+        Severity: DiagnosticSeverity.Warning);
 
     private static Diagnostic TooLarge() => new(DiagnosticCodes.TooLarge,
         $"This file is too large to check safely. It unpacks to more than {DocxPackage.MaxUnpackedBytes / (1024 * 1024)} MB.",

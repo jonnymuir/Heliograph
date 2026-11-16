@@ -57,6 +57,7 @@ the line.
 | `HG1018` | An email has no subject, or its subject is more than one line. An email kept in one file must start with a line `Subject: ...`. | Give it a subject of one line. |
 | `HG1019` | A link in an email does not plainly go to a web page, an email address or a phone number: its address does not start with `https://`, `http://`, `mailto:` or `tel:` written out in the template, or it has a condition inside it. Such a link could be made to go anywhere, or to run script. | Write the start of the address in the template. A value can fill in the rest. Put a condition round a whole link, not inside its address. |
 | `HG1017` | Warning. A text message template has a character outside the basic set for text messages, such as a curly quote. Every message from it will hold 70 characters, not 160, so most will be charged as more than one. Reported once, at the first such character. | Replace it with a plain character unless you need it. |
+| `HG1020` | Warning. The document has no title in its properties. A PDF made from it will not meet the standard for accessible PDF, because a screen reader announces the title first. | Set a title that says what the letter is: **File > Properties > Description** in LibreOffice, **File > Info** in Word. |
 | `HG1010` | Warning. The document has hidden text, which is sent to every recipient inside the file. Reported once for each part. | Delete it if recipients should not have it. |
 
 ## Data that is wrong for one recipient (HG2)

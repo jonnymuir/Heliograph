@@ -167,7 +167,8 @@ NJF: your licence for ((Event name)) is approved. Pay £((Licence fee)) by ((Fee
 Set a title in the document's properties: **File > Properties > Description** in LibreOffice,
 **File > Info** in Word. A PDF made from the letter needs it to meet the accessibility standard,
 because a screen reader announces the title first. Write it for the recipient ("Your annual
-statement"), and do not put a tag in it.
+statement"), and do not put a tag in it. If you leave it out you are told when you upload
+(`HG1020`), and the template still works.
 
 ## Where tags work
 

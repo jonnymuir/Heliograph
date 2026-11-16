@@ -212,11 +212,7 @@ another PDF route can be added without changing the core.
    shared part is itself a document.
 3. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-4. **A document with no title.** A PDF needs one to meet PDF/UA, and it was the only rule the
-   benchmark letters failed. Warn at compile, refuse at compile, or fill it in from the first
-   heading. Word in Microsoft 365 may not let an author set it, which counts against refusing.
-
-5. **How an agent writes the document part.** Over MCP an agent writes the email and the text
+4. **How an agent writes the document part.** Over MCP an agent writes the email and the text
    message, and can upload a `.docx` it has been given, but it cannot lay one out. Success
    measure 4 asks for an agent that writes a template that compiles. Either the measure means
    the email and the text, or Heliograph offers a way to start a document from plain text, which
@@ -238,3 +234,4 @@ choices here. Each can be reversed; the line says what reversing it would cost.
 | The MCP server offers authoring only. It does not render for a real recipient. | Offering every operation, render included, over MCP. | Small: one more tool. It would put recipients' personal data into agent conversations. |
 | Over MCP, a part an agent does not pass is kept, and it names the parts to remove. | Every save replacing the whole draft. | Small: tool arguments only. |
 | The MCP endpoint is `/heliograph/correspondence-authoring/mcp`, mirroring Wayfinder's `/wayfinder/service-blueprint-authoring/mcp`. | Any other address. | Nothing: a host can pass its own. |
+| A document with no title is pointed out with a warning (`HG1020`) and still compiles. | Refusing it, or filling the title in from the first heading. | Small: one check in the compiler. Refusing would block authors whose editor cannot set a title. Filling it in from a heading could be added on top, and would make the warning rare. |
