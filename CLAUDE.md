@@ -34,6 +34,7 @@ Follow them; this file adds only what is specific to this repo.
 |---|---|
 | `src/Heliograph` | The core library. Empty until the first design decisions land. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). |
+| `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 
 ## Build and test
 

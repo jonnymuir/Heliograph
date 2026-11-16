@@ -1,0 +1,14 @@
+{
+  "applicantName": "Alex Applicant",
+  "applicantAddress": [
+    "12 Tumble Lane",
+    "Clubtown",
+    "ZZ1 1ZZ"
+  ],
+  "applicationReference": "NJF-2026-004217",
+  "eventName": "Clubtown Summer Juggle",
+  "eventDate": "2027-06-19",
+  "dateReceived": "2026-11-16",
+  "decisionDueDate": "2026-12-14",
+  "letterDate": "2026-11-17"
+}

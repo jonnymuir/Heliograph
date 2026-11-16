@@ -1,0 +1,94 @@
+{
+  "memberName": "Alex Applicant",
+  "memberAddress": [
+    "12 Tumble Lane",
+    "Clubtown",
+    "ZZ1 1ZZ"
+  ],
+  "memberReference": "M-0042170",
+  "membershipTier": "Performer",
+  "regionalOffice": "southern",
+  "statementStart": "2025-12-01",
+  "statementEnd": "2026-11-30",
+  "letterDate": "2026-12-05",
+  "contributions": [
+    {
+      "date": "2025-12-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 12.5
+    },
+    {
+      "date": "2026-01-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 25.0
+    },
+    {
+      "date": "2026-02-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 37.5
+    },
+    {
+      "date": "2026-03-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 50.0
+    },
+    {
+      "date": "2026-04-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 62.5
+    },
+    {
+      "date": "2026-05-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 75.0
+    },
+    {
+      "date": "2026-06-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 87.5
+    },
+    {
+      "date": "2026-07-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 100.0
+    },
+    {
+      "date": "2026-08-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 112.5
+    },
+    {
+      "date": "2026-09-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 125.0
+    },
+    {
+      "date": "2026-10-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 137.5
+    },
+    {
+      "date": "2026-11-02",
+      "description": "Monthly contribution",
+      "amount": 12.5,
+      "runningTotal": 150.0
+    }
+  ],
+  "totalPaid": 150,
+  "amountDueForYear": 150,
+  "hasContributions": true,
+  "noContributions": false,
+  "amountOwed": 0.0,
+  "owesMoney": false
+}

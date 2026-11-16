@@ -1,0 +1,23 @@
+{
+  "memberName": "Casey Catcher",
+  "memberAddress": [
+    "The Juggling Barn",
+    "Spinning Plate Road",
+    "Clubtown",
+    "ZZ1 2ZZ"
+  ],
+  "memberReference": "M-0042190",
+  "membershipTier": "Community",
+  "regionalOffice": "southern",
+  "statementStart": "2025-12-01",
+  "statementEnd": "2026-11-30",
+  "letterDate": "2026-12-05",
+  "contributions": [],
+  "totalPaid": 0,
+  "amountDueForYear": 150,
+  "hasContributions": false,
+  "noContributions": true,
+  "amountOwed": 150,
+  "owesMoney": true,
+  "paymentDueDate": "2027-01-04"
+}
