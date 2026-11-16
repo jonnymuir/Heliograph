@@ -83,6 +83,29 @@ public class AcknowledgementLetterTests
     }
 
     [Fact]
+    public void The_copy_saved_by_Word_in_Microsoft_365_compiles_and_renders()
+    {
+        var compilation = Benchmark.Compile(Letter, "document.word-365.docx");
+
+        compilation.Diagnostics.Should().BeEmpty();
+        var render = compilation.Document!.Render(Benchmark.Sample(Letter, "typical"), Benchmark.British);
+        var paragraphs = TestDocx.Paragraphs(render.Docx!);
+        paragraphs.Should().Contain("Hi Alex Applicant,");
+        paragraphs.Should().Contain("12 Tumble Lane\nClubtown\nZZ1 1ZZ");
+        string.Concat(paragraphs).Should().NotContain("((");
+    }
+
+    [Fact]
+    public void A_letter_does_not_tell_its_recipient_who_edited_the_template()
+    {
+        var render = Benchmark.Compile(Letter, "document.word-365.docx").Document!
+            .Render(Benchmark.Sample(Letter, "typical"), Benchmark.British);
+
+        TestDocx.Property(render.Docx!, "lastModifiedBy").Should().BeEmpty();
+        TestDocx.Property(render.Docx!, "creator").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Rendering_one_letter_does_not_change_the_next()
     {
         var document = Benchmark.Compile(Letter).Document!;

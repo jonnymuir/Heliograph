@@ -21,6 +21,8 @@ person, address and reference is invented. Postcodes start `ZZ`, which no real p
   it hard.
 - `document.docx` and `dictionary.json`, once the letter has been built: the template as an
   editor saved it, and its dictionary. The acknowledgement has both.
+- `document.word-365.docx`: the same template after a person edited and saved it in Word in
+  Microsoft 365. The same tests run over it. It differs in wording where the person changed it.
 - `samples/`: data for one recipient per file. Dates are ISO dates and money is a plain number,
   because the dictionary's types decide how they are printed, not the data and not the author.
 

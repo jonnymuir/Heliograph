@@ -180,14 +180,16 @@ another PDF route can be added without changing the core.
 - **A generated sheet lists every tag in the dictionary, ready to copy**, and the compiler names
   the nearest match for one that is misspelt. That is how an author avoids typing from memory in
   an unmodified editor.
+- **The dictionary is a JSON file.** It needs no extra library, and every host and agent can
+  read and write it.
 - **The principles and constraints above.**
 
 ## Open decisions
 
 1. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
    own document with a comment at each problem would put them where the work is.
-2. **The dictionary's home and reach.** One per correspondence, one per service, or shared; who
-   maintains it when it is not generated; and its file format.
+2. **The dictionary's home and reach.** One per correspondence, one per service, or shared; and
+   who maintains it when it is not generated.
 3. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
 4. **The Wayfinder join**: reference-app code only, or a small adapter package; and one

@@ -104,6 +104,19 @@ public class RenderDataTests
         Paragraphs("Dear((Applicant name)),", """{ "applicantName": " Alex " }""").Should().Equal("Dear Alex ,");
     }
 
+    [Fact]
+    public void The_author_named_in_the_template_is_not_copied_into_the_letter_but_its_title_is()
+    {
+        using var stream = TestDocx.With("Dear ((Applicant name)),").Author("Casey Caseworker").Build();
+        var document = DocumentTemplate.Compile(stream, Dictionary).Document!;
+
+        var docx = document.Render(Benchmark.Data("""{ "applicantName": "Alex Applicant" }"""), Benchmark.British).Docx!;
+
+        TestDocx.Property(docx, "creator").Should().BeEmpty();
+        TestDocx.Property(docx, "lastModifiedBy").Should().BeEmpty();
+        TestDocx.Property(docx, "title").Should().Be("Decision letter");
+    }
+
     private static DocumentRender Render(string paragraph, string data)
     {
         using var stream = TestDocx.With(paragraph).Build();
