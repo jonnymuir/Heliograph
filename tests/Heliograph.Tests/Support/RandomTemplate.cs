@@ -44,7 +44,7 @@ internal sealed class RandomTemplate
     {
         _random = new Random(seed);
 
-        // One template in three is given a single mistake: a condition tag with no partner.
+        // One template in three is given a single mistake: a condition tag with no partner, or with one in the wrong place.
         MistakeAt = _random.Next(3) == 0 ? _random.Next(1, 12) : 0;
         _blocks = Blocks(depth: 0);
         HasMistake = MistakeAt > 0 && _choices >= MistakeAt;
@@ -53,7 +53,7 @@ internal sealed class RandomTemplate
     private int MistakeAt { get; }
     private int _choices;
 
-    /// <summary>Whether the document holds an unpaired condition tag, and so must be refused.</summary>
+    /// <summary>Whether the document holds a misplaced condition tag, and so must be refused.</summary>
     public bool HasMistake { get; }
 
     /// <summary>The data for one recipient: every field supplied, with the yes or no fields set from the bits of <paramref name="answers"/>.</summary>
@@ -115,9 +115,9 @@ internal sealed class RandomTemplate
         {
             blocks.Add(_random.Next(40) switch
             {
-                _ when Mistake() => new Paragraph([new Stray(_random.Next(2) == 0 ? $"((if {Pick(YesNoFields)}))" : "((end if))")]),
+                _ when Mistake() => BlockMistake(depth),
                 < 10 when depth < 3 => new Condition(Pick(YesNoFields), Blocks(depth + 1)),
-                < 14 when depth < 2 => Table(depth),
+                < 14 when depth < 2 => NewTable(depth),
                 _ => new Paragraph(Sentence(depth: 0)),
             });
         }
@@ -125,7 +125,15 @@ internal sealed class RandomTemplate
         return blocks;
     }
 
-    private Table Table(int depth)
+    /// <summary>A condition tag on a line of its own with no partner, or a pair that opens inside a table and closes after it.</summary>
+    private Block BlockMistake(int depth) => _random.Next(3) switch
+    {
+        0 => new Paragraph([new Stray($"((if {Pick(YesNoFields)}))")]),
+        1 => new Paragraph([new Stray("((end if))")]),
+        _ => new Straddle(Pick(YesNoFields), NewTable(Math.Max(depth, 1))),
+    };
+
+    private Table NewTable(int depth)
     {
         var rows = new List<List<List<Block>>>();
         for (var row = _random.Next(1, 3); row > 0; row--)
@@ -164,12 +172,20 @@ internal sealed class RandomTemplate
     {
         Paragraph paragraph => ParagraphXml(string.Concat(paragraph.Tokens.Select(token => token.Written))),
         Condition condition => ParagraphXml($"((if {condition.Field}))") + string.Concat(condition.Blocks.Select(Xml)) + ParagraphXml("((end if))"),
+        Straddle straddle => InFirstCell(Xml(straddle.Table), ParagraphXml($"((if {straddle.Field}))")) + ParagraphXml("((end if))"),
         Table table => "<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/></w:tblPr><w:tblGrid><w:gridCol w:w=\"2000\"/><w:gridCol w:w=\"2000\"/></w:tblGrid>"
                        + string.Concat(table.Rows.Select(row => "<w:tr>" + string.Concat(row.Select(cell =>
                            "<w:tc><w:tcPr><w:tcW w:w=\"2000\" w:type=\"dxa\"/></w:tcPr>" + string.Concat(cell.Select(Xml)) + "</w:tc>")) + "</w:tr>"))
                        + "</w:tbl>",
         _ => throw new InvalidOperationException(),
     };
+
+    private static string InFirstCell(string table, string paragraph)
+    {
+        const string cellStart = "</w:tcPr>";
+        var at = table.IndexOf(cellStart, StringComparison.Ordinal) + cellStart.Length;
+        return table[..at] + paragraph + table[at..];
+    }
 
     private string ParagraphXml(string text) => "<w:p>" + string.Concat(Pieces(text, _random).Select(piece =>
         $"<w:r>{Pick(Formats)}<w:t xml:space=\"preserve\">{new XText(piece)}</w:t></w:r>")) + "</w:p>";
@@ -252,6 +268,12 @@ internal sealed class RandomTemplate
     {
         public override IEnumerable<string> Expected(int answers) =>
             Yes(answers, Field) ? Blocks.SelectMany(block => block.Expected(answers)) : [];
+    }
+
+    /// <summary>The mistake of opening a condition in a table's first cell and closing it after the table.</summary>
+    private sealed record Straddle(string Field, Table Table) : Block
+    {
+        public override IEnumerable<string> Expected(int answers) => throw new InvalidOperationException("A template with a mistake has no finished letter.");
     }
 
     private sealed record Table(List<List<List<Block>>> Rows) : Block

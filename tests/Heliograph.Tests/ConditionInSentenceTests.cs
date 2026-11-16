@@ -75,6 +75,17 @@ public class ConditionInSentenceTests
         Paragraphs(docx, """{ "owesMoney": false, "isAMember": true }""").Should().Equal("Before.", "B", "After.");
     }
 
+    [Theory]
+    [InlineData("((if Owes money))A((end if))((if Is a member))((end if))")]
+    [InlineData("((if Is a member))((end if))((if Owes money))A((end if))")]
+    [InlineData("((if Is a member))((if Owes money))A((end if))((end if)) ")]
+    public void A_paragraph_left_empty_goes_whichever_order_its_conditions_come_in(string paragraph)
+    {
+        var docx = TestDocx.With("Before.", paragraph, "After.");
+
+        Paragraphs(docx, """{ "owesMoney": false, "isAMember": true }""").Should().Equal("Before.", "After.");
+    }
+
     [Fact]
     public void A_table_cell_whose_whole_content_is_hidden_is_still_a_cell()
     {

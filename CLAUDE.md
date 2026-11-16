@@ -33,7 +33,7 @@ Follow them; this file adds only what is specific to this repo.
 | Project | Purpose |
 |---|---|
 | `src/Heliograph` | The core library: the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values and conditions) and renders it. No package dependencies. |
-| `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). |
+| `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). The Open XML SDK is referenced here only, as an independent validator of rendered files. |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
 
 ## Build and test
@@ -44,6 +44,11 @@ dotnet test Heliograph.slnx
 node scripts/check-policies.mjs
 node scripts/check-doc-links.mjs
 ```
+
+`RandomisedTests` builds templates at random and compares each rendered letter with what the
+generator says it should be. A failure names a seed; `new RandomTemplate(seed)` builds that
+document again. When the engine gains something an author can write, teach the generator to write
+it, or the net has a hole there.
 
 The editor round-trip tests drive LibreOffice with no window. They find it in its usual install
 place, or at the path in `HELIOGRAPH_SOFFICE`. Without LibreOffice they are skipped, unless

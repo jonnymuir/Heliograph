@@ -18,32 +18,33 @@ internal static class ConditionResolver
     /// </summary>
     public static void Resolve(XDocument part, Func<string, bool> isYes)
     {
+        var sentences = new HashSet<XElement>();
         while (part.Descendants(Conditions.Element).FirstOrDefault() is { } condition)
         {
             if (isYes((string)condition.Attribute("key")!))
             {
                 condition.ReplaceWith(condition.Nodes());
+                continue;
             }
-            else
+
+            if (condition.Attribute("inline") is not null && condition.Ancestors(Word + "p").FirstOrDefault() is { } paragraph)
             {
-                Hide(condition);
+                sentences.Add(paragraph);
             }
+
+            condition.Remove();
+        }
+
+        // Judged once every condition is settled, so the answer does not depend on the order they came in. A
+        // sentence that lost a condition and now shows nothing leaves no paragraph behind.
+        foreach (var paragraph in sentences.Where(paragraph => paragraph.Parent is not null && IsEmpty(paragraph)))
+        {
+            paragraph.Remove();
         }
 
         // A table cell must end with a paragraph, even when everything in it was hidden.
         var emptied = part.Descendants(Word + "tc").Where(cell => cell.Elements().LastOrDefault()?.Name != Word + "p").ToList();
         emptied.ForEach(cell => cell.Add(new XElement(Word + "p")));
-    }
-
-    /// <summary>Removes a condition and its content. If that was all a sentence held, its paragraph goes too.</summary>
-    private static void Hide(XElement condition)
-    {
-        var paragraph = condition.Attribute("inline") is null ? null : condition.Ancestors(Word + "p").FirstOrDefault();
-        condition.Remove();
-        if (paragraph is not null && IsEmpty(paragraph))
-        {
-            paragraph.Remove();
-        }
     }
 
     /// <summary>Whether a paragraph shows nothing: no text, no picture, no break, and no section break to carry.</summary>

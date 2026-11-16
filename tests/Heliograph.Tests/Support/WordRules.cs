@@ -11,7 +11,7 @@ namespace Heliograph.Tests.Support;
 internal static class WordRules
 {
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-    private static readonly string[] Stories = ["hdr", "ftr", "footnote", "endnote", "txbxContent"];
+    private static readonly string[] StoryNames = ["hdr", "ftr", "footnote", "endnote", "txbxContent"];
 
     public static IReadOnlyList<string> Problems(byte[] docx)
     {
@@ -29,11 +29,19 @@ internal static class WordRules
     private static IEnumerable<string> Problems(XDocument part)
     {
         var elements = part.Descendants().ToList();
+        return Leftovers(elements).Concat(Tables(elements)).Concat(Stories(elements)).Concat(Fields(elements));
+    }
+
+    private static IEnumerable<string> Leftovers(List<XElement> elements)
+    {
         if (elements.Any(e => e.Name.NamespaceName.StartsWith("urn:heliograph", StringComparison.Ordinal)))
         {
             yield return "something the compiler wrote for itself was left in the file";
         }
+    }
 
+    private static IEnumerable<string> Tables(List<XElement> elements)
+    {
         foreach (var cell in elements.Where(e => e.Name == W + "tc" && e.Elements().LastOrDefault()?.Name != W + "p"))
         {
             yield return $"a table cell does not end with a paragraph: {Excerpt(cell.Parent!)}";
@@ -48,15 +56,17 @@ internal static class WordRules
         {
             yield return "a table row has no cells";
         }
+    }
 
-        foreach (var story in elements.Where(e => e.Name.Namespace == W && Stories.Contains(e.Name.LocalName)))
-        {
-            if (!story.Elements().Any(e => e.Name == W + "p" || e.Name == W + "tbl"))
-            {
-                yield return $"a {story.Name.LocalName} has no paragraph in it";
-            }
-        }
+    /// <summary>A header, footer, note or text box must hold at least one paragraph or table.</summary>
+    private static IEnumerable<string> Stories(List<XElement> elements) => elements
+        .Where(e => e.Name.Namespace == W && StoryNames.Contains(e.Name.LocalName))
+        .Where(story => !story.Elements().Any(e => e.Name == W + "p" || e.Name == W + "tbl"))
+        .Select(story => $"a {story.Name.LocalName} has no paragraph in it");
 
+    /// <summary>A field has a beginning and an end, in that order, and one field may sit inside another.</summary>
+    private static IEnumerable<string> Fields(List<XElement> elements)
+    {
         var depth = 0;
         foreach (var type in elements.Where(e => e.Name == W + "fldChar").Select(e => (string?)e.Attribute(W + "fldCharType")))
         {

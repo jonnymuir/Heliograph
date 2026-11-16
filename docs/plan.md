@@ -47,8 +47,8 @@ Each letter is a vertical slice: dictionary, compile with diagnostics, render, t
 #### Before the annual statement
 
 Close the cases the [edge-case register](edge-cases.md) marks as planned. Tags that are not
-recognised, and what must not reach a recipient, are done (strategies S1, S3, S4, S5, S9). Next
-is structure (S6, S7, S8), then the independent checks in the tests (S10). Lists multiply every case, so the net goes in first.
+recognised, and what must not reach a recipient, are done (strategies S1, S3, S4, S5, S9), and
+so are the independent checks in the tests (S10). Structure is next (S6, S7, S8). Lists multiply every case, so the net goes in first.
 
 ### 3. Email and SMS parts
 
