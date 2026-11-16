@@ -18,6 +18,9 @@ internal sealed class TestDocx
     private string? _header;
     private string? _footer;
     private string? _author;
+    private string _title = "Decision letter";
+    private string _wordNamespace = Word;
+    private readonly List<string> _rootRelationships = [];
     private string _mainContentType = MainType;
 
     /// <summary>A document with one paragraph per string, each in a single run.</summary>
@@ -70,9 +73,24 @@ internal sealed class TestDocx
     }
 
     /// <summary>Records who wrote and last saved the document, the way an editor does in its properties.</summary>
-    public TestDocx Author(string name)
+    public TestDocx Author(string name, string title = "Decision letter")
     {
         _author = name;
+        _title = title;
+        return this;
+    }
+
+    /// <summary>Uses another namespace for the document's own elements, as "Strict Open XML" does.</summary>
+    public TestDocx WordNamespace(string wordNamespace)
+    {
+        _wordNamespace = wordNamespace;
+        return this;
+    }
+
+    /// <summary>Adds a relationship from the package itself, such as to its extended properties.</summary>
+    public TestDocx RootRelationship(string type, string target)
+    {
+        _rootRelationships.Add($"<Relationship Id=\"rIdR{_rootRelationships.Count}\" Type=\"{type}\" Target=\"{target}\"/>");
         return this;
     }
 
@@ -118,18 +136,18 @@ internal sealed class TestDocx
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                 + $"<Relationship Id=\"rId1\" Type=\"{OfficeRelationships}/officeDocument\" Target=\"word/document.xml\"/>"
                 + (_author is null ? "" : "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties\" Target=\"docProps/core.xml\"/>")
-                + "</Relationships>");
+                + string.Concat(_rootRelationships) + "</Relationships>");
             if (_author is not null)
             {
                 Add(zip, "docProps/core.xml",
                     "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
-                    + $"<dc:title>Decision letter</dc:title><dc:creator>{_author}</dc:creator><cp:lastModifiedBy>{_author}</cp:lastModifiedBy></cp:coreProperties>");
+                    + $"<dc:title>{_title}</dc:title><dc:creator>{_author}</dc:creator><cp:lastModifiedBy>{_author}</cp:lastModifiedBy></cp:coreProperties>");
             }
 
             Add(zip, "word/_rels/document.xml.rels",
                 "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                 + relationships + string.Concat(_documentRelationships) + "</Relationships>");
-            Add(zip, "word/document.xml", $"<w:document xmlns:w=\"{Word}\"><w:body>{string.Concat(_paragraphs)}</w:body></w:document>");
+            Add(zip, "word/document.xml", $"<w:document xmlns:w=\"{_wordNamespace}\"><w:body>{string.Concat(_paragraphs)}</w:body></w:document>");
             if (_header is not null)
             {
                 Add(zip, "word/header1.xml", $"<w:hdr xmlns:w=\"{Word}\">{ParagraphXml([_header])}</w:hdr>");
@@ -202,6 +220,14 @@ internal sealed class TestDocx
         using var zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
         using var part = zip.GetEntry("word/document.xml")!.Open();
         return XDocument.Load(part);
+    }
+
+    /// <summary>The raw text of one part of the file.</summary>
+    public static string PartText(byte[] docx, string partName)
+    {
+        using var zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
+        using var reader = new StreamReader(zip.GetEntry(partName)!.Open());
+        return reader.ReadToEnd();
     }
 
     /// <summary>The text of one of the document's properties, such as "creator" or "lastModifiedBy".</summary>

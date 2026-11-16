@@ -22,6 +22,15 @@ internal sealed class DocxPackage
     private static readonly XNamespace Relationships = "http://schemas.openxmlformats.org/package/2006/relationships";
     private static readonly XNamespace ContentTypes = "http://schemas.openxmlformats.org/package/2006/content-types";
 
+    // The first bytes of the container that both the older .doc format and a password-protected file use.
+    private static readonly byte[] OldWordSignature = [0xD0, 0xCF, 0x11, 0xE0];
+
+    // The parts, besides the main document, whose paragraphs an author writes, by the last word of their relationship type.
+    private static readonly Dictionary<string, string> TextPartLabels = new()
+    {
+        ["header"] = "header", ["footer"] = "footer", ["footnotes"] = "footnotes", ["endnotes"] = "endnotes",
+    };
+
     private readonly List<(string Name, byte[] Bytes)> _entries;
 
     private DocxPackage(List<(string Name, byte[] Bytes)> entries) => _entries = entries;
@@ -29,15 +38,28 @@ internal sealed class DocxPackage
     public IEnumerable<string> Names => _entries.Select(entry => entry.Name);
 
     /// <summary>Reads the zip, or says why it was refused. Stops reading as soon as a limit is passed.</summary>
-    public static DocxPackage? Read(Stream stream, out string? refusalCode)
+    public static DocxPackage? Read(Stream stream, out DocxRefusal? refusal)
     {
-        refusalCode = null;
+        refusal = null;
         try
         {
-            using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+            var file = ReadWithin(stream, MaxUnpackedBytes);
+            if (file is null)
+            {
+                refusal = DocxRefusal.TooLarge;
+                return null;
+            }
+
+            if (file.AsSpan().StartsWith(OldWordSignature))
+            {
+                refusal = DocxRefusal.OldOrProtected;
+                return null;
+            }
+
+            using var zip = new ZipArchive(new MemoryStream(file), ZipArchiveMode.Read);
             if (zip.Entries.Count > MaxEntries)
             {
-                refusalCode = DiagnosticCodes.TooLarge;
+                refusal = DocxRefusal.TooLarge;
                 return null;
             }
 
@@ -45,10 +67,11 @@ internal sealed class DocxPackage
             var remaining = MaxUnpackedBytes;
             foreach (var entry in zip.Entries)
             {
-                var bytes = ReadWithin(entry, remaining);
+                using var source = entry.Open();
+                var bytes = ReadWithin(source, remaining);
                 if (bytes is null)
                 {
-                    refusalCode = DiagnosticCodes.TooLarge;
+                    refusal = DocxRefusal.TooLarge;
                     return null;
                 }
 
@@ -60,7 +83,7 @@ internal sealed class DocxPackage
         }
         catch (InvalidDataException)
         {
-            refusalCode = DiagnosticCodes.NotAWordDocument;
+            refusal = DocxRefusal.NotAWordDocument;
             return null;
         }
     }
@@ -94,34 +117,34 @@ internal sealed class DocxPackage
         .Select(e => (((string?)e.Attribute("PartName"))?.TrimStart('/'), (string?)e.Attribute("ContentType") ?? ""));
 
     /// <summary>
-    /// The parts that hold text an author wrote: the main document, then its headers and footers. Null when the
+    /// The parts that hold text an author wrote: the main document, then its headers, footers and notes. Null when the
     /// package is not a Word document.
     /// </summary>
     public IReadOnlyList<(string Name, string Label)>? TextParts()
     {
-        var main = RelationshipsIn("_rels/.rels")
-            .Where(r => !r.External && r.Type.EndsWith(OfficeDocumentRelationship, StringComparison.Ordinal))
-            .Select(r => r.Target.TrimStart('/'))
-            .FirstOrDefault();
-        if (main is null || !Has(main) || !DeclaredContentTypes().Any(t => t.PartName == main && t.ContentType == MainDocumentType))
+        if (MainDocument() is not { } main)
         {
             return null;
         }
 
         var folder = main.Contains('/', StringComparison.Ordinal) ? main[..(main.LastIndexOf('/') + 1)] : "";
-        var parts = new List<(string, string)> { (main, "document") };
-        foreach (var (type, target, external) in RelationshipsIn($"{folder}_rels/{main[folder.Length..]}.rels"))
-        {
-            var label = type.EndsWith("/header", StringComparison.Ordinal) ? "header"
-                : type.EndsWith("/footer", StringComparison.Ordinal) ? "footer" : null;
-            var name = target.StartsWith('/') ? target.TrimStart('/') : folder + target;
-            if (label is not null && !external && Has(name))
-            {
-                parts.Add((name, label));
-            }
-        }
+        var others = RelationshipsIn($"{folder}_rels/{main[folder.Length..]}.rels")
+            .Where(r => !r.External)
+            .Select(r => (Name: r.Target.StartsWith('/') ? r.Target.TrimStart('/') : folder + r.Target,
+                Label: TextPartLabels.FirstOrDefault(known => r.Type.EndsWith("/" + known.Key, StringComparison.Ordinal)).Value))
+            .Where(part => part.Label is not null && Has(part.Name));
+        return [(main, "document"), .. others];
+    }
 
-        return parts;
+    /// <summary>The name of the main document part, when the package says it has one and that it is a Word document.</summary>
+    private string? MainDocument()
+    {
+        var main = RelationshipsIn("_rels/.rels")
+            .Where(r => !r.External && r.Type.EndsWith(OfficeDocumentRelationship, StringComparison.Ordinal))
+            .Select(r => r.Target.TrimStart('/'))
+            .FirstOrDefault();
+        var isWord = main is not null && Has(main) && DeclaredContentTypes().Any(t => t.PartName == main && t.ContentType == MainDocumentType);
+        return isWord ? main : null;
     }
 
     /// <summary>Writes the package with some parts replaced: same order, same timestamps, same bytes for the same input.</summary>
@@ -151,10 +174,9 @@ internal sealed class DocxPackage
         return output.ToArray();
     }
 
-    private static byte[]? ReadWithin(ZipArchiveEntry entry, long limit)
+    private static byte[]? ReadWithin(Stream source, long limit)
     {
         // The size in the zip's directory is whatever the file claims, so count what actually comes out.
-        using var source = entry.Open();
         using var buffer = new MemoryStream();
         var chunk = new byte[81920];
         int read;
@@ -170,4 +192,12 @@ internal sealed class DocxPackage
 
         return buffer.ToArray();
     }
+}
+
+/// <summary>Why a file could not be read as a package at all.</summary>
+internal enum DocxRefusal
+{
+    NotAWordDocument,
+    OldOrProtected,
+    TooLarge,
 }
