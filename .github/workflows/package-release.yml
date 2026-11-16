@@ -67,17 +67,6 @@ jobs:
           name: heliograph-nuget
           path: artifacts/*.nupkg
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          case "$TAG" in
-            *-*) gh release create "$TAG" artifacts/*.nupkg --title "$TAG" --generate-notes --prerelease ;;
-            *)   gh release create "$TAG" artifacts/*.nupkg --title "$TAG" --generate-notes ;;
-          esac
-
       # Trusted Publishing: this run's GitHub OIDC token is exchanged for a nuget.org API key that
       # expires in an hour. No long-lived secret is stored. It needs a Trusted Publishing policy on
       # nuget.org for this repo and this workflow file (jonnymuir/Heliograph, package-release.yml).
@@ -93,3 +82,15 @@ jobs:
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" -s https://api.nuget.org/v3/index.json --skip-duplicate
+
+      # Last, so a publish that fails leaves no release behind that points at packages nobody can restore.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          case "$TAG" in
+            *-*) gh release create "$TAG" artifacts/*.nupkg --title "$TAG" --generate-notes --prerelease ;;
+            *)   gh release create "$TAG" artifacts/*.nupkg --title "$TAG" --generate-notes ;;
+          esac
