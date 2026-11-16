@@ -215,3 +215,16 @@ another PDF route can be added without changing the core.
 4. **A document with no title.** A PDF needs one to meet PDF/UA, and it was the only rule the
    benchmark letters failed. Warn at compile, refuse at compile, or fill it in from the first
    heading. Word in Microsoft 365 may not let an author set it, which counts against refusing.
+
+## Chosen while the maintainer was away
+
+The maintainer asked the agent to take its own recommended option on each question and list the
+choices here. Each can be reversed; the line says what reversing it would cost.
+
+| Choice | Instead of | To reverse |
+|---|---|---|
+| The PDF converter starts LibreOffice as a local process. | Calling LibreOffice in a container, or both. | Nothing: a container route is another implementation of `IPdfConverter`. |
+| A draft is saved even when it does not compile, with its diagnostics. Only publishing is refused. | Refusing to save a draft with an error. | Small: one check in `CorrespondenceLibrary.SaveDraftAsync`. |
+| A published version keeps a copy of its dictionary. | Compiling a version against the dictionary as it is today. | Medium: stores would drop a column, and a dictionary change could then break a published letter. |
+| Heliograph reads dictionaries and does not edit them. Whoever knows the data maintains its dictionary. | Editing a dictionary through Heliograph. | Small: add a save operation to `IDictionarySource`. |
+| A correspondence's key is lower-case letters, digits and hyphens. | Any text. | Small, until keys are in use in addresses and file names. |

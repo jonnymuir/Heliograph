@@ -33,6 +33,7 @@ Follow them; this file adds only what is specific to this repo.
 | Project | Purpose |
 |---|---|
 | `src/Heliograph` | The core library: `Correspondence` (one compile and one render for every part), the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values, conditions and rows that repeat over a list) and renders it. No package dependencies. |
+| `src/Heliograph/Library` | Part of the core library: `CorrespondenceLibrary`, the operations on stored correspondence (draft, check, preview, publish, render a version), over two seams the host supplies, `ICorrespondenceStore` and `IDictionarySource`. |
 | `src/Heliograph/Messages` | Part of the core library: plain-text templates. The SMS part, the email part, and the line-by-line engine they share. |
 | `src/Heliograph.Pdf.LibreOffice` | One route to PDF behind `IPdfConverter`: runs a local LibreOffice with no window and asks for PDF/UA. References the core only. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). The Open XML SDK is referenced here only, as an independent validator of rendered files. |
