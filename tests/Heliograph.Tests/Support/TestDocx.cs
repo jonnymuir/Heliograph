@@ -181,6 +181,13 @@ internal sealed class TestDocx
             .Select(p => (string?)p.Element(w + "pPr")?.Element(w + "pStyle")?.Attribute(w + "val")).ToList();
     }
 
+    /// <summary>How many paragraphs each table cell in the document body holds. A cell with none is not a valid cell.</summary>
+    public static IReadOnlyList<int> CellParagraphCounts(byte[] docx)
+    {
+        XNamespace w = Word;
+        return Body(docx).Descendants(w + "tc").Select(cell => cell.Elements(w + "p").Count()).ToList();
+    }
+
     /// <summary>All the text in the document body that is set in italics.</summary>
     public static string ItalicText(byte[] docx)
     {

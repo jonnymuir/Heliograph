@@ -31,8 +31,8 @@ public sealed class CompiledDocument
         {
             // A copy, so the compiled template is never changed and can be shared.
             var part = new XDocument(template);
-            ResolveConditions(part, recipient);
-            foreach (var slot in part.Descendants(TagScanner.Slot + "value").ToList())
+            ConditionResolver.Resolve(part, key => recipient.IsYes(_fields[key]));
+            foreach (var slot in part.Descendants(TagScanner.Value).ToList())
             {
                 if (recipient.Paragraphs(_fields[(string)slot.Attribute("key")!]) is { } paragraphs)
                 {
@@ -46,25 +46,6 @@ public sealed class CompiledDocument
         return recipient.Diagnostics.Count == 0
             ? new DocumentRender(_package.Save(rendered), [])
             : new DocumentRender(null, recipient.Diagnostics);
-    }
-
-    /// <summary>
-    /// Keeps or removes the content each condition governs, outermost first. It runs before any value is filled in,
-    /// so a field used only in removed content needs no value.
-    /// </summary>
-    private void ResolveConditions(XDocument part, RecipientData recipient)
-    {
-        while (part.Descendants(Conditions.Element).FirstOrDefault() is { } condition)
-        {
-            if (recipient.IsYes(_fields[(string)condition.Attribute("key")!]))
-            {
-                condition.ReplaceWith(condition.Nodes());
-            }
-            else
-            {
-                condition.Remove();
-            }
-        }
     }
 }
 

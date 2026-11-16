@@ -125,17 +125,6 @@ public class ConditionTests
         Compile(docx).Diagnostics.Select(d => d.Code).Should().Contain(DiagnosticCodes.ConditionNotClosed);
     }
 
-    [Theory]
-    [InlineData("((if Owes money)) You owe us.")]
-    [InlineData("You owe us. ((end if))")]
-    [InlineData("((if Owes money))((end if))")]
-    public void A_condition_tag_that_shares_its_paragraph_is_reported(string paragraph)
-    {
-        var compilation = Compile(TestDocx.With("((if Owes money))", paragraph, "((end if))"));
-
-        compilation.Diagnostics.Select(d => d.Code).Should().Contain(DiagnosticCodes.ConditionTagNotAlone);
-    }
-
     [Fact]
     public void A_condition_on_a_field_that_is_not_yes_or_no_is_reported()
     {

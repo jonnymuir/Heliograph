@@ -65,6 +65,10 @@ decide day-to-day code.
   tag is how an author writes one, `((Member name))`. Code, diagnostics and docs keep to that.
 - **A new diagnostic code gets a row in [docs/diagnostics.md](docs/diagnostics.md).** A test fails
   until it has one.
+- **A rendered file must always be a valid Word document.** Where a tag's placement would break a
+  table, a list or a link, the template is refused at compile with the place and a fix. Nothing
+  is guessed and nothing broken is produced. Each awkward placement found gets a test in
+  `AwkwardPlacementTests`.
 - **The core takes no framework dependency and assumes no product.** No ASP.NET Core, no Umbraco,
   no Wayfinder reference in `src/Heliograph`. A file format, a PDF route, a store and a dictionary
   source each sit behind a seam with one implementation; adding another must not change the core.
