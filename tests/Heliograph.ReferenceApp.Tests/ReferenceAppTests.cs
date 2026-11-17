@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 
 namespace Heliograph.ReferenceApp.Tests;
 
@@ -74,9 +73,9 @@ public sealed class ReferenceAppTests : IClassFixture<ReferenceAppTests.Site>
     {
         private readonly string _folder = Path.Combine(Path.GetTempPath(), "heliograph-reference-" + Guid.NewGuid().ToString("N"));
 
-        protected override void ConfigureWebHost(IWebHostBuilder builder) =>
-            builder.ConfigureAppConfiguration((_, configuration) =>
-                configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Heliograph:Folder"] = _folder }));
+        // UseSetting, not app configuration: Program reads the folder before the app's own configuration is added to, so
+        // only a host setting reaches it, and the test never touches the app's real folder.
+        protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseSetting("Heliograph:Folder", _folder);
 
         protected override void Dispose(bool disposing)
         {
