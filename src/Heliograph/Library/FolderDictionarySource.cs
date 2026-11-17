@@ -11,33 +11,52 @@ public sealed partial class FolderDictionarySource(string folder) : IDictionaryS
 {
     private const string SampleSuffix = ".samples";
 
+    private readonly string _root = Path.GetFullPath(folder);
+
     public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<string>>(Directory.Exists(folder)
-            ? [.. Directory.GetFiles(folder, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>().Where(IsName).Order(StringComparer.Ordinal)]
-            : []);
+        Task.FromResult(NamesIn(_root));
 
     public async Task<string?> ReadAsync(string name, CancellationToken cancellationToken = default) =>
-        IsName(name) && File.Exists(Path.Combine(folder, name + ".json"))
-            ? await File.ReadAllTextAsync(Path.Combine(folder, name + ".json"), cancellationToken).ConfigureAwait(false)
+        Inside(name + ".json") is { } path && File.Exists(path)
+            ? await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false)
             : null;
 
-    public Task<IReadOnlyList<string>> ListSamplesAsync(string name, CancellationToken cancellationToken = default)
-    {
-        var samples = Path.Combine(folder, name + SampleSuffix);
-        return Task.FromResult<IReadOnlyList<string>>(IsName(name) && Directory.Exists(samples)
-            ? [.. Directory.GetFiles(samples, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>().Where(IsName).Order(StringComparer.Ordinal)]
-            : []);
-    }
+    public Task<IReadOnlyList<string>> ListSamplesAsync(string name, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Inside(name + SampleSuffix) is { } samples ? NamesIn(samples) : []);
 
     public async Task<string?> ReadSampleAsync(string name, string sample, CancellationToken cancellationToken = default)
     {
-        var path = Path.Combine(folder, name + SampleSuffix, sample + ".json");
-        return IsName(name) && IsName(sample) && File.Exists(path)
+        if (!IsName(sample) || Inside(name + SampleSuffix) is not { } samples)
+        {
+            return null;
+        }
+
+        var path = Path.GetFullPath(Path.Combine(samples, sample + ".json"));
+        return path.StartsWith(samples + Path.DirectorySeparatorChar, StringComparison.Ordinal) && File.Exists(path)
             ? await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false)
             : null;
     }
 
-    /// <summary>A name becomes part of a path, so it may hold nothing that leaves the folder.</summary>
+    private static IReadOnlyList<string> NamesIn(string directory) => Directory.Exists(directory)
+        ? [.. Directory.GetFiles(directory, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>().Where(IsName).Order(StringComparer.Ordinal)]
+        : [];
+
+    /// <summary>
+    /// The full path of an entry directly in the folder, or null. A name becomes part of a path, so it must be a plain
+    /// name, and the path it makes must still be inside the folder.
+    /// </summary>
+    private string? Inside(string entry)
+    {
+        var name = entry.EndsWith(".json", StringComparison.Ordinal) ? entry[..^5] : entry.EndsWith(SampleSuffix, StringComparison.Ordinal) ? entry[..^SampleSuffix.Length] : entry;
+        if (!IsName(name))
+        {
+            return null;
+        }
+
+        var path = Path.GetFullPath(Path.Combine(_root, entry));
+        return path.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal) ? path : null;
+    }
+
     private static bool IsName(string? name) => name is not null && NamePattern().IsMatch(name);
 
     [GeneratedRegex("^[A-Za-z0-9][A-Za-z0-9-]*$")]
