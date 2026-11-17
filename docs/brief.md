@@ -211,6 +211,10 @@ another PDF route can be added without changing the core.
   from the dictionary, with a tag sheet to copy from; a file dropped on the workbench is checked
   at once; the author's own document handed back with a comment at each problem; and opening it
   in Word or LibreOffice straight from the workbench, saving back to Heliograph.
+- **Authors keep dictionaries in the workbench**, on a Dictionaries screen, over the API and
+  over MCP, where the host's dictionary source can be written to. Saving says what the change
+  breaks. A new dictionary can start from a ready-made one the host offers; the Heliograph.Umbraco
+  reference site offers one for each Wayfinder blueprint, built from its fields.
 - **The Wayfinder join: one "send correspondence" capability.** A blueprint stage calls a single
   support-system capability that names the correspondence and passes the request's fields as
   the data, lists as arrays. Authors create correspondence without a restart, which a capability
@@ -238,7 +242,7 @@ choices here. Each can be reversed; the line says what reversing it would cost.
 | The PDF converter starts LibreOffice as a local process. | Calling LibreOffice in a container, or both. | Nothing: a container route is another implementation of `IPdfConverter`. |
 | A draft is saved even when it does not compile, with its diagnostics. Only publishing is refused. | Refusing to save a draft with an error. | Small: one check in `CorrespondenceLibrary.SaveDraftAsync`. |
 | A published version keeps a copy of its dictionary. | Compiling a version against the dictionary as it is today. | Medium: stores would drop a column, and a dictionary change could then break a published letter. |
-| Heliograph reads dictionaries and does not edit them. Whoever knows the data maintains its dictionary. | Editing a dictionary through Heliograph. | Small: add a save operation to `IDictionarySource`. |
+| ~~Heliograph reads dictionaries and does not edit them.~~ Reversed by the maintainer: authors keep dictionaries on a Dictionaries screen. | | |
 | A correspondence's key is lower-case letters, digits and hyphens. | Any text. | Small, until keys are in use in addresses and file names. |
 | The guides moved to `docs/skills/<name>/SKILL.md`, each with a name and a description, and are served over MCP from those files. | Keeping `docs/*.md` and writing separate material for agents. | Small before the first release: move the files back and fix the links. |
 | The MCP server offers authoring only. It does not render for a real recipient. | Offering every operation, render included, over MCP. | Small: one more tool. It would put recipients' personal data into agent conversations. |

@@ -2,10 +2,14 @@ namespace Heliograph.Library;
 
 /// <summary>
 /// The dictionaries a correspondence can use, as an author needs them: the list, each one laid out with its tags,
-/// and the sample recipients for previews. Read through the host's <see cref="IDictionarySource"/>.
+/// and the sample recipients for previews. Read through the host's <see cref="IDictionarySource"/>, and written
+/// through it when it is also an <see cref="IDictionaryStore"/>.
 /// </summary>
-public sealed class DictionaryCatalog(IDictionarySource source)
+public sealed class DictionaryCatalog(IDictionarySource source, IDictionaryStartingPoints? startingPoints = null)
 {
+    /// <summary>Adding and changing dictionaries and their sample recipients, where the host allows it.</summary>
+    public DictionaryEditor Editing { get; } = new(source, startingPoints);
+
     /// <summary>The names of the dictionaries a correspondence can use.</summary>
     public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default) => source.ListAsync(cancellationToken);
 

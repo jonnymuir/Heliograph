@@ -32,7 +32,8 @@ public static class CorrespondenceAuthoringMcpExtensions
         services.TryAddSingleton(provider => new CorrespondenceLibrary(
             provider.GetRequiredService<ICorrespondenceStore>(),
             provider.GetRequiredService<IDictionarySource>(),
-            provider.GetService<TimeProvider>() ?? TimeProvider.System));
+            provider.GetService<TimeProvider>() ?? TimeProvider.System,
+            provider.GetService<IDictionaryStartingPoints>()));
 
         services.AddMcpServer(options => options.ServerInstructions = CorrespondenceAuthoringInstructions.Compose(instructions))
             .WithHttpTransport()

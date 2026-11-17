@@ -66,6 +66,17 @@ export interface EditLink {
   expires: string;
 }
 
+export interface DictionarySettings {
+  canEdit: boolean;
+  startingPoints: Array<{ name: string; description: string; json: string }>;
+}
+
+export interface DictionarySave {
+  saved: boolean;
+  problems: Problem[];
+  uses: Array<{ key: string; name: string; diagnostics: Problem[] }>;
+}
+
 export interface WorkbenchSource {
   list(): Promise<Summary[]>;
   dictionaries(): Promise<string[]>;
@@ -77,6 +88,13 @@ export interface WorkbenchSource {
   check(key: string): Promise<Problem[]>;
   preview(key: string, sample: string): Promise<Parts>;
   publish(key: string): Promise<{ version: number | null; diagnostics: Problem[] }>;
+  dictionarySettings(): Promise<DictionarySettings>;
+  /** A dictionary as the JSON it is kept in. */
+  dictionaryDefinition(name: string): Promise<string | null>;
+  saveDictionary(name: string, json: string): Promise<DictionarySave>;
+  sample(dictionary: string, sample: string): Promise<string | null>;
+  saveSample(dictionary: string, sample: string, json: string): Promise<Problem[]>;
+  deleteSample(dictionary: string, sample: string): Promise<void>;
   /** Addresses that open the draft's document in a word processor and save it straight back. Null when there is no document. */
   editLink(key: string): Promise<EditLink | null>;
   /** A file to save: the document, a starter, the document with comments, a rendered preview or its PDF. Null when there is none. */

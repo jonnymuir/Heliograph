@@ -85,4 +85,7 @@ store. None of these has a place in a file.
 | `HG3004` | The dictionary the correspondence names cannot be read. The message says why. | Whoever maintains the dictionary corrects it. |
 | `HG3005` | The correspondence has no parts. It is saved as a draft and cannot be published. | Add a document, an email or a text message. |
 | `HG3006` | Someone else saved the draft after this copy was read, so this copy was not saved. | Read it again, make the change to that copy, and save it. |
+| `HG3008` | A dictionary or sample name cannot be used: it is not letters, digits and hyphens, starting with a letter or digit. | Use a name such as `licensing`. |
+| `HG3009` | Dictionaries cannot be changed here: the site takes them from a system that knows its own data. | Ask whoever maintains that data to change the dictionary. |
+| `HG3010` | A sample recipient is not a JSON object. | Write it as `{ "fieldKey": "value", ... }`, with the dictionary's keys. |
 | `HG3007` | The key cannot be used: it is not lower-case letters, digits and hyphens, starting with a letter. | Use a key such as `decision-letter`. |

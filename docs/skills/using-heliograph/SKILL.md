@@ -106,6 +106,19 @@ var render = document.Render(recipient, new RenderSettings(CultureInfo.GetCultur
 `Render` returns `Docx`, the finished file as bytes, or null with `Diagnostics` saying what is
 wrong with the data. Only fields the template uses for this recipient are checked.
 
+### Letting authors keep dictionaries
+
+When your `IDictionarySource` is also an `IDictionaryStore`, authors keep dictionaries from the
+workbench's Dictionaries screen, over the API (`PUT /dictionaries/{name}`, samples under
+`/dictionaries/{name}/samples/{sample}`) and over MCP. A save is checked first (`HG3004`,
+`HG3008`, `HG3010`), and the answer lists every correspondence that uses the dictionary with what
+is now wrong with its draft. `FolderDictionarySource` and Heliograph.Umbraco's database source
+are both stores. A source that is not shows dictionaries read-only and refuses changes (`HG3009`).
+
+To offer ready-made dictionaries for "New dictionary", register an `IDictionaryStartingPoints`.
+Heliograph does not know where they come from: the Heliograph.Umbraco reference site builds one
+from each Wayfinder blueprint's fields.
+
 ## Stored correspondence
 
 `Correspondence.Compile` works on files you hand it. `CorrespondenceLibrary` is for a system that

@@ -50,6 +50,7 @@ public static class CorrespondenceAuthoringApiExtensions
         }
 
         DictionaryEndpoints.Map(group);
+        DictionaryEditingEndpoints.Map(group);
         DraftEndpoints.Map(group);
         DocumentEndpoints.Map(group);
         RenderEndpoints.Map(group);
