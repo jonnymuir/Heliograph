@@ -230,6 +230,16 @@ word processor and upload the file again. You do not need to delete these commen
 own comments, whose author is "Heliograph", come out by themselves. Anyone else's comments are
 still refused, because they would be sent to every recipient.
 
+## Changing a document without downloading it
+
+Once a correspondence has a document, **Open in Word** or **Open in LibreOffice** opens it in your
+word processor straight from the workbench. Change it and save as you normally would: the save goes
+back to Heliograph as a new draft, checked like any upload. Come back to the workbench to see what
+is now wrong, if anything. The link works for eight hours; open it again after that.
+
+This works with Word on the desktop and with LibreOffice. Word in the browser (Microsoft 365)
+cannot open it this way: download the document and upload it again instead.
+
 ## Before you upload
 
 1. Accept or reject every tracked change, and turn tracking off.

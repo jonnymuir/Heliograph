@@ -23,6 +23,21 @@ export class CorrespondenceView extends LitElement {
   @state() private tab: Tab = 'document';
   @state() private status = '';
 
+  // Coming back to the page after saving in a word processor shows what is now wrong with the document.
+  private readonly refresh = () => {
+    if (this.key && document.visibilityState === 'visible') void this.load(false);
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('focus', this.refresh);
+  }
+
+  override disconnectedCallback() {
+    window.removeEventListener('focus', this.refresh);
+    super.disconnectedCallback();
+  }
+
   override async willUpdate(changed: Map<string, unknown>) {
     if (changed.has('key') && this.key) await this.load(true);
   }

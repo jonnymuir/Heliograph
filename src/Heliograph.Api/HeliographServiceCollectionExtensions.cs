@@ -18,6 +18,13 @@ public static class HeliographServiceCollectionExtensions
             provider.GetRequiredService<ICorrespondenceStore>(),
             provider.GetRequiredService<IDictionarySource>(),
             provider.GetService<TimeProvider>() ?? TimeProvider.System));
+
+        // Edit links are signed with the host's Data Protection keys. A site with several servers shares its key ring,
+        // as it already must for sign-in cookies.
+        services.AddDataProtection();
+        services.TryAddSingleton(provider => new EditLinks(
+            provider.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(),
+            provider.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;
     }
 

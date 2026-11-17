@@ -26,7 +26,9 @@ export class DocumentPanel extends LitElement {
       <div class="actions">
         <button @click=${() => this.download('starter', `${this.draft.key}-starter.docx`)}>Download a starter document</button>
         ${this.draft.hasDocument
-          ? html`<button @click=${() => this.download('document', `${this.draft.key}.docx`)}>Download the document</button>
+          ? html`<button class="primary" @click=${() => this.open('word')}>Open in Word</button>
+              <button class="primary" @click=${() => this.open('libreOffice')}>Open in LibreOffice</button>
+              <button @click=${() => this.download('document', `${this.draft.key}.docx`)}>Download the document</button>
               ${documentProblems
                 ? html`<button @click=${() => this.download('annotated', `${this.draft.key}-with-comments.docx`)}>Download with comments</button>`
                 : null}
@@ -42,12 +44,30 @@ export class DocumentPanel extends LitElement {
         <input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" @change=${this.chosen} />
       </label>
       <p class="status muted" role="status">${this.busy}</p>
+      ${this.draft.hasDocument
+        ? html`<p class="muted">
+            <strong>Open in Word</strong> or <strong>LibreOffice</strong> edits the document where it is: save it in your
+            word processor and it is saved here. Come back to this page to see what is wrong with it. The link works for
+            eight hours.
+          </p>`
+        : null}
       ${documentProblems
         ? html`<p class="muted">
             <strong>Download with comments</strong> gives you your own document back with a comment at each problem. Fix
             them and upload it again; Heliograph's comments come out by themselves.
           </p>`
         : null}`;
+  }
+
+  /** Hands the document to the word processor through an address it opens and saves back to. */
+  private async open(editor: 'word' | 'libreOffice') {
+    const link = await this.source.editLink(this.draft.key);
+    if (!link) {
+      this.busy = 'The document could not be opened.';
+      return;
+    }
+    this.busy = `Opening in ${editor === 'word' ? 'Word' : 'LibreOffice'}… Save there when you are done, then come back here.`;
+    window.location.href = link[editor];
   }
 
   private async download(which: 'starter' | 'document' | 'annotated', name: string) {
