@@ -14,6 +14,9 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <!-- Aspire still pulls MessagePack 2.5.302 (GHSA-qhrr-8q5h-9q3h); drop once it doesn't. -->
     <PackageReference Include="MessagePack" />
+    <PackageReference Include="OpenTelemetry.Api" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
