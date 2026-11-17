@@ -12,6 +12,11 @@ updates:
       dotnet:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # Pinned only to patch the copy Aspire pulls in (GHSA-qhrr-8q5h-9q3h). Aspire is built against this major, and
+      # CI does not run the Aspire host, so a new major is taken by hand with Aspire, not by auto-PR.
+      - dependency-name: "MessagePack"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
