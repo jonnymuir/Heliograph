@@ -52,7 +52,9 @@ conditions, and an annual statement with a table of contributions.
    The document opens in your word processor; change it, save, and come back to the browser: the
    workbench shows what is now wrong, if anything. The first time, macOS asks whether LibreOffice
    may reach devices on the local network; allow it, because the reference app is on your
-   machine.
+   machine. On a Mac, LibreOffice cannot take the link from the browser, so the button copies the
+   address and tells you how to open it from inside LibreOffice; see
+   [Writing a template](../writing-a-template/SKILL.md#changing-a-document-without-downloading-it).
 7. **Publish.** With no problems left, **Publish** makes version 1. A change after that is a
    draft until you publish again.
 8. **What your system sends.** Open `https://localhost:7296/outbox/decision-letter/refused`. This

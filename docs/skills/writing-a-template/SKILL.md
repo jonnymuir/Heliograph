@@ -240,6 +240,14 @@ is now wrong, if anything. The link works for eight hours; open it again after t
 This works with Word on the desktop and with LibreOffice. Word in the browser (Microsoft 365)
 cannot open it this way: download the document and upload it again instead.
 
+**LibreOffice on a Mac** cannot take a link from the browser: it opens to its start screen and
+not the document, a known LibreOffice problem
+([bug 151224](https://bugs.documentfoundation.org/show_bug.cgi?id=151224)). On a Mac, **Open in
+LibreOffice** copies the document's address instead. In LibreOffice, choose **File › Open**, paste
+the address into the file name box and press **Open**. If the Mac's own Open window appears, turn
+on **LibreOffice › Settings › LibreOffice › General › Use LibreOffice dialogs** once, then try
+again. Saving goes straight back to Heliograph as before.
+
 ## Before you upload
 
 1. Accept or reject every tracked change, and turn tracking off.

@@ -66,6 +66,15 @@ export class DocumentPanel extends LitElement {
       this.busy = 'The document could not be opened.';
       return;
     }
+    if (editor === 'libreOffice' && isMac()) {
+      // LibreOffice on a Mac ignores links handed over by the browser (LibreOffice bugs 151224 and 158260), so the
+      // author opens the address from inside LibreOffice instead.
+      await navigator.clipboard.writeText(link.url);
+      this.busy =
+        'The document\'s address is copied. In LibreOffice, choose File › Open, paste it into the file name box and press Open. ' +
+        'If you see the Mac\'s own Open window instead, first turn on LibreOffice › Settings › LibreOffice › General › “Use LibreOffice dialogs”.';
+      return;
+    }
     this.busy = `Opening in ${editor === 'word' ? 'Word' : 'LibreOffice'}… Save there when you are done, then come back here.`;
     window.location.href = link[editor];
   }
@@ -117,6 +126,9 @@ export class DocumentPanel extends LitElement {
     `,
   ];
 }
+
+/** Whether the author is on a Mac, where LibreOffice cannot take a link from the browser. */
+const isMac = () => /Mac/.test(navigator.platform) || /Macintosh/.test(navigator.userAgent);
 
 declare global {
   interface HTMLElementTagNameMap {

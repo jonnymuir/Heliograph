@@ -5,7 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Heliograph.Api</PackageId>
     <Title>Heliograph.Api</Title>
-    <Version>0.1.0-alpha.3</Version>
+    <Version>0.1.0-alpha.4</Version>
     <Authors>Jonny Muir</Authors>
     <Description>Correspondence authoring over REST: one MapCorrespondenceAuthoringApi() call adds the operations a person has (read the dictionary, save a draft, upload a document, check, preview, publish, render), closed unless the caller is signed in. What the Heliograph workbench talks to.</Description>
     <PackageTags>Correspondence;REST;Templates;Heliograph</PackageTags>

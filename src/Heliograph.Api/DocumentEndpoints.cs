@@ -34,7 +34,7 @@ internal static class DocumentEndpoints
             }
 
             var url = $"{request.Scheme}://{request.Host}{WebDavEndpoints.Prefix}/{Uri.EscapeDataString(links.Issue(key))}/{Uri.EscapeDataString(FileName(draft.Content.Name))}";
-            return Results.Ok(new EditLinkResponse(url, "ms-word:ofe|u|" + url, "vnd.libreoffice.command:ofv|u|" + url, DateTimeOffset.UtcNow.Add(EditLinks.Lifetime)));
+            return Results.Ok(new EditLinkResponse(url, "ms-word:ofe|u|" + url, "vnd.libreoffice.command:ofe|u|" + url, DateTimeOffset.UtcNow.Add(EditLinks.Lifetime)));
         });
 
         group.MapGet("/correspondence/{key}/document/annotated", async (string key, CorrespondenceLibrary library, CancellationToken ct) =>
