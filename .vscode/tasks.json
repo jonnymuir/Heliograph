@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Workbench client: build",
+      "type": "shell",
+      "command": "npm install --no-audit --no-fund && npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/src/Heliograph.Workbench.Client"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "dotnet: build AppHost",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/reference/Heliograph.AppHost/Heliograph.AppHost.csproj"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "dotnet: build ReferenceApp",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/reference/Heliograph.ReferenceApp/Heliograph.ReferenceApp.csproj"],
+      "dependsOn": ["Workbench client: build"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Reference host: prepare AppHost",
+      "dependsOn": ["Workbench client: build", "dotnet: build AppHost"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

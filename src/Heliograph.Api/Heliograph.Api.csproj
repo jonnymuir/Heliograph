@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Heliograph.Api</PackageId>
+    <Title>Heliograph.Api</Title>
+    <Version>0.1.0-alpha.1</Version>
+    <Authors>Jonny Muir</Authors>
+    <Description>Correspondence authoring over REST: one MapCorrespondenceAuthoringApi() call adds the operations a person has (read the dictionary, save a draft, upload a document, check, preview, publish, render), closed unless the caller is signed in. What the Heliograph workbench talks to.</Description>
+    <PackageTags>Correspondence;REST;Templates;Heliograph</PackageTags>
+    <PackageProjectUrl>https://github.com/jonnymuir/Heliograph</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jonnymuir/Heliograph</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Heliograph/Heliograph.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

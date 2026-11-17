@@ -23,4 +23,4 @@ jobs:
       pull-requests: write
     with:
       solution: Heliograph.slnx
-      # node-build: '["src/Heliograph.Client"]'
+      node-build: '["src/Heliograph.Workbench.Client"]'

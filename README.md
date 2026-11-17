@@ -16,6 +16,19 @@ A heliograph sent messages by flashing sunlight across long distances.
   [Wayfinder](https://github.com/jonnymuir/Wayfinder), delivers what Heliograph produces.
 - **Whatever a person can do, an AI agent can do the same way**, and gets the same answers.
 
+## Try it
+
+Clone the repo and press Run in VS Code (**C#: Heliograph.ReferenceApp (standalone)**), or:
+
+```bash
+cd src/Heliograph.Workbench.Client && npm install && npm run build && cd ../..
+dotnet run --project reference/Heliograph.ReferenceApp
+```
+
+The workbench opens with three letters ready to preview, change and publish. The
+[reference app guide](https://github.com/jonnymuir/Heliograph/blob/main/docs/skills/reference-app/SKILL.md)
+walks through it, and shows the dozen lines a site writes to host Heliograph.
+
 ## What works today
 
 | | |
@@ -28,8 +41,9 @@ A heliograph sent messages by flashing sunlight across long distances.
 | Email part | Yes: a subject and a body in a small set of Markdown, rendered as accessible HTML and as plain text |
 | An MCP server for AI agents | Yes: `Heliograph.Mcp` offers the authoring operations, and serves the guides people read as the agent's skills |
 | Stored correspondence, with drafts and numbered versions | Yes, over a store the host supplies |
+| The workbench: write the email and text, bring the document in and out, preview, publish | Yes: `Heliograph.Workbench`, over `Heliograph.Api` |
 | PDF output | Yes: an accessible, tagged PDF through `Heliograph.Pdf.LibreOffice`, checked against PDF/UA by an independent validator |
-| A package on nuget.org | Not yet. Reference the project from a checkout |
+| A package on nuget.org | Prereleases: `dotnet add package Heliograph --prerelease` |
 
 ## A template
 

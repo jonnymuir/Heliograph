@@ -18,6 +18,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '20'
+      # The workbench ships inside Heliograph.Workbench as static web assets, so it is built first. Without it the
+      # package would be empty; the check after Pack catches that.
+      - name: Build the workbench client
+        working-directory: src/Heliograph.Workbench.Client
+        run: npm ci && npm run build
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
@@ -37,6 +46,8 @@ jobs:
       # Proves the packages can be built, so a release never finds out first.
       - name: Pack
         run: dotnet pack Heliograph.slnx -c Release --no-build -o artifacts
+      - name: The workbench is inside its package
+        run: unzip -l artifacts/Heliograph.Workbench.*.nupkg | grep -q 'staticwebassets/heliograph-workbench.js'
       - name: Size budgets
         run: node scripts/check-policies.mjs
       - name: Doc links

@@ -38,6 +38,15 @@ jobs:
             fi
           done
 
+      # No cache on purpose: a release must not restore a cache a pull request could have filled.
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0 # zizmor: ignore[cache-poisoning]
+        with:
+          node-version: '20'
+      - name: Build the workbench client
+        working-directory: src/Heliograph.Workbench.Client
+        run: npm ci && npm run build
+
       - name: Setup .NET
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
@@ -60,6 +69,9 @@ jobs:
 
       - name: Pack
         run: dotnet pack Heliograph.slnx -c Release --no-build -o artifacts
+
+      - name: The workbench is inside its package
+        run: unzip -l artifacts/Heliograph.Workbench.*.nupkg | grep -q 'staticwebassets/heliograph-workbench.js'
 
       - name: Upload NuGet package artifacts
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

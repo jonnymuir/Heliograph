@@ -9,6 +9,7 @@ namespace Heliograph;
 public sealed record Diagnostic(
     string Code, string Message, string Fix, DiagnosticLocation? Location = null, DiagnosticSeverity Severity = DiagnosticSeverity.Error);
 
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DiagnosticSeverity>))]
 public enum DiagnosticSeverity
 {
     /// <summary>The template does not compile, or the document is not rendered.</summary>

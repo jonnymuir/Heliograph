@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# What the reference app keeps while it runs. Delete it to start again from the benchmark letters.
+reference/Heliograph.ReferenceApp/App_Data/
+# The workbench client's build output, made by `npm run build` in src/Heliograph.Workbench.Client.
+src/Heliograph.Workbench/wwwroot/
