@@ -135,9 +135,30 @@ var render = await library.RenderAsync("decision-letter", recipient, settings);
   and `HG3006` says so.
 
 You supply two things. `ICorrespondenceStore` keeps drafts and versions: files, a database, a
-document library. `IDictionarySource` supplies each dictionary as JSON, from wherever the data is
-known. Both only keep and return; the rules are in the library. Put your own authorisation in
-front of every one of these operations.
+document library. `IDictionarySource` supplies each dictionary as JSON, and its sample recipients
+for previews, from wherever the data is known. Both only keep and return; the rules are in the
+library. Put your own authorisation in front of every one of these operations.
+
+For a small host, both come in the box and keep everything as ordinary files:
+
+```csharp
+var library = new CorrespondenceLibrary(
+    new FolderCorrespondenceStore("data/correspondence"),   // <key>/draft/document.docx, email.md, sms.txt
+    new FolderDictionarySource("data/dictionaries"),        // <name>.json, <name>.samples/<sample>.json
+    TimeProvider.System);
+```
+
+`FolderCorrespondenceStore` is safe for many requests in one process. A site with several
+servers keeps correspondence in a database instead.
+
+Two operations make the document easier for an author:
+
+- `StarterDocumentAsync(key)` gives a `.docx` to begin from: the title set, real headings, and a
+  tag sheet listing every field in the dictionary. A template that still has the tag sheet is
+  refused (`HG1021`).
+- `AnnotatedDocumentAsync(key)` gives the draft's document back with a Word comment at each
+  problem. Comments whose author is "Heliograph" are taken out when a document is compiled, so
+  the author uploads it again without deleting them.
 
 ## PDF
 

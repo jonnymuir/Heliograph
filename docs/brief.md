@@ -205,31 +205,22 @@ another PDF route can be added without changing the core.
 - **In Umbraco, one sign-in for agents.** The plumbing that lets an MCP client sign in through
   the backoffice moves out of Wayfinder.Umbraco into one small package that Wayfinder.Umbraco
   and Heliograph.Umbraco both use. Each maps its own MCP endpoint.
+- **Diagnostics appear in two places**: as a list in the workbench, and in the author's own
+  document, as a Word comment at each problem.
+- **The document, from start to finish, made simple (all four steps).** A starter document made
+  from the dictionary, with a tag sheet to copy from; a file dropped on the workbench is checked
+  at once; the author's own document handed back with a comment at each problem; and opening it
+  in Word or LibreOffice straight from the workbench, saving back to Heliograph.
 - **Prereleases go to nuget.org while both repos are built**, so Heliograph.Umbraco restores the
   engine the way any site would.
 - **The principles and constraints above.**
 
 ## Open decisions
 
-1. **Where diagnostics appear.** A list in the workbench is the minimum. Returning the author's
-   own document with a comment at each problem would put them where the work is.
-2. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
+1. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
-3. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
+2. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-4. **The document, from start to finish, for a person.** The steps an author takes to start a
-   document, get it into Heliograph, fix it and change it later. Each could be made simpler:
-   - *Starting:* download a starter `.docx` made from the dictionary, with the letterhead, the
-     styles and a page listing every tag ready to copy, instead of starting from a blank page.
-   - *Bringing it in:* drop the file on the workbench, which checks it at once.
-   - *Fixing it:* the author's own document handed back with a comment at each problem
-     (decision 1), so they fix it where they work.
-   - *Changing it later:* "open in Word" or "open in LibreOffice" from the workbench, saving
-     straight back to Heliograph, so there is no download and upload. This is listed under
-     "Later" in the scope; it needs WebDAV or a Microsoft 365 integration, so it is the costliest.
-
-   Recommendation: the first three for the first release, because each is small and together
-   they remove most of the friction; opening in place after it.
 
 ## Chosen while the maintainer was away
 

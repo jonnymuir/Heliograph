@@ -148,17 +148,22 @@ internal sealed class DocxPackage
     }
 
     /// <summary>Writes the package with some parts replaced: same order, same timestamps, same bytes for the same input.</summary>
-    public byte[] Save(IReadOnlyDictionary<string, XDocument> replaced)
+    public byte[] Save(IReadOnlyDictionary<string, XDocument> replaced) => Save(replaced, new Dictionary<string, XDocument>());
+
+    /// <summary>Writes the package with some parts replaced and new parts added at the end.</summary>
+    public byte[] Save(IReadOnlyDictionary<string, XDocument> replaced, IReadOnlyDictionary<string, XDocument> added)
     {
         var output = new MemoryStream();
         using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
         {
-            foreach (var (name, bytes) in _entries)
+            var newParts = added.Where(part => !Has(part.Key)).Select(part => (part.Key, Array.Empty<byte>()));
+            var all = replaced.Concat(added).ToDictionary(part => part.Key, part => part.Value);
+            foreach (var (name, bytes) in _entries.Concat(newParts))
             {
                 var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
                 entry.LastWriteTime = FixedTimestamp;
                 using var stream = entry.Open();
-                if (replaced.TryGetValue(name, out var xml))
+                if (all.TryGetValue(name, out var xml))
                 {
                     var settings = new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = false };
                     using var writer = XmlWriter.Create(stream, settings);

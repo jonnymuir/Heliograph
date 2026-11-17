@@ -90,4 +90,15 @@ public interface IDictionarySource
 
     /// <summary>The dictionary as JSON, in the form <see cref="FieldDictionary.Parse"/> reads, or null if there is none with this name.</summary>
     Task<string?> ReadAsync(string name, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The names of the made-up recipients a dictionary has for previews, in order. Samples belong with the dictionary
+    /// because they are written by whoever knows the data. A source with none returns an empty list.
+    /// </summary>
+    Task<IReadOnlyList<string>> ListSamplesAsync(string name, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<string>>([]);
+
+    /// <summary>One sample recipient's data as a JSON object, or null if there is none with this name.</summary>
+    Task<string?> ReadSampleAsync(string name, string sample, CancellationToken cancellationToken = default) =>
+        Task.FromResult<string?>(null);
 }

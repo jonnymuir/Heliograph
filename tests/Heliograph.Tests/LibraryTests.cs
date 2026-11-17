@@ -229,7 +229,7 @@ public class LibraryTests
         (await _library.ListAsync()).Should().Equal(
             new CorrespondenceSummary("reminder", "Welcome", "members", null),
             new CorrespondenceSummary("welcome", "Welcome", "members", 1));
-        (await _library.ListDictionariesAsync()).Should().Equal("members");
+        (await _library.Dictionaries.ListAsync()).Should().Equal("members");
     }
 
     private static System.Text.Json.JsonElement Alex => Benchmark.Data("""{ "memberName": "Alex" }""");

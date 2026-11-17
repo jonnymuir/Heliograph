@@ -28,7 +28,7 @@ public static class CorrespondenceAuthoringTools
     [McpServerTool(Name = "list_dictionaries", ReadOnly = true)]
     [Description("List the names of the dictionaries a correspondence can use. A dictionary is the closed list of fields a template may refer to.")]
     public static Task<IReadOnlyList<string>> ListDictionaries(CorrespondenceLibrary library, CancellationToken ct) =>
-        library.ListDictionariesAsync(ct);
+        library.Dictionaries.ListAsync(ct);
 
     [McpServerTool(Name = "read_dictionary", ReadOnly = true)]
     [Description(
@@ -41,19 +41,46 @@ public static class CorrespondenceAuthoringTools
         [Description("The dictionary's name, from list_dictionaries or a correspondence's 'dictionary'.")] string name,
         CancellationToken ct)
     {
-        var json = await library.ReadDictionaryAsync(name, ct).ConfigureAwait(false)
-            ?? throw new McpException($"There is no dictionary called \"{name}\". Call list_dictionaries to see the names that exist.");
-        try
-        {
-            var dictionary = FieldDictionary.Parse(json);
-            return new DictionarySheet(name, [.. dictionary.AllFields.Select(field => new DictionaryEntry(
-                field.Type == FieldType.YesNo ? $"((if {field.Name}))" : field.Type == FieldType.List ? null : $"(({field.Name}))",
-                field.Name, field.Key, TypeName(field.Type), dictionary.ListOf(field)?.Name))]);
-        }
-        catch (FormatException e)
-        {
-            throw new McpException($"The dictionary \"{name}\" cannot be read. {e.Message}");
-        }
+        return await library.Dictionaries.SheetAsync(name, ct).ConfigureAwait(false)
+            ?? throw new McpException($"There is no dictionary called \"{name}\" that can be read. Call list_dictionaries to see the names that exist.");
+    }
+
+    [McpServerTool(Name = "list_samples", ReadOnly = true)]
+    [Description("List the made-up sample recipients a dictionary has. Pass one's name to preview_correspondence as 'sample' instead of writing data yourself.")]
+    public static Task<IReadOnlyList<string>> ListSamples(
+        CorrespondenceLibrary library,
+        [Description("The dictionary's name.")] string dictionary,
+        CancellationToken ct)
+    {
+        return library.Dictionaries.SamplesAsync(dictionary, ct);
+    }
+
+    [McpServerTool(Name = "starter_document", ReadOnly = true)]
+    [Description(
+        "Get a Word document (.docx, as base64) to start the document part from: the title set, real heading styles, and a tag " +
+        "sheet listing every field in the dictionary. Write the letter on the first page and delete the tag sheet before " +
+        "saving it back; a document that still has the tag sheet is refused (HG1021).")]
+    public static async Task<string> StarterDocument(
+        CorrespondenceLibrary library,
+        [Description("The correspondence's key. Save it first with a name and a dictionary.")] string key,
+        CancellationToken ct)
+    {
+        return await library.StarterDocumentAsync(key, ct).ConfigureAwait(false) is { } docx
+            ? Convert.ToBase64String(docx)
+            : throw new McpException($"There is no correspondence \"{key}\" with a dictionary that can be read. Save it with a name and a dictionary first.");
+    }
+
+    [McpServerTool(Name = "annotated_document", ReadOnly = true)]
+    [Description(
+        "Get the draft's document (.docx, as base64) with a Word comment at each problem, the same file a person downloads to " +
+        "fix their document. The comments come out by themselves when the document is saved back. Returns null when the " +
+        "draft has no document.")]
+    public static async Task<string?> AnnotatedDocument(
+        CorrespondenceLibrary library,
+        [Description("The correspondence's key.")] string key,
+        CancellationToken ct)
+    {
+        return await library.AnnotatedDocumentAsync(key, ct).ConfigureAwait(false) is { } docx ? Convert.ToBase64String(docx) : null;
     }
 
     [McpServerTool(Name = "read_correspondence", ReadOnly = true)]
@@ -155,11 +182,15 @@ public static class CorrespondenceAuthoringTools
     public static async Task<PreviewView> PreviewCorrespondence(
         CorrespondenceLibrary library,
         [Description("The correspondence's key.")] string key,
-        [Description("Sample data for one recipient, as a JSON object.")] string dataJson,
+        [Description("Sample data for one recipient, as a JSON object. Leave out to use 'sample'.")] string? dataJson = null,
+        [Description("The name of one of the dictionary's samples, from list_samples, instead of dataJson.")] string? sample = null,
         [Description("The language and region for dates and numbers, such as \"en-GB\".")] string culture = "en-GB",
         [Description("True to include the rendered document (.docx) as base64.")] bool includeDocument = false,
         CancellationToken ct = default)
     {
+        dataJson ??= sample is null
+            ? throw new McpException("Pass dataJson, or the name of a sample from list_samples.")
+            : await SampleAsync(library, key, sample, ct).ConfigureAwait(false);
         using var data = ParseData(dataJson);
         var preview = await library.PreviewAsync(key, data.RootElement, new RenderSettings(Culture(culture)), ct).ConfigureAwait(false);
         var rendered = preview.Rendered;
@@ -188,11 +219,13 @@ public static class CorrespondenceAuthoringTools
     private static IReadOnlyList<ProblemView> Problems(IReadOnlyList<Diagnostic> diagnostics) => [.. diagnostics.Select(d => new ProblemView(
         d.Code, d.Severity == DiagnosticSeverity.Error ? "error" : "warning", d.Message, d.Fix, d.Location?.Part, d.Location?.Paragraph, d.Location?.Excerpt))];
 
-    private static string TypeName(FieldType type) => type switch
+    private static async Task<string> SampleAsync(CorrespondenceLibrary library, string key, string sample, CancellationToken ct)
     {
-        FieldType.YesNo => "yes or no",
-        _ => type.ToString().ToLowerInvariant(),
-    };
+        var dictionary = (await library.ReadDraftAsync(key, ct).ConfigureAwait(false))?.Content.Dictionary
+            ?? throw new McpException($"There is no correspondence with the key \"{key}\".");
+        return await library.Dictionaries.SampleAsync(dictionary, sample, ct).ConfigureAwait(false)
+            ?? throw new McpException($"The dictionary \"{dictionary}\" has no sample called \"{sample}\". Call list_samples to see them.");
+    }
 
     private static byte[] Decode(string base64)
     {
@@ -233,16 +266,6 @@ public static class CorrespondenceAuthoringTools
         }
     }
 }
-
-/// <summary>A dictionary laid out for an author: each field with the tag to write for it.</summary>
-public sealed record DictionarySheet(string Name, IReadOnlyList<DictionaryEntry> Fields);
-
-/// <param name="Tag">What to write in a template. Null for a list, which is never written itself.</param>
-/// <param name="Name">The field's name.</param>
-/// <param name="Key">The key the data carries the value under.</param>
-/// <param name="Type">text, date, address, number, money, list, or yes or no.</param>
-/// <param name="List">The list this field belongs to, or null.</param>
-public sealed record DictionaryEntry(string? Tag, string Name, string Key, string Type, string? List);
 
 public sealed record DraftView(
     string Key, int Revision, string Name, string Dictionary, string? Email, string? Sms, bool HasDocument, string? DocumentBase64, int? LatestVersion);

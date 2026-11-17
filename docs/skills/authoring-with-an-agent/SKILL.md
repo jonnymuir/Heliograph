@@ -19,6 +19,9 @@ its drafts are checked by the same compiler, and it is given the same guides you
 | `list_correspondence` | Every correspondence: key, name, dictionary, newest published version |
 | `list_dictionaries` | The names of the dictionaries |
 | `read_dictionary` | Every field in a dictionary, with the tag to write for it |
+| `list_samples` | A dictionary's made-up recipients, for previews |
+| `starter_document` | A `.docx` to begin the document from, with a tag sheet to copy from |
+| `annotated_document` | The draft's document with a Word comment at each problem |
 | `read_correspondence` | The draft: the email and the text message as text, and whether there is a document |
 | `save_correspondence` | Saves the draft and returns everything wrong with it |
 | `check_correspondence` | Compiles the draft again and returns everything wrong with it |
