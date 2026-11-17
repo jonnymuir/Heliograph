@@ -1,0 +1,44 @@
+using Heliograph.Documents;
+using Heliograph.Pdf.Layout;
+using Heliograph.Pdf.Reading;
+using Heliograph.Pdf.Writing;
+
+namespace Heliograph.Pdf;
+
+/// <summary>Limits on one conversion, so a strange letter can never hold a server.</summary>
+public sealed record HeliographPdfOptions
+{
+    /// <summary>The most pages a letter may run to. A letter that runs past it is refused. 500 by default.</summary>
+    public int MaxPages { get; init; } = 500;
+}
+
+/// <summary>
+/// Converts a rendered letter to an accessible, tagged PDF (PDF/UA-1) in .NET alone: nothing to install and no program
+/// started. The same letter always gives the same bytes. Fonts the letter names are drawn in built-in look-alikes with
+/// the same widths (Liberation Sans for Arial, Liberation Serif for Times New Roman, Liberation Mono for Courier New).
+/// </summary>
+public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null) : IPdfConverter
+{
+    private readonly HeliographPdfOptions _options = options ?? new HeliographPdfOptions();
+
+    public Task<byte[]> ConvertAsync(byte[] docx, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(docx);
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            var document = WordReader.Read(docx);
+            var (pages, root) = PageLayout.Run(document, _options.MaxPages, cancellationToken);
+            return Task.FromResult(DocumentWriter.Write(document, pages, root));
+        }
+        catch (PageLimitException e)
+        {
+            throw new PdfConversionException(e.Message, e);
+        }
+        catch (Exception e) when (e is InvalidDataException or System.Xml.XmlException or ArgumentException or IndexOutOfRangeException or FormatException)
+        {
+            // Never the document's content in the message: it carries personal data.
+            throw new PdfConversionException("The letter could not be read as a Word document.", e);
+        }
+    }
+}

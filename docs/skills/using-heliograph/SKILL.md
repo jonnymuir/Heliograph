@@ -192,24 +192,45 @@ to open a document from an address and save it back, under `/heliograph/webdav`.
 
 ## PDF
 
-The core library makes no PDF. It defines `IPdfConverter`, and a host chooses a route.
-`Heliograph.Pdf.LibreOffice` is the first: it runs a LibreOffice installed on the same machine,
-with no window.
+The core library makes no PDF. It defines `IPdfConverter`, and a host chooses a route:
+
+| Package | How | Use it when |
+|---|---|---|
+| `Heliograph.Pdf` | .NET alone, with built-in fonts; nothing to install. About 5 ms and a few MB a letter | You host anywhere .NET runs, an App Service included. New: what it lays out so far is in [docs/pdf-engine.md](../../pdf-engine.md) |
+| `Heliograph.Pdf.LibreOffice` | Runs a LibreOffice installed on the same machine, with no window. About a second and 230 MB a letter | LibreOffice is installed, and a template uses something `Heliograph.Pdf` does not lay out yet |
 
 ```csharp
-IPdfConverter converter = new LibreOfficePdfConverter();
+IPdfConverter converter = new HeliographPdfConverter();      // or new LibreOfficePdfConverter()
 byte[] pdf = await converter.ConvertAsync(render.Docx!);
 ```
+
+`Heliograph.Pdf`:
+
+- **Fonts:** it draws the fonts a letter names in built-in look-alikes with the same widths:
+  - Arial in Liberation Sans;
+  - Times New Roman in Liberation Serif;
+  - Courier New in Liberation Mono.
+
+  Any other font is drawn in Liberation Sans for now.
+- **Deterministic:** the same letter always gives the same bytes.
+- **Limits:** a letter past `HeliographPdfOptions.MaxPages` (500) is refused, and a cancelled
+  token stops the conversion.
+- **Checked against LibreOffice:** its benchmark letters are laid out as LibreOffice lays them
+  out, line for line, to within a point and a half, checked in CI.
+
+Both routes:
 
 - It asks for PDF/UA, the standard for accessible PDF: a tagged file with headings, lists and
   table structure that says its language. The benchmark letters pass
   [veraPDF](https://verapdf.org/)'s PDF/UA check in CI.
 - **A PDF is only accessible if the template has a title** in its document properties. Compile
   warns when it is missing (`HG1020`) and stops nothing.
-- Each conversion has a folder and a LibreOffice profile of its own, removed afterwards, so
-  conversions can run side by side. Starting LibreOffice takes a second or more each time.
 - A failure is a `PdfConversionException`. Its message never quotes the letter.
-- A PDF is not the same bytes on every run: the converter stamps a date and an identifier.
+
+`Heliograph.Pdf.LibreOffice` gives each conversion a folder and a LibreOffice profile of its own,
+removed afterwards, so conversions can run side by side. Starting LibreOffice takes a second or
+more each time, and its PDF is not the same bytes on every run: it stamps a date and an
+identifier.
 
 ## Emails
 

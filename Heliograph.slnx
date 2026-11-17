@@ -3,6 +3,7 @@
     <Project Path="src/Heliograph/Heliograph.csproj" />
     <Project Path="src/Heliograph.Api/Heliograph.Api.csproj" />
     <Project Path="src/Heliograph.Mcp/Heliograph.Mcp.csproj" />
+    <Project Path="src/Heliograph.Pdf/Heliograph.Pdf.csproj" />
     <Project Path="src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
     <Project Path="src/Heliograph.Workbench/Heliograph.Workbench.csproj" />
   </Folder>

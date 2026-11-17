@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <PackageId>Heliograph.Pdf</PackageId>
+    <Title>Heliograph.Pdf</Title>
+    <Version>0.1.0-alpha.7</Version>
+    <Authors>Jonny Muir</Authors>
+    <Description>Converts a letter rendered by Heliograph to an accessible, tagged PDF (PDF/UA-1) in .NET alone: no program to install, nothing started. Carries free look-alike fonts so it works anywhere .NET runs.</Description>
+    <PackageTags>Correspondence;PDF;PDF/UA;Accessibility</PackageTags>
+    <PackageProjectUrl>https://github.com/jonnymuir/Heliograph</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jonnymuir/Heliograph</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Heliograph/Heliograph.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The built-in fonts travel inside the assembly, with their licence beside them in the package. -->
+    <EmbeddedResource Include="Fonts/BuiltIn/*.ttf" LogicalName="Heliograph.Pdf.Fonts.%(Filename)%(Extension)" />
+    <None Include="Fonts/BuiltIn/LICENSE-Liberation.txt" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

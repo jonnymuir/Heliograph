@@ -13,6 +13,12 @@ Packages a shipped project references. The core library and the PDF converter re
 | Lit (`lit`, `lit-html`, `lit-element`, `@lit/reactive-element`) | BSD 3-Clause | `Heliograph.Workbench`. Bundled into the workbench script, so it is distributed. BSD 3-Clause asks that its notice travels with it: the build writes `THIRD-PARTY-NOTICES.txt` beside the script, and the script's first line points to it. |
 | `ModelContextProtocol.AspNetCore` | Apache 2.0 | `Heliograph.Mcp`. A NuGet dependency, restored by the host; nothing of it is copied into this repo. Apache 2.0 is permissive and sits under MIT code without changing its licence. |
 
+## Fonts that ship
+
+| Fonts | Licence | Used by |
+|---|---|---|
+| Liberation Sans, Serif and Mono 2.1.5 ([liberation-fonts](https://github.com/liberationfonts/liberation-fonts), release `liberation-fonts-ttf-2.1.5.tar.gz`, SHA-256 `7191c669…25d0`) | SIL Open Font License 1.1 | `Heliograph.Pdf`, inside the assembly. The OFL allows fonts to be bundled with software, on condition that the licence goes with them (`LICENSE-Liberation.txt` is in the package) and the fonts are not sold on their own. Subsets embedded in a PDF are allowed. The fonts are unmodified. |
+
 ## What is run, and never shipped
 
 | Software | Licence | How Heliograph touches it |
@@ -20,6 +26,7 @@ Packages a shipped project references. The core library and the PDF converter re
 | [LibreOffice](https://www.libreoffice.org/) | MPL 2.0 | `Heliograph.Pdf.LibreOffice` starts a LibreOffice the host has installed, as a separate program, and reads the file it writes. No LibreOffice code or binary is in any Heliograph package. The tests drive it the same way. |
 | [veraPDF](https://verapdf.org/) | GPL 3.0 or later, or MPL 2.0 or later, at the user's choice | Tests only. The test suite runs the official `verapdf/cli` container image and reads what it prints. Nothing that ships refers to it. |
 | [Open XML SDK](https://github.com/dotnet/Open-XML-SDK) | MIT | Tests only, as a validator of rendered files. |
+| [Poppler](https://poppler.freedesktop.org/) (`pdftotext`) | GPL 2.0 or 3.0 | Tests only. The tests run the `pdftotext` program the machine has installed, to read where each line of a PDF sits, and compare the two converters. Nothing that ships refers to it. |
 
 ## Why this is safe
 

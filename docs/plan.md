@@ -80,8 +80,9 @@ started together by an Aspire host. Then its own first release.
 
 ### 8. Heliograph's own PDF engine
 
-A pure .NET converter, `Heliograph.Pdf`, so PDFs need nothing installed. Stages, checks and risks
-are in [pdf-engine.md](pdf-engine.md).
+A pure .NET converter, `Heliograph.Pdf`, so PDFs need nothing installed. Stages, checks, risks
+and where it is are in [pdf-engine.md](pdf-engine.md). It is in stage 1: the benchmark letters
+convert, accessible and laid out as LibreOffice lays them out.
 
 ## Where we are
 

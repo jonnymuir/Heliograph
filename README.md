@@ -42,7 +42,7 @@ walks through it, and shows the dozen lines a site writes to host Heliograph.
 | An MCP server for AI agents | Yes: `Heliograph.Mcp` offers the authoring operations, and serves the guides people read as the agent's skills |
 | Stored correspondence, with drafts and numbered versions | Yes, over a store the host supplies |
 | The workbench: write the email and text, bring the document in and out, preview, publish | Yes: `Heliograph.Workbench`, over `Heliograph.Api` |
-| PDF output | Yes: an accessible, tagged PDF through `Heliograph.Pdf.LibreOffice`, checked against PDF/UA by an independent validator |
+| PDF output | Yes: an accessible, tagged PDF, checked against PDF/UA by an independent validator. `Heliograph.Pdf` makes it in .NET alone (new); `Heliograph.Pdf.LibreOffice` uses an installed LibreOffice |
 | A package on nuget.org | Prereleases: `dotnet add package Heliograph --prerelease` |
 
 ## A template
