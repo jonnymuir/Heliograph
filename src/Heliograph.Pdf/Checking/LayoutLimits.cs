@@ -19,7 +19,10 @@ internal static class LayoutLimits
     private static readonly XNamespace V = "urn:schemas-microsoft-com:vml";
     private static readonly XNamespace Mc = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
-    private static readonly Limit[] Limits =
+    private static readonly Limit[] Limits = [.. ThingsOnThePage(), .. ThingsInTheText()];
+
+    // Objects and page structure.
+    private static Limit[] ThingsOnThePage() =>
     [
         new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, _ => $"This document has a picture. {Route} does not draw pictures yet, so its PDFs would be missing it.",
             $"Take the picture out, {Instead}"),
@@ -33,6 +36,11 @@ internal static class LayoutLimits
             $"Set the text in a single column, or use a table, {Instead}"),
         new(DiagnosticCodes.PdfCannotWorkOutField, Fields, what => $"This document has a {what} field. {Route} works out page numbers and page counts only, so this field would print nothing.",
             $"Type the text in, or use a tag from the dictionary for a value, {Instead}"),
+    ];
+
+    // How text is set.
+    private static Limit[] ThingsInTheText() =>
+    [
         new(DiagnosticCodes.PdfCannotMakeLink, Links, _ => $"This document has a link. {Route} does not make links yet: the text would print, but could not be clicked.",
             $"Write the address out in full as plain text, {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawFormatting, Formatting, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
@@ -70,44 +78,63 @@ internal static class LayoutLimits
         return diagnostics;
     }
 
-    private static IEnumerable<(XElement, string)> Pictures(XElement root) =>
-        root.Descendants().Where(e => (e.Name == A + "graphicData" && ((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
+    private static IEnumerable<(XElement, string)> Pictures(XElement root)
+    {
+        return root.Descendants().Where(e => (e.Name == A + "graphicData" && ((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
             || e.Name == V + "imagedata").Select(e => (e, "a picture"));
+    }
 
-    private static IEnumerable<(XElement, string)> Shapes(XElement root) =>
-        root.Descendants().Where(e => (e.Name == A + "graphicData" && !((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
+    private static IEnumerable<(XElement, string)> Shapes(XElement root)
+    {
+        return root.Descendants().Where(e => (e.Name == A + "graphicData" && !((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
             || e.Name == Mc + "AlternateContent" || (e.Name.Namespace == V && e.Name.LocalName is "shape" or "rect" or "roundrect" or "oval" or "line" && !e.Descendants(V + "imagedata").Any()))
             .Select(e => (e, "a text box, shape or chart"));
+    }
 
-    private static IEnumerable<(XElement, string)> Notes(XElement root) =>
-        root.Descendants().Where(e => e.Name == W + "footnoteReference" || e.Name == W + "endnoteReference")
+    private static IEnumerable<(XElement, string)> Notes(XElement root)
+    {
+        return root.Descendants().Where(e => e.Name == W + "footnoteReference" || e.Name == W + "endnoteReference")
             .Select(e => (e, e.Name.LocalName == "footnoteReference" ? "a footnote" : "an endnote"));
+    }
 
-    private static IEnumerable<(XElement, string)> Sections(XElement root) =>
-        root.Descendants(W + "sectPr").Where(s => s.Parent?.Name == W + "pPr").Select(s => (s, "a section break"));
+    private static IEnumerable<(XElement, string)> Sections(XElement root)
+    {
+        return root.Descendants(W + "sectPr").Where(s => s.Parent?.Name == W + "pPr").Select(s => (s, "a section break"));
+    }
 
-    private static IEnumerable<(XElement, string)> Columns(XElement root) =>
-        root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
+    private static IEnumerable<(XElement, string)> Columns(XElement root)
+    {
+        return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
+    }
 
-    private static IEnumerable<(XElement, string)> Fields(XElement root) =>
-        root.Descendants().Where(e => e.Name == W + "instrText" || e.Name == W + "fldSimple")
+    private static IEnumerable<(XElement, string)> Fields(XElement root)
+    {
+        return root.Descendants().Where(e => e.Name == W + "instrText" || e.Name == W + "fldSimple")
             .Select(e => (e, Name: (e.Name == W + "fldSimple" ? (string?)e.Attribute(W + "instr") ?? "" : e.Value).Trim().Split(' ', 2)[0].ToUpperInvariant()))
             .Where(f => f.Name.Length > 0 && f.Name is not ("PAGE" or "NUMPAGES"));
+    }
 
-    private static IEnumerable<(XElement, string)> Links(XElement root) =>
-        root.Descendants(W + "hyperlink").Select(e => (e, "a link"));
+    private static IEnumerable<(XElement, string)> Links(XElement root)
+    {
+        return root.Descendants(W + "hyperlink").Select(e => (e, "a link"));
+    }
 
-    private static IEnumerable<(XElement, string)> Direction(XElement root) =>
-        root.Descendants().Where(e => (e.Name == W + "bidi" && On(e)) || (e.Name == W + "rtl" && On(e))
+    private static IEnumerable<(XElement, string)> Direction(XElement root)
+    {
+        return root.Descendants().Where(e => (e.Name == W + "bidi" && On(e)) || (e.Name == W + "rtl" && On(e))
             || (e.Name == W + "textDirection" && Val(e) is { } d && d is not ("lrTb" or "tb")))
             .Select(e => (e, e.Name.LocalName == "textDirection" ? "text that runs up or down the page" : "right-to-left text"));
+    }
 
-    private static IEnumerable<(XElement, string)> Tables(XElement root) =>
-        root.Descendants().Where(e => e.Name == W + "vMerge" || (e.Name == W + "tbl" && e.Ancestors(W + "tbl").Any()))
+    private static IEnumerable<(XElement, string)> Tables(XElement root)
+    {
+        return root.Descendants().Where(e => e.Name == W + "vMerge" || (e.Name == W + "tbl" && e.Ancestors(W + "tbl").Any()))
             .Select(e => (e, e.Name.LocalName == "vMerge" ? "cells merged down a column" : "another table inside it"));
+    }
 
-    private static IEnumerable<(XElement, string)> Tabs(XElement root) =>
-        root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "tabs")
+    private static IEnumerable<(XElement, string)> Tabs(XElement root)
+    {
+        return root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "tabs")
             .Select(t => (t, Val(t) switch
             {
                 "right" or "end" => "aligned right",
@@ -117,9 +144,12 @@ internal static class LayoutLimits
                 _ => (string?)t.Attribute(W + "leader") is { } leader && leader != "none" ? "with a leader of dots or a line" : "",
             }))
             .Where(t => t.Item2.Length > 0);
+    }
 
-    private static IEnumerable<(XElement, string)> Formatting(XElement root) =>
-        root.Descendants().Select(e => (e, What: FormattingName(e))).Where(f => f.What is not null)!;
+    private static IEnumerable<(XElement, string)> Formatting(XElement root)
+    {
+        return root.Descendants().Select(e => (e, What: FormattingName(e))).Where(f => f.What is not null)!;
+    }
 
     private static string? FormattingName(XElement e) => e.Name.LocalName switch
     {
@@ -134,10 +164,12 @@ internal static class LayoutLimits
         _ => null,
     };
 
-    private static IEnumerable<(XElement, string)> Fonts(XElement root) =>
-        root.Descendants(W + "rFonts")
+    private static IEnumerable<(XElement, string)> Fonts(XElement root)
+    {
+        return root.Descendants(W + "rFonts")
             .Select(f => (f, Font: (string?)f.Attribute(W + "ascii") ?? (f.Attribute(W + "asciiTheme") is not null ? "set by the document's theme" : null)))
             .Where(f => f.Font is not null && !FontLibrary.HasLookAlike(f.Font))!;
+    }
 
     // Different headers on even pages only apply when the document turns them on.
     private static Diagnostic? EvenPages(DocumentToCheck document)
