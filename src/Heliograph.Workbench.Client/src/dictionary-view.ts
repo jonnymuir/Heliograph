@@ -1,6 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { type FieldRow, exampleSample, fieldTypes, keyFor, toJson, toRows } from './dictionary-fields.js';
+import { type FieldRow, emptyRow, exampleSample, fieldTypes, innerFieldTypes, keyFor, toJson, toRows } from './dictionary-fields.js';
 import './problems-list.js';
 import type { DictionarySave, WorkbenchSource } from './source.js';
 import { shared } from './styles.js';
@@ -37,20 +37,21 @@ export class DictionaryView extends LitElement {
   }
 
   override render() {
-    const lists = this.rows.filter((row) => row.type === 'list' && !row.list).map((row) => row.name);
     return html`
       <h2>${this.name}</h2>
       <p class="muted">
         Each field is something a correspondence may use: authors write it as a tag, <code>((Field name))</code>, and the data
-        carries it under its key. ${this.editable ? '' : 'This site takes its dictionaries from elsewhere, so they cannot be changed here.'}
+        carries it under its key. A <strong>list</strong> is a field that repeats, such as payments; give it fields of its own,
+        such as each payment's date and amount, and authors repeat a table row over it.
+        ${this.editable ? '' : 'This site takes its dictionaries from elsewhere, so they cannot be changed here.'}
       </p>
       <table>
-        <thead><tr><th scope="col">Field name</th><th scope="col">Key in the data</th><th scope="col">Type</th><th scope="col">In list</th><th scope="col"><span class="muted">Remove</span></th></tr></thead>
-        <tbody>${this.rows.map((row, i) => this.row(row, i, lists))}</tbody>
+        <thead><tr><th scope="col">Field name</th><th scope="col">Key in the data</th><th scope="col">Type</th><th scope="col"><span class="muted">Remove</span></th></tr></thead>
+        <tbody>${this.rows.map((row, i) => this.field(row, [i]))}</tbody>
       </table>
       ${this.editable
         ? html`<div class="actions">
-            <button @click=${() => (this.rows = [...this.rows, { name: '', key: '', type: 'text', list: '' }])}>Add a field</button>
+            <button @click=${() => (this.rows = [...this.rows, emptyRow()])}>Add a field</button>
             <button class="primary" @click=${this.save}>Save the dictionary</button>
           </div>`
         : null}
@@ -58,25 +59,39 @@ export class DictionaryView extends LitElement {
       ${this.samplesSection()}`;
   }
 
-  private row(row: FieldRow, i: number, lists: string[]) {
-    const change = (patch: Partial<FieldRow>) => (this.rows = this.rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
-    const disabled = !this.editable;
-    return html`<tr>
-      <td><input type="text" aria-label="Field name" .value=${row.name} ?disabled=${disabled}
+  /** A field's row, and for a list the rows of its own fields beneath it. The path is its place: [i] or [list, i]. */
+  private field(row: FieldRow, path: number[]): unknown {
+    const inner = path.length === 2;
+    const list = inner ? this.rows[path[0]].name || 'the list' : '';
+    const own = html`<tr class=${inner ? 'inner' : ''}>
+      <td><input type="text" aria-label=${inner ? `Field name in ${list}` : 'Field name'} .value=${row.name} ?disabled=${!this.editable}
         @input=${(e: Event) => {
           const name = (e.target as HTMLInputElement).value;
-          change(row.key === '' || row.key === keyFor(row.name) ? { name, key: keyFor(name) } : { name });
+          this.change(path, row.key === '' || row.key === keyFor(row.name) ? { name, key: keyFor(name) } : { name });
         }} /></td>
-      <td><input type="text" aria-label="Key in the data" .value=${row.key} ?disabled=${disabled} @input=${(e: Event) => change({ key: (e.target as HTMLInputElement).value })} /></td>
-      <td><select aria-label="Type" ?disabled=${disabled} @change=${(e: Event) => change({ type: (e.target as HTMLSelectElement).value })}>
-        ${fieldTypes.map((type) => html`<option value=${type} ?selected=${row.type === type}>${type === 'yesNo' ? 'yes or no' : type}</option>`)}
+      <td><input type="text" aria-label="Key in the data" .value=${row.key} ?disabled=${!this.editable} @input=${(e: Event) => this.change(path, { key: (e.target as HTMLInputElement).value })} /></td>
+      <td><select aria-label="Type" ?disabled=${!this.editable} @change=${(e: Event) => this.change(path, { type: (e.target as HTMLSelectElement).value })}>
+        ${(inner ? innerFieldTypes : fieldTypes).map((type) => html`<option value=${type} ?selected=${row.type === type}>${type === 'yesNo' ? 'yes or no' : type}</option>`)}
       </select></td>
-      <td><select aria-label="In list" ?disabled=${disabled || row.type === 'list'} @change=${(e: Event) => change({ list: (e.target as HTMLSelectElement).value })}>
-        <option value="" ?selected=${!row.list}>—</option>
-        ${lists.map((list) => html`<option ?selected=${row.list === list}>${list}</option>`)}
-      </select></td>
-      <td>${this.editable ? html`<button aria-label="Remove ${row.name}" @click=${() => (this.rows = this.rows.filter((_, j) => j !== i))}>Remove</button>` : null}</td>
+      <td>${this.editable ? html`<button aria-label="Remove ${row.name}" @click=${() => this.removeField(path)}>Remove</button>` : null}</td>
     </tr>`;
+    if (inner || row.type !== 'list') return own;
+    return html`${own}${row.fields.map((f, j) => this.field(f, [path[0], j]))}
+      ${this.editable
+        ? html`<tr class="inner"><td colspan="4"><button @click=${() => this.change(path, { fields: [...row.fields, emptyRow()] })}>Add a field to ${row.name || 'this list'}</button></td></tr>`
+        : null}`;
+  }
+
+  private change(path: number[], patch: Partial<FieldRow>) {
+    this.rows = path.length === 1
+      ? this.rows.map((r, i) => (i === path[0] ? { ...r, ...patch } : r))
+      : this.rows.map((r, i) => (i === path[0] ? { ...r, fields: r.fields.map((f, j) => (j === path[1] ? { ...f, ...patch } : f)) } : r));
+  }
+
+  private removeField(path: number[]) {
+    this.rows = path.length === 1
+      ? this.rows.filter((_, i) => i !== path[0])
+      : this.rows.map((r, i) => (i === path[0] ? { ...r, fields: r.fields.filter((_, j) => j !== path[1]) } : r));
   }
 
   private outcome(result: DictionarySave) {
@@ -142,6 +157,7 @@ export class DictionaryView extends LitElement {
       h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
       h3 { margin: 1.5rem 0 0.5rem; font-size: 1.1rem; }
       td input[type='text'] { width: 100%; box-sizing: border-box; }
+      tr.inner td:first-child { padding-left: 2rem; }
       .outcome { margin-top: 1rem; }
       textarea { min-height: 14rem; }
     `,
