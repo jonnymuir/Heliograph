@@ -145,7 +145,8 @@ public class AuthoringOverMcpTests
         var tools = await agent.ListToolsAsync();
 
         tools.Select(tool => tool.Name).Should().BeEquivalentTo(
-            "list_correspondence", "list_dictionaries", "read_dictionary", "read_correspondence", "save_correspondence",
+            "list_correspondence", "list_dictionaries", "read_dictionary", "list_samples", "starter_document", "annotated_document",
+            "read_correspondence", "save_correspondence",
             "check_correspondence", "check_dictionary", "preview_correspondence", "publish_correspondence");
         tools.Should().OnlyContain(tool => !string.IsNullOrWhiteSpace(tool.Description));
     }

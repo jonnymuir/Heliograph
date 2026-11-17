@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Heliograph.Documents;
 
 namespace Heliograph.Library;
 
@@ -29,6 +30,47 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
     /// <summary>A dictionary as JSON, or null if there is none with this name.</summary>
     public Task<string?> ReadDictionaryAsync(string name, CancellationToken cancellationToken = default) =>
         dictionaries.ReadAsync(name, cancellationToken);
+
+    /// <summary>A dictionary laid out for an author, each field with its tag. Null if there is none, or it cannot be read.</summary>
+    public async Task<DictionarySheet?> ReadDictionarySheetAsync(string name, CancellationToken cancellationToken = default) =>
+        await dictionaries.ReadAsync(name, cancellationToken).ConfigureAwait(false) is { } json && TryParse(json) is { } dictionary
+            ? DictionarySheet.From(name, dictionary)
+            : null;
+
+    /// <summary>The names of a dictionary's made-up sample recipients.</summary>
+    public Task<IReadOnlyList<string>> ListSamplesAsync(string dictionary, CancellationToken cancellationToken = default) =>
+        dictionaries.ListSamplesAsync(dictionary, cancellationToken);
+
+    /// <summary>One sample recipient's data as JSON, or null if there is none with this name.</summary>
+    public Task<string?> ReadSampleAsync(string dictionary, string sample, CancellationToken cancellationToken = default) =>
+        dictionaries.ReadSampleAsync(dictionary, sample, cancellationToken);
+
+    /// <summary>
+    /// A Word document to start the correspondence's document part from: its title set, real headings, and a tag
+    /// sheet listing every field in its dictionary. Null when there is no correspondence with this key or its
+    /// dictionary cannot be read.
+    /// </summary>
+    public async Task<byte[]?> StarterDocumentAsync(string key, CancellationToken cancellationToken = default) =>
+        await store.ReadDraftAsync(key, cancellationToken).ConfigureAwait(false) is { } draft
+        && await ReadDictionarySheetAsync(draft.Content.Dictionary, cancellationToken).ConfigureAwait(false) is { } sheet
+            ? StarterDocument.Create(draft.Content.Name, sheet)
+            : null;
+
+    /// <summary>
+    /// The draft's document, as the author uploaded it, with a comment at each problem the compiler found in it, so
+    /// they can fix it in their word processor. The comments come out by themselves when it is uploaded again. Null
+    /// when the draft has no document or the file cannot be read as one.
+    /// </summary>
+    public async Task<byte[]?> AnnotatedDocumentAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (await store.ReadDraftAsync(key, cancellationToken).ConfigureAwait(false) is not { Content.Document: { } document } draft)
+        {
+            return null;
+        }
+
+        var (_, diagnostics) = await CompileAsync(draft.Content, dictionaryJson: null, cancellationToken).ConfigureAwait(false);
+        return HeliographComments.Annotate(document, diagnostics.Where(d => d.Location is null or { Part: not ("email" or "email subject" or "sms") }));
+    }
 
     /// <summary>The draft an author is working on, or null if there is no correspondence with this key.</summary>
     public Task<CorrespondenceDraft?> ReadDraftAsync(string key, CancellationToken cancellationToken = default) =>
@@ -201,6 +243,18 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
         using var document = content.Document is null ? null : new MemoryStream(content.Document, writable: false);
         var compilation = Correspondence.Compile(new CorrespondenceSource { Document = document, Email = content.Email, Sms = content.Sms }, dictionary);
         return (compilation.Correspondence, compilation.Diagnostics);
+    }
+
+    private static FieldDictionary? TryParse(string json)
+    {
+        try
+        {
+            return FieldDictionary.Parse(json);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
     }
 
     private static Diagnostic NotFound(string key) => Problem(DiagnosticCodes.CorrespondenceNotFound,

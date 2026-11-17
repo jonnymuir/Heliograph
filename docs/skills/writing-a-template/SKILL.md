@@ -13,6 +13,17 @@ A template is an ordinary Word document (`.docx`). Lay it out however you like: 
 lists, headers, footers, pictures, page numbers. Where the letter should change from one person
 to the next, you write a **tag**.
 
+## Start from a starter document
+
+Where Heliograph is hosted with its workbench, **Download a starter document** gives you a Word
+file to begin from instead of a blank page. It has the letter's title already set, real heading
+styles, and on its second page a **tag sheet**: every field in the dictionary with the tag to
+copy, brackets included.
+
+Write the letter on the first page, copying tags from the sheet. Then delete the tag sheet, from
+the line that starts "Heliograph tag sheet" to the end. If you forget, the upload is refused
+(`HG1021`), so the sheet can never reach a recipient.
+
 ## Tags
 
 A tag is the name of a **field** in double round brackets:
@@ -211,8 +222,16 @@ character that makes every text message cost more.
 - Show or hide a whole table row or column.
 - Write the characters `((something))` so that they print as they are.
 
+## Fixing what is wrong, in your own document
+
+When a document has problems, **Download with comments** gives you your own file back with a Word
+comment on each paragraph that has one, saying what is wrong and what to do. Fix them in your
+word processor and upload the file again. You do not need to delete these comments: Heliograph's
+own comments, whose author is "Heliograph", come out by themselves. Anyone else's comments are
+still refused, because they would be sent to every recipient.
+
 ## Before you upload
 
 1. Accept or reject every tracked change, and turn tracking off.
-2. Delete every comment.
+2. Delete every comment except Heliograph's.
 3. Save as "Word Document (.docx)". Not `.doc`, not `.docm`, not "Strict Open XML".

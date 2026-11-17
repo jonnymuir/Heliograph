@@ -28,9 +28,21 @@ public static class DocumentTemplate
                 return new DocumentCompilation(null, unsafeContent);
             }
 
+            // The comments Heliograph put at each problem come out before anything is checked.
+            if (HeliographComments.Strip(package) is not { } stripped)
+            {
+                return new DocumentCompilation(null, [NotAWordDocument()]);
+            }
+
+            package = stripped;
             if (package.TextParts() is not { } parts)
             {
                 return new DocumentCompilation(null, [NotAWordDocument()]);
+            }
+
+            if (TagSheetLeftIn(package, parts) is { } tagSheet)
+            {
+                return new DocumentCompilation(null, [tagSheet]);
             }
 
             return TemplateFitness.Check(package, parts) is { Count: > 0 } unfit
@@ -91,6 +103,21 @@ public static class DocumentTemplate
     private static Diagnostic NotAWordDocument() => new(DiagnosticCodes.NotAWordDocument,
         "This file is not a Word document (.docx) that can be read.",
         "Open it in your word processor, save it as a Word document (.docx), and upload that.");
+
+    /// <summary>
+    /// The starter document's tag sheet, still in the template. Its tags would be filled in and sent to every
+    /// recipient, and they would set off a dozen other diagnostics, so this is reported on its own.
+    /// </summary>
+    private static Diagnostic? TagSheetLeftIn(DocxPackage package, IReadOnlyList<(string Name, string Label)> parts)
+    {
+        var paragraphs = package.Xml(parts[0].Name)!.Descendants(WordXml.Word + "p").ToList();
+        var index = paragraphs.FindIndex(p => string.Concat(p.Descendants(WordXml.Word + "t").Select(t => t.Value))
+            .TrimStart().StartsWith(StarterDocument.TagSheetMarker, StringComparison.OrdinalIgnoreCase));
+        return index < 0 ? null : new Diagnostic(DiagnosticCodes.TagSheetLeftIn,
+            "The tag sheet from the starter document is still in this document. Its tags would be filled in and sent to every recipient.",
+            $"Delete the page that starts \"{StarterDocument.TagSheetMarker}\", and everything after it, then save and upload the document again.",
+            new DiagnosticLocation("document", index + 1, StarterDocument.TagSheetMarker));
+    }
 
     private static Diagnostic NoTitle() => new(DiagnosticCodes.DocumentHasNoTitle,
         "This document has no title in its properties. A PDF made from it will not meet the standard for accessible PDF, "

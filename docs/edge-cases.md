@@ -167,6 +167,8 @@ the template is not stopped, because the text may be what they meant.
 | The names of people who commented or tracked changes | Emptied | S9 | Works |
 | A company or a manager recorded in the file | Emptied | S9 | Works |
 | Comments | Refused | S5 | Refused |
+| Heliograph's own comments, from "Download with comments" | Taken out before the document is checked | S9 | Works |
+| The starter document's tag sheet left in | Refused, on its own | S5 | Refused |
 | Tracked changes not yet accepted or rejected | Refused | S5 | Refused |
 | Hidden text | Pointed out, as a warning. Sent, still hidden | S3 | Works |
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
