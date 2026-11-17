@@ -37,8 +37,13 @@ Follow them; this file adds only what is specific to this repo.
 | `src/Heliograph` | The core library: `Correspondence` (one compile and one render for every part), the field dictionary, diagnostics, and `Documents/`, which compiles a `.docx` template (values, conditions and rows that repeat over a list) and renders it. No package dependencies. |
 | `src/Heliograph/Library` | Part of the core library: `CorrespondenceLibrary`, the operations on stored correspondence (draft, check, preview, publish, render a version), over two seams the host supplies, `ICorrespondenceStore` and `IDictionarySource`. |
 | `src/Heliograph/Messages` | Part of the core library: plain-text templates. The SMS part, the email part, and the line-by-line engine they share. |
+| `src/Heliograph.Api` | The authoring operations as REST endpoints (`MapCorrespondenceAuthoringApi()`), and `AddHeliographInFolder()`, the smallest whole setup. What the workbench talks to. |
+| `src/Heliograph.Workbench` + `src/Heliograph.Workbench.Client` | The author's screen, a Lit web component (TypeScript, Vite) built into the package's `wwwroot` and served by `MapHeliographWorkbench()`. The client is built before `dotnet build`; `wwwroot` is not committed. |
 | `src/Heliograph.Mcp` | The authoring operations as MCP tools over HTTP, three prompts, and every guide in `docs/skills` as a resource. One `MapCorrespondenceAuthoringMcp()` call, closed unless the caller is signed in. The only project that references ASP.NET Core. |
 | `src/Heliograph.Pdf.LibreOffice` | One route to PDF behind `IPdfConverter`: runs a local LibreOffice with no window and asks for PDF/UA. References the core only. |
+| `reference/` | Never ships. `Heliograph.ReferenceApp` hosts every package with the benchmark letters seeded, `Heliograph.AppHost` starts it under Aspire, as Wayfinder's does. VS Code's Run and Debug has both. See [docs/skills/reference-app](docs/skills/reference-app/SKILL.md). |
+| `tests/Heliograph.Api.Tests` | The REST API through a test host: the same journey as the MCP tests. |
+| `tests/Heliograph.ReferenceApp.Tests` | Starts the reference app on an empty folder: seeded letters, the workbench served, every sample previews. |
 | `tests/Heliograph.Mcp.Tests` | The MCP server through a real MCP client against an in-memory host: what an agent is offered, told and refused. |
 | `tests/Heliograph.Tests` | Behavioural tests through the public API (xUnit, AwesomeAssertions). The Open XML SDK is referenced here only, as an independent validator of rendered files. |
 | `benchmarks/` | Three fictional letters with their dictionaries and sample data: the acceptance test. Not a project. |
@@ -46,8 +51,12 @@ Follow them; this file adds only what is specific to this repo.
 ## Build and test
 
 ```bash
+# The workbench ships as a static file inside Heliograph.Workbench, so it is built first
+cd src/Heliograph.Workbench.Client && npm ci && npm run build && cd ../..
+
 dotnet build Heliograph.slnx
 dotnet test Heliograph.slnx
+dotnet run --project reference/Heliograph.ReferenceApp   # https://localhost:7296/heliograph
 node scripts/check-policies.mjs
 node scripts/check-doc-links.mjs
 ```

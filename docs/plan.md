@@ -84,6 +84,10 @@ Step 4 is done: a rendered letter converts to a tagged PDF that passes an indepe
 check, once the template has a title. What to do about a template without one is an open
 decision. The API, MCP server, reference app and workbench are next (step 5).
 
+The reference app runs: the workbench over the REST API and the MCP server, the benchmark letters
+seeded and published, an outbox page showing the run-time call, and an Aspire host. Opening a
+document in Word from the workbench and the evaluation of an agent are still to do.
+
 Step 5 has begun: `CorrespondenceLibrary` holds the operations the API, the MCP server and
 Heliograph.Umbraco all offer, over a store and a dictionary source the host supplies.
 `Heliograph.Mcp` offers them to agents, and the guides in `docs/skills` are served to agents as

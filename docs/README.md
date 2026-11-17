@@ -7,6 +7,7 @@ and served to agents over MCP, from one file.
 
 | | For | |
 |---|---|---|
+| [reference-app](skills/reference-app/SKILL.md) | Everyone | Run the reference app and try everything, and the smallest code that hosts Heliograph |
 | [authoring-with-an-agent](skills/authoring-with-an-agent/SKILL.md) | Authors, agents, developers | What an agent can do over MCP, how the work goes, and how a developer turns it on |
 | [writing-a-template](skills/writing-a-template/SKILL.md) | Authors | How to write a template: tags, conditions, where they work, what is refused |
 | [using-heliograph](skills/using-heliograph/SKILL.md) | Developers | The dictionary, compile and render, diagnostics, what the library guarantees and what you must do |

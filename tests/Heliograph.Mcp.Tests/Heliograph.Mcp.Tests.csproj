@@ -25,6 +25,7 @@
   <ItemGroup>
     <!-- The store a host would supply, shared with the core's tests. -->
     <Compile Include="../Heliograph.Tests/Support/InMemoryLibrary.cs" Link="Support/InMemoryLibrary.cs" />
+    <Compile Include="../Heliograph.Tests/Support/InMemoryDictionarySource.cs" Link="Support/InMemoryDictionarySource.cs" />
     <Content Include="../../docs/skills/**/*.md" LinkBase="docs/skills" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../benchmarks/**/*" LinkBase="benchmarks" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

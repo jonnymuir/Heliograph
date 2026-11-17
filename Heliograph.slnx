@@ -1,11 +1,20 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Heliograph/Heliograph.csproj" />
+    <Project Path="src/Heliograph.Api/Heliograph.Api.csproj" />
     <Project Path="src/Heliograph.Mcp/Heliograph.Mcp.csproj" />
     <Project Path="src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
+    <Project Path="src/Heliograph.Workbench/Heliograph.Workbench.csproj" />
+  </Folder>
+  <Folder Name="/reference/">
+    <Project Path="reference/Heliograph.AppHost/Heliograph.AppHost.csproj" />
+    <Project Path="reference/Heliograph.ReferenceApp/Heliograph.ReferenceApp.csproj" />
+    <Project Path="reference/Heliograph.ServiceDefaults/Heliograph.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Heliograph.Api.Tests/Heliograph.Api.Tests.csproj" />
     <Project Path="tests/Heliograph.Mcp.Tests/Heliograph.Mcp.Tests.csproj" />
+    <Project Path="tests/Heliograph.ReferenceApp.Tests/Heliograph.ReferenceApp.Tests.csproj" />
     <Project Path="tests/Heliograph.Tests/Heliograph.Tests.csproj" />
   </Folder>
 </Solution>

@@ -6,6 +6,7 @@ Each folder here is one guide, written once and read three ways.
 |---|---|
 | [writing-a-template](writing-a-template/SKILL.md) | Whoever writes the letters |
 | [authoring-with-an-agent](authoring-with-an-agent/SKILL.md) | A content designer working with an AI agent, the agent, and the developer who connects it |
+| [reference-app](reference-app/SKILL.md) | Anyone trying Heliograph, and a developer starting to host it |
 | [using-heliograph](using-heliograph/SKILL.md) | A developer hosting Heliograph |
 | [diagnostics](diagnostics/SKILL.md) | Anyone holding a diagnostic code |
 

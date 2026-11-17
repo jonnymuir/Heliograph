@@ -1,0 +1,6 @@
+/* The standalone page around the workbench. A host that puts the element on its own page brings its own. */
+body { margin: 0; font-family: system-ui, sans-serif; color: #1b1b1b; background: #fff; }
+.page-header { background: #0b0c0c; color: #fff; padding: 0.9rem 1.5rem; display: flex; align-items: baseline; gap: 1rem; }
+.page-header strong { font-size: 1.2rem; }
+.page-header span { color: #d0d0d0; }
+main { max-width: 80rem; margin: 0 auto; padding: 1.5rem; }

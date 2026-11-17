@@ -10,6 +10,7 @@ Packages a shipped project references. The core library and the PDF converter re
 
 | Package | Licence | Used by |
 |---|---|---|
+| Lit (`lit`, `lit-html`, `lit-element`, `@lit/reactive-element`) | BSD 3-Clause | `Heliograph.Workbench`. Bundled into the workbench script, so it is distributed. BSD 3-Clause asks that its notice travels with it: the build writes `THIRD-PARTY-NOTICES.txt` beside the script, and the script's first line points to it. |
 | `ModelContextProtocol.AspNetCore` | Apache 2.0 | `Heliograph.Mcp`. A NuGet dependency, restored by the host; nothing of it is copied into this repo. Apache 2.0 is permissive and sits under MIT code without changing its licence. |
 
 ## What is run, and never shipped

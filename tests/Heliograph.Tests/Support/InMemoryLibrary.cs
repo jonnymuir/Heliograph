@@ -66,23 +66,6 @@ internal sealed class InMemoryCorrespondenceStore : ICorrespondenceStore
     }
 }
 
-/// <summary>Dictionaries held in memory, which a test can change as the people who own the data would.</summary>
-internal sealed class InMemoryDictionarySource : IDictionarySource
-{
-    private readonly SortedDictionary<string, string> _dictionaries = new(StringComparer.Ordinal);
-
-    public string this[string name]
-    {
-        set => _dictionaries[name] = value;
-    }
-
-    public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<string>>([.. _dictionaries.Keys]);
-
-    public Task<string?> ReadAsync(string name, CancellationToken cancellationToken = default) =>
-        Task.FromResult(_dictionaries.GetValueOrDefault(name));
-}
-
 /// <summary>A clock a test sets.</summary>
 internal sealed class FixedClock(DateTimeOffset now) : TimeProvider
 {

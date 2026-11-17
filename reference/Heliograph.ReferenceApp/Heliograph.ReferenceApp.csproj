@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Heliograph.Api/Heliograph.Api.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Mcp/Heliograph.Mcp.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Workbench/Heliograph.Workbench.csproj" />
+    <ProjectReference Include="../Heliograph.ServiceDefaults/Heliograph.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The benchmark letters are what the app starts with. -->
+    <Content Include="../../benchmarks/**/*" LinkBase="benchmarks" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
