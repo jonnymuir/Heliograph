@@ -225,6 +225,15 @@ another PDF route can be added without changing the core.
   first, as the worked example, and becomes a package only when another site needs it.
 - **Prereleases go to nuget.org while both repos are built**, so Heliograph.Umbraco restores the
   engine the way any site would.
+- **Heliograph makes its own PDFs** ([pdf-engine.md](pdf-engine.md)), in a new package,
+  `Heliograph.Pdf`, beside `Heliograph.Pdf.LibreOffice` and behind the same seam:
+  - **Fonts:** it carries freely licensed look-alike fonts (Liberation, Carlito, Caladea, under
+    the SIL OFL), so it works with nothing installed. A host can add its own font files.
+  - **Unsupported features:** for hosts that use it, a template using something it cannot lay out
+    is refused at compile, with the place and a fix.
+  - **Default:** it becomes the default in both reference apps and Heliograph.Umbraco once it
+    passes on the benchmark letters and on the randomised documents (its stage 2). LibreOffice
+    stays one line away.
 - **The principles and constraints above.**
 
 ## Open decisions

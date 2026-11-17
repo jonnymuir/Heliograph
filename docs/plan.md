@@ -78,6 +78,11 @@ Storage and uSync, the backoffice screens, and the reference site where a Wayfin
 supplies the dictionary and a stage sends a letter by calling Heliograph as a support system,
 started together by an Aspire host. Then its own first release.
 
+### 8. Heliograph's own PDF engine
+
+A pure .NET converter, `Heliograph.Pdf`, so PDFs need nothing installed. Stages, checks and risks
+are in [pdf-engine.md](pdf-engine.md).
+
 ## Where we are
 
 Step 4 is done: a rendered letter converts to a tagged PDF that passes an independent PDF/UA
