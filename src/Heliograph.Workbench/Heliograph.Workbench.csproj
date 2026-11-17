@@ -5,7 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Heliograph.Workbench</PackageId>
     <Title>Heliograph.Workbench</Title>
-    <Version>0.1.0-alpha.3</Version>
+    <Version>0.1.0-alpha.4</Version>
     <Authors>Jonny Muir</Authors>
     <Description>The Heliograph workbench: the author's screen as a web component. Write the email and the text, bring the document in from a word processor and send it back with comments, see what is wrong, preview every part, publish. One MapHeliographWorkbench() call serves it on its own page.</Description>
     <PackageTags>Correspondence;Templates;WebComponent;Heliograph</PackageTags>

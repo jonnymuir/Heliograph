@@ -21,7 +21,7 @@ public class OpenInEditorTests
         var link = await LinkAsync(http);
 
         link.GetProperty("word").GetString().Should().StartWith("ms-word:ofe|u|http");
-        link.GetProperty("libreOffice").GetString().Should().StartWith("vnd.libreoffice.command:ofv|u|http");
+        link.GetProperty("libreOffice").GetString().Should().StartWith("vnd.libreoffice.command:ofe|u|http");
         link.GetProperty("url").GetString().Should().Contain("/heliograph/webdav/").And.EndWith(".docx");
     }
 

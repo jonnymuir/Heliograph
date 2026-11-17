@@ -5,7 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Heliograph.Mcp</PackageId>
     <Title>Heliograph.Mcp</Title>
-    <Version>0.1.0-alpha.3</Version>
+    <Version>0.1.0-alpha.4</Version>
     <Authors>Jonny Muir</Authors>
     <Description>Correspondence authoring for AI agents: one MapCorrespondenceAuthoringMcp() call adds an MCP-over-HTTP endpoint with the operations a person has (read the dictionary, save a draft, check, preview, publish), the guides as resources, and ready-made prompts. It inherits the host's own authorisation.</Description>
     <PackageTags>Correspondence;MCP;Model-Context-Protocol;Templates;Heliograph</PackageTags>
