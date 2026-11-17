@@ -23,27 +23,8 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
     public Task<IReadOnlyList<CorrespondenceSummary>> ListAsync(CancellationToken cancellationToken = default) =>
         store.ListAsync(cancellationToken);
 
-    /// <summary>The names of the dictionaries a correspondence can use.</summary>
-    public Task<IReadOnlyList<string>> ListDictionariesAsync(CancellationToken cancellationToken = default) =>
-        dictionaries.ListAsync(cancellationToken);
-
-    /// <summary>A dictionary as JSON, or null if there is none with this name.</summary>
-    public Task<string?> ReadDictionaryAsync(string name, CancellationToken cancellationToken = default) =>
-        dictionaries.ReadAsync(name, cancellationToken);
-
-    /// <summary>A dictionary laid out for an author, each field with its tag. Null if there is none, or it cannot be read.</summary>
-    public async Task<DictionarySheet?> ReadDictionarySheetAsync(string name, CancellationToken cancellationToken = default) =>
-        await dictionaries.ReadAsync(name, cancellationToken).ConfigureAwait(false) is { } json && TryParse(json) is { } dictionary
-            ? DictionarySheet.From(name, dictionary)
-            : null;
-
-    /// <summary>The names of a dictionary's made-up sample recipients.</summary>
-    public Task<IReadOnlyList<string>> ListSamplesAsync(string dictionary, CancellationToken cancellationToken = default) =>
-        dictionaries.ListSamplesAsync(dictionary, cancellationToken);
-
-    /// <summary>One sample recipient's data as JSON, or null if there is none with this name.</summary>
-    public Task<string?> ReadSampleAsync(string dictionary, string sample, CancellationToken cancellationToken = default) =>
-        dictionaries.ReadSampleAsync(dictionary, sample, cancellationToken);
+    /// <summary>The dictionaries a correspondence can use, with their tags and sample recipients.</summary>
+    public DictionaryCatalog Dictionaries { get; } = new(dictionaries);
 
     /// <summary>
     /// A Word document to start the correspondence's document part from: its title set, real headings, and a tag
@@ -52,7 +33,7 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
     /// </summary>
     public async Task<byte[]?> StarterDocumentAsync(string key, CancellationToken cancellationToken = default) =>
         await store.ReadDraftAsync(key, cancellationToken).ConfigureAwait(false) is { } draft
-        && await ReadDictionarySheetAsync(draft.Content.Dictionary, cancellationToken).ConfigureAwait(false) is { } sheet
+        && await Dictionaries.SheetAsync(draft.Content.Dictionary, cancellationToken).ConfigureAwait(false) is { } sheet
             ? StarterDocument.Create(draft.Content.Name, sheet)
             : null;
 
@@ -243,18 +224,6 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
         using var document = content.Document is null ? null : new MemoryStream(content.Document, writable: false);
         var compilation = Correspondence.Compile(new CorrespondenceSource { Document = document, Email = content.Email, Sms = content.Sms }, dictionary);
         return (compilation.Correspondence, compilation.Diagnostics);
-    }
-
-    private static FieldDictionary? TryParse(string json)
-    {
-        try
-        {
-            return FieldDictionary.Parse(json);
-        }
-        catch (FormatException)
-        {
-            return null;
-        }
     }
 
     private static Diagnostic NotFound(string key) => Problem(DiagnosticCodes.CorrespondenceNotFound,

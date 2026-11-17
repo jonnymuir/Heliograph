@@ -28,7 +28,7 @@ public static class CorrespondenceAuthoringTools
     [McpServerTool(Name = "list_dictionaries", ReadOnly = true)]
     [Description("List the names of the dictionaries a correspondence can use. A dictionary is the closed list of fields a template may refer to.")]
     public static Task<IReadOnlyList<string>> ListDictionaries(CorrespondenceLibrary library, CancellationToken ct) =>
-        library.ListDictionariesAsync(ct);
+        library.Dictionaries.ListAsync(ct);
 
     [McpServerTool(Name = "read_dictionary", ReadOnly = true)]
     [Description(
@@ -41,7 +41,7 @@ public static class CorrespondenceAuthoringTools
         [Description("The dictionary's name, from list_dictionaries or a correspondence's 'dictionary'.")] string name,
         CancellationToken ct)
     {
-        return await library.ReadDictionarySheetAsync(name, ct).ConfigureAwait(false)
+        return await library.Dictionaries.SheetAsync(name, ct).ConfigureAwait(false)
             ?? throw new McpException($"There is no dictionary called \"{name}\" that can be read. Call list_dictionaries to see the names that exist.");
     }
 
@@ -52,7 +52,7 @@ public static class CorrespondenceAuthoringTools
         [Description("The dictionary's name.")] string dictionary,
         CancellationToken ct)
     {
-        return library.ListSamplesAsync(dictionary, ct);
+        return library.Dictionaries.SamplesAsync(dictionary, ct);
     }
 
     [McpServerTool(Name = "starter_document", ReadOnly = true)]
@@ -223,7 +223,7 @@ public static class CorrespondenceAuthoringTools
     {
         var dictionary = (await library.ReadDraftAsync(key, ct).ConfigureAwait(false))?.Content.Dictionary
             ?? throw new McpException($"There is no correspondence with the key \"{key}\".");
-        return await library.ReadSampleAsync(dictionary, sample, ct).ConfigureAwait(false)
+        return await library.Dictionaries.SampleAsync(dictionary, sample, ct).ConfigureAwait(false)
             ?? throw new McpException($"The dictionary \"{dictionary}\" has no sample called \"{sample}\". Call list_samples to see them.");
     }
 
