@@ -1,3 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using Heliograph.Tests.Support;
+using Heliograph.Pdf;
+using Heliograph.Documents;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -51,6 +55,21 @@ public class AuthoringOverRestTests
         annotated.StatusCode.Should().Be(HttpStatusCode.OK);
         (await http.GetAsync("correspondence/reminder")).StatusCode.Should().Be(HttpStatusCode.OK);
         (await Json(http.GetAsync("correspondence/reminder"))).GetProperty("hasDocument").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task A_site_that_makes_its_own_PDFs_is_told_on_upload_what_the_converter_cannot_lay_out()
+    {
+        await using var host = await ApiHost.StartAsync(services => services.AddSingleton<IPdfConverter, HeliographPdfConverter>());
+        host.Dictionaries["members"] = Members;
+        using var http = host.Http();
+        await http.PutAsJsonAsync("correspondence/reminder", new { expectedRevision = 0, name = "Your reminder", dictionary = "members" });
+        var link = "<w:p xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:hyperlink w:anchor=\"top\"><w:r><w:t>Top</w:t></w:r></w:hyperlink></w:p>";
+        using var upload = new ByteArrayContent(TestDocx.With("Hello ((Member name))").RawParagraph(link).Build().ToArray());
+
+        var saved = await Json(http.PutAsync("correspondence/reminder/document?expectedRevision=1", upload));
+
+        saved.GetProperty("diagnostics").EnumerateArray().Select(d => d.GetProperty("code").GetString()).Should().Contain(DiagnosticCodes.PdfCannotMakeLink);
     }
 
     [Fact]

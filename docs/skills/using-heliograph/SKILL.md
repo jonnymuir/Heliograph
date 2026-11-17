@@ -217,6 +217,13 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
   token stops the conversion.
 - **Checked against LibreOffice:** its benchmark letters are laid out as LibreOffice lays them
   out, line for line, to within a point and a half, checked in CI.
+- **It refuses what it cannot lay out, at compile.** `HeliographPdfConverter` is also an
+  `IDocumentCheck`. Registered as the host's `IPdfConverter`, as `AddCorrespondenceLibrary`
+  reads it, it makes every check, preview and publish report what a template has that it does
+  not lay out yet: pictures, links and coloured text, for example (`HG4001` to `HG4013`). So no
+  PDF quietly loses anything. A version already published goes on rendering as it was. Without
+  the library, pass it yourself:
+  `DocumentTemplate.Compile(docx, dictionary, [new HeliographPdfConverter()])`.
 
 Both routes:
 

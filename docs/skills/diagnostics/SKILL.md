@@ -89,3 +89,31 @@ store. None of these has a place in a file.
 | `HG3009` | Dictionaries cannot be changed here: the site takes them from a system that knows its own data. | Ask whoever maintains that data to change the dictionary. |
 | `HG3010` | A sample recipient is not a JSON object. | Write it as `{ "fieldKey": "value", ... }`, with the dictionary's keys. |
 | `HG3007` | The key cannot be used: it is not lower-case letters, digits and hyphens, starting with a letter. | Use a key such as `decision-letter`. |
+
+## What the PDF route cannot lay out (HG4)
+
+Reported only where the site makes its PDFs with Heliograph's own converter (`Heliograph.Pdf`).
+Each one names something in the template that the converter does not lay out yet, so a PDF
+would be missing it or would look wrong. Each is reported once in each part, at the first place
+it occurs. They apply while a letter is written and published. A version already published goes
+on rendering as it was.
+
+The fix is always one of two things. Change the template, or ask whoever runs the site to make
+that letter's PDFs with LibreOffice (`Heliograph.Pdf.LibreOffice`) until the converter supports
+it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-engine.md).
+
+| Code | Meaning | What to do |
+|---|---|---|
+| `HG4001` | A picture. | Take it out, or use the LibreOffice route for this letter. |
+| `HG4002` | A text box, shape or chart. | Put the text in an ordinary paragraph or table. |
+| `HG4003` | A footnote or endnote. | Put the note's text in the body of the letter. |
+| `HG4004` | More than one section, so pages after the break would take the first section's page and margins. | Keep one page size and set of margins for the whole letter. |
+| `HG4005` | Text set in columns. | Use a single column, or a table. |
+| `HG4006` | A field other than a page number or page count, which would print nothing. | Type the text in, or use a tag from the dictionary. |
+| `HG4007` | A link, which would print but could not be clicked. | Write the address out as plain text. |
+| `HG4008` | Coloured, highlighted, shaded, struck-through, raised or lowered text, capitals set as formatting, spaced-out characters, or a border round a paragraph. It would print as plain text. | Take the formatting off. |
+| `HG4009` | Right-to-left text, or text running up or down the page. | Set the text left to right. |
+| `HG4010` | A table with cells merged down a column, or a table inside another. | Give each cell its own row, with no table inside another. |
+| `HG4011` | A tab stop aligned right, centred or on the decimal point, or with a leader, so text after it would not line up. | Use a left tab stop, or a table with the column aligned as needed. |
+| `HG4012` | Different headers and footers on even pages. | Turn off different odd and even pages. |
+| `HG4013` | A warning, not an error: a font the converter does not have, drawn in Liberation Sans, so lines may break differently. | Use Arial, Times New Roman or Courier New, which have look-alikes with the same widths. |

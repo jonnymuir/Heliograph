@@ -51,9 +51,10 @@ This plan is built to find out early and keep finding out.
 All six benchmark letters pass PDF/UA, give the same bytes every time, and are laid out as
 LibreOffice lays them out to within a point and a half on every line.
 
-The compile-time check, which refuses what is not built yet, is the next part of stage 1. Until
-it lands, a template with a picture, a text box, footnotes or more than one section converts
-without them. Use `Heliograph.Pdf.LibreOffice` for those.
+What it does not lay out yet is refused when a template is compiled (`HG4001` to `HG4013`; see
+the [diagnostics guide](skills/diagnostics/SKILL.md)). The converter is an `IDocumentCheck`, and
+registering it as the host's `IPdfConverter` is enough. So stage 1 is done; stage 2, the
+measuring net, is next.
 
 ## How we will know it is right
 

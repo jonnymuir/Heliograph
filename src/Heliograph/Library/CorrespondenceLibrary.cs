@@ -14,8 +14,14 @@ namespace Heliograph.Library;
 /// is rendered for a real recipient. The library keeps nothing itself: correspondence comes from the host's
 /// <see cref="ICorrespondenceStore"/> and dictionaries from its <see cref="IDictionarySource"/>.
 /// </remarks>
+/// <remarks>
+/// Document checks the host gives (what its PDF route can lay out, say) apply while a correspondence is written:
+/// checking, previewing and publishing a draft. A version already published renders as it was published, even if the
+/// host's checks change afterwards.
+/// </remarks>
 public sealed partial class CorrespondenceLibrary(
-    ICorrespondenceStore store, IDictionarySource dictionaries, TimeProvider clock, IDictionaryStartingPoints? startingPoints = null)
+    ICorrespondenceStore store, IDictionarySource dictionaries, TimeProvider clock, IDictionaryStartingPoints? startingPoints = null,
+    IReadOnlyList<IDocumentCheck>? documentChecks = null)
 {
     // A published version never changes, so one compiled is good for as long as the process runs.
     private readonly ConcurrentDictionary<(string Key, int Version), CompiledCorrespondence> _published = new();
@@ -153,7 +159,7 @@ public sealed partial class CorrespondenceLibrary(
 
         if (!_published.TryGetValue((key, published.Version), out var compiled))
         {
-            (compiled, var diagnostics) = await CompileAsync(published.Content, published.DictionaryJson, cancellationToken).ConfigureAwait(false);
+            (compiled, var diagnostics) = await CompileAsync(published.Content, published.DictionaryJson, cancellationToken, authoring: false).ConfigureAwait(false);
             if (compiled is null)
             {
                 // It compiled when it was published, so this means the engine has changed underneath it.
@@ -194,7 +200,7 @@ public sealed partial class CorrespondenceLibrary(
 
     /// <summary>Compiles content against the dictionary given, or the one it names as that dictionary is now.</summary>
     private async Task<(CompiledCorrespondence? Compiled, IReadOnlyList<Diagnostic> Diagnostics)> CompileAsync(
-        CorrespondenceContent content, string? dictionaryJson, CancellationToken cancellationToken)
+        CorrespondenceContent content, string? dictionaryJson, CancellationToken cancellationToken, bool authoring = true)
     {
         if (content is { Document: null, Email: null, Sms: null })
         {
@@ -223,7 +229,8 @@ public sealed partial class CorrespondenceLibrary(
         }
 
         using var document = content.Document is null ? null : new MemoryStream(content.Document, writable: false);
-        var compilation = Correspondence.Compile(new CorrespondenceSource { Document = document, Email = content.Email, Sms = content.Sms }, dictionary);
+        var source = new CorrespondenceSource { Document = document, Email = content.Email, Sms = content.Sms };
+        var compilation = Correspondence.Compile(source, dictionary, authoring ? documentChecks ?? [] : []);
         return (compilation.Correspondence, compilation.Diagnostics);
     }
 

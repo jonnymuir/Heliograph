@@ -25,7 +25,10 @@ public enum DiagnosticSeverity
 /// <param name="Excerpt">The start of the paragraph's or line's text.</param>
 public sealed record DiagnosticLocation(string Part, int Paragraph, string Excerpt);
 
-/// <summary>The stable codes. HG0 is a refused file, HG1 a template problem, HG2 a problem with one recipient's data, HG3 a problem with stored correspondence.</summary>
+/// <summary>
+/// The stable codes. HG0 is a refused file, HG1 a template problem, HG2 a problem with one recipient's data, HG3 a
+/// problem with stored correspondence, HG4 something in a template that the host's PDF route cannot lay out.
+/// </summary>
 public static class DiagnosticCodes
 {
     public const string NotAWordDocument = "HG0001";
@@ -73,6 +76,20 @@ public static class DiagnosticCodes
     public const string DictionaryNameNotValid = "HG3008";
     public const string DictionariesReadOnly = "HG3009";
     public const string SampleNotValid = "HG3010";
+
+    public const string PdfCannotDrawPicture = "HG4001";
+    public const string PdfCannotDrawShape = "HG4002";
+    public const string PdfCannotLayOutNotes = "HG4003";
+    public const string PdfCannotLayOutSections = "HG4004";
+    public const string PdfCannotLayOutColumns = "HG4005";
+    public const string PdfCannotWorkOutField = "HG4006";
+    public const string PdfCannotMakeLink = "HG4007";
+    public const string PdfCannotDrawFormatting = "HG4008";
+    public const string PdfCannotLayOutDirection = "HG4009";
+    public const string PdfCannotLayOutTable = "HG4010";
+    public const string PdfCannotAlignTab = "HG4011";
+    public const string PdfCannotLayOutEvenPages = "HG4012";
+    public const string PdfFontDrawnInLookAlike = "HG4013";
 }
 
 internal static class DiagnosticLists
