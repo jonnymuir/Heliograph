@@ -31,6 +31,30 @@ This plan is built to find out early and keep finding out.
 - **Heliograph.Umbraco takes it as it takes every engine package.** It becomes the default there
   and in both reference apps after stage 2, the measuring net, with LibreOffice one line away.
 
+## Where it is
+
+`Heliograph.Pdf` exists, at stage 1. It lays out:
+
+- **Paragraphs:**
+  - styles and their inheritance;
+  - bold, italic, underline and size;
+  - left, centred, right and justified text;
+  - indents, tab stops, line breaks;
+  - the three line-spacing modes, and space before and after.
+- **Pages:** widow and orphan control, keep with next, keep together, page breaks.
+- **Lists:** bullets and numbers.
+- **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
+  on each page.
+- **Headers and footers:** on every page, with a first page of its own, and page numbers and page
+  counts.
+
+All six benchmark letters pass PDF/UA, give the same bytes every time, and are laid out as
+LibreOffice lays them out to within a point and a half on every line.
+
+The compile-time check, which refuses what is not built yet, is the next part of stage 1. Until
+it lands, a template with a picture, a text box, footnotes or more than one section converts
+without them. Use `Heliograph.Pdf.LibreOffice` for those.
+
 ## How we will know it is right
 
 Every check runs in CI, and an agent can run all of them without a person.
