@@ -12,9 +12,10 @@ Heliograph follows the model Wayfinder already proved. In Wayfinder a service de
 **correspondence** and an engine renders it. Both are data, not code, and both are checked before
 they can be used. Both ship as an engine that runs anywhere, with a reference host to prove it,
 and a separate Umbraco package that hosts it in the backoffice. One thing differs on purpose:
-Wayfinder ships its own editor, and Heliograph does not. Authors write in the word processor they
-already have, and Heliograph supplies what surrounds it: a dictionary of what may be used, a
-compiler that says what is wrong, and a preview.
+Wayfinder ships an editor for the whole blueprint, and Heliograph does not build a word
+processor. Authors write the document in the word processor they already have. The workbench is
+where they write the email and the text, and where everything surrounds the document: a
+dictionary of what may be used, a compiler that says what is wrong, and a preview.
 
 | | Wayfinder | Heliograph |
 |---|---|---|
@@ -129,7 +130,7 @@ flowchart TB
 | PDF converter | NuGet, one per route | Turns a merged document into a PDF. Separate so a host chooses its route, or none, and the core never assumes one. |
 | `Heliograph.Api` | NuGet | One `Map...()` call adds REST endpoints for the dictionary, compile, preview, publish and render. The host supplies authorisation. |
 | `Heliograph.Mcp` | NuGet | The same operations over MCP, with the guides and the dictionary as resources, so an agent works the way a person does. |
-| `Heliograph.Workbench` | NuGet (compiled web component) | Where a content designer brings a file: upload it, see what is wrong and where, browse and copy from the dictionary, preview every part with sample data, publish. It is not an editor. |
+| `Heliograph.Workbench` | NuGet (compiled web component) | The author's screen. Write the email and the text with the dictionary at hand, bring the document in from a word processor and send it back, see what is wrong and where, preview every part with sample data, publish. It does not lay out documents. |
 | `Heliograph.ReferenceApp` | Never | Proves the engine runs with no CMS: correspondence as files, an outbox page that shows what would have been sent. Holds the benchmark letters. Also the target for security and performance scans. |
 | `Heliograph.Umbraco` | NuGet | Correspondence stored in the Umbraco database and carried between environments by uSync, an API behind backoffice sign-in, wired by a composer. |
 | `Heliograph.Umbraco.Client` | Inside `Heliograph.Umbraco` | The backoffice screens, beside Wayfinder's Blueprints. |
@@ -208,8 +209,11 @@ how to join the two; it does not live in either engine.
   letter reaches anyone. The build order answers it: the core, the dictionary and the compiler
   first, proved on the benchmark letters in the reference app; the workbench and the Umbraco
   package after.
-- **No editor of our own.** Authors keep the tool they know and Heliograph avoids building a word
-  processor, against less control: Heliograph cannot stop a mistake being typed, only catch it at
-  compile. That is why the compiler and its diagnostics are the centre of the design.
+- **No word processor of our own.** Authors keep the tool they know and Heliograph avoids
+  building one, against less control: Heliograph cannot stop a mistake being typed in a document,
+  only catch it at compile, and moving the file between the two is a step a person has to take.
+  That is why the compiler and its diagnostics are the centre of the design, and why that step
+  has to be made as simple as possible. The email and the text are plain text, so the workbench
+  edits them itself.
 - **A part per channel.** Each part is written for its medium, against wording that can drift
   between them. The shared dictionary and one compile keep the data and the checks the same.
