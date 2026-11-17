@@ -17,7 +17,9 @@ internal sealed class WordReader : IDisposable
     {
         _zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
         Styles = new StyleSheet(Part("word/styles.xml"));
-        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")));
+        // Word's interval between default tab stops is half an inch unless the document sets its own.
+        var defaultTab = Twips(Part("word/settings.xml")?.Root?.Element(W + "defaultTabStop"), "val") ?? 36;
+        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab);
         _relationships = (Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
             .ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
     }

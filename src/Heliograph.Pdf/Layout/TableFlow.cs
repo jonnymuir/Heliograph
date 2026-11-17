@@ -3,8 +3,9 @@ using Heliograph.Pdf.Reading;
 namespace Heliograph.Pdf.Layout;
 
 /// <summary>
-/// Lays out a table row by row. A row that does not fit starts a new page, where the heading rows are drawn again as
-/// artifacts. As in Word and LibreOffice, the text sits at the table's indent and the border one cell padding to its left.
+/// Lays out a table row by row. As in Word, a row that does not fit breaks across the page: each cell carries on from its
+/// own last line that fits, under the heading rows drawn again as artifacts. A heading row, or one marked not to break,
+/// moves whole to the next page instead. The text sits at the table's indent, the border one cell padding to its left.
 /// </summary>
 internal sealed class TableFlow(PageSet pages)
 {
@@ -13,60 +14,73 @@ internal sealed class TableFlow(PageSet pages)
         var headings = t.Rows.TakeWhile(r => r.Header).ToList();
         foreach (var row in t.Rows)
         {
-            if (RowHeight(t, row) > pages.Room && pages.HasContent)
-            {
-                pages.NewPage();
-                if (!row.Header)
-                {
-                    headings.ForEach(h => Draw(t, h, null));
-                }
-            }
-
-            Draw(t, row, node.Add("TR"));
+            Place(t, row, RowLayout.Of(t, row, node.Add("TR")), headings);
         }
     }
 
-    public static double RowHeight(Table t, Row row)
+    // Places a row: whole if it fits, else broken across pages where it can be, else moved whole to the next page.
+    private void Place(Table t, Row row, RowLayout cells, List<Row> headings)
     {
-        var height = 0.0;
-        foreach (var (cell, width) in Columns(t, row))
+        var from = new int[cells.Count];
+        while (cells.Need(from) > pages.Room + 0.01)
         {
-            var text = TextWidth(t, cell, width);
-            var h = t.Margins.Top + t.Margins.Bottom + (cell.Borders.Top?.Width ?? 0);
-            foreach (var p in cell.Blocks.OfType<Paragraph>())
+            var cut = Breakable(row, from) ? cells.Cut(from, pages.Room) : null;
+            if (cut is null && pages.HasContent)
             {
-                h += p.Style.Spacing.Before + LineBreaker.Break(p, text, _ => "").Sum(l => l.Height) + p.Style.Spacing.After;
+                NewPage(t, headings, row);
+                continue;
             }
 
-            height = Math.Max(height, h);
+            // Nothing fits even on an empty page: place what fits, at least a line of each cell, and go on.
+            cut ??= cells.Cut(from, pages.Room, atLeastOne: true);
+            if (cut is null)
+            {
+                break;
+            }
+
+            Draw(cells, from, cut, cells.Need(from, cut));
+            from = cut;
+            NewPage(t, headings, row);
         }
 
-        return height;
+        Draw(cells, from, null, cells.Need(from));
     }
 
-    private void Draw(Table t, Row row, StructNode? rowNode)
-    {
-        var height = RowHeight(t, row);
-        var x = pages.Geometry.Left + t.Indent - t.Margins.Left;
-        foreach (var (cell, width) in Columns(t, row))
-        {
-            var cellNode = rowNode?.Add(row.Header ? "TH" : "TD", row.Header ? "Column" : null, cell.Span);
-            var y = pages.Y + t.Margins.Top + (cell.Borders.Top?.Width ?? 0);
-            foreach (var p in cell.Blocks.OfType<Paragraph>())
-            {
-                y += p.Style.Spacing.Before;
-                var owner = cellNode is null ? Owner.Artifact : new Owner(cellNode.Add("P"), null);
-                foreach (var line in LineBreaker.Break(p, TextWidth(t, cell, width), _ => ""))
-                {
-                    LinePlacer.Place(pages.Current, line, x + t.Margins.Left, y, owner);
-                    y += line.Height;
-                }
+    // A heading row never breaks; a row marked not to break may still have to, once it has started on a page of its own.
+    private static bool Breakable(Row row, int[] from) => !row.Header && !(row.CantSplit && from.All(f => f == 0));
 
-                y += p.Style.Spacing.After;
+    /// <summary>The height of a whole row, when nothing of it has been placed yet.</summary>
+    public static double RowHeight(Table t, Row row) => RowLayout.Of(t, row, null).Need(new int[row.Cells.Count]);
+
+    private void NewPage(Table t, List<Row> headings, Row row)
+    {
+        pages.NewPage();
+        if (!row.Header)
+        {
+            foreach (var heading in headings)
+            {
+                var cells = RowLayout.Of(t, heading, null);
+                var from = new int[cells.Count];
+                Draw(cells, from, null, cells.Need(from));
+            }
+        }
+    }
+
+    // Draws each cell's lines from one index up to another (or to the end), and the cell borders round that part.
+    private void Draw(RowLayout cells, int[] from, int[]? to, double height)
+    {
+        for (var c = 0; c < cells.Count; c++)
+        {
+            var cell = cells[c];
+            var end = to?[c] ?? cell.Lines.Count;
+            var offset = from[c] < cell.Lines.Count ? cell.Lines[from[c]].Top : 0;
+            for (var k = from[c]; k < end; k++)
+            {
+                var (top, line, owner) = cell.Lines[k];
+                LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
             }
 
-            Borders(cell.Borders, x, width, height);
-            x += width;
+            Borders(cell.Borders, pages.Geometry.Left + cell.Left, cell.Width, height);
         }
 
         pages.Y += height;
@@ -96,18 +110,4 @@ internal sealed class TableFlow(PageSet pages)
             ops.Add(new LineOp(x + width, top, x + width, top + height, right.Width));
         }
     }
-
-    private static IEnumerable<(Cell Cell, double Width)> Columns(Table t, Row row)
-    {
-        var column = 0;
-        foreach (var cell in row.Cells)
-        {
-            yield return (cell, t.Grid.Skip(column).Take(cell.Span).Sum());
-            column += cell.Span;
-        }
-    }
-
-    // A cell's text area is the cell less its padding and half of each side border.
-    private static double TextWidth(Table t, Cell cell, double width) =>
-        width - t.Margins.Left - t.Margins.Right - (((cell.Borders.Left?.Width ?? 0) + (cell.Borders.Right?.Width ?? 0)) / 2);
 }

@@ -10,9 +10,12 @@ internal static class PageLayout
     {
         var g = document.Section.Page;
         var stories = document.Section.Stories;
-        var header = Math.Max(Height(stories.Header, g), Height(stories.FirstHeader ?? [], g));
-        var footer = Math.Max(Height(stories.Footer, g), Height(stories.FirstFooter ?? [], g));
-        var pages = new PageSet(g, Math.Max(g.Top, g.HeaderDistance + header), g.Height - Math.Max(g.Bottom, g.FooterDistance + footer), maxPages, cancellation);
+        // As in Word, the text starts at the top margin, or below the page's header when the header reaches further down.
+        TextArea Area(IReadOnlyList<Block> header, IReadOnlyList<Block> footer) => new(
+            Math.Max(g.Top, g.HeaderDistance + Height(header, g)), g.Height - Math.Max(g.Bottom, g.FooterDistance + Height(footer, g)));
+        var rest = Area(stories.Header, stories.Footer);
+        var first = Area(stories.FirstHeader ?? stories.Header, stories.FirstFooter ?? stories.Footer);
+        var pages = new PageSet(g, first, rest, maxPages, cancellation);
         var root = new StructNode("Document", null);
         new BodyFlow(pages, root).Run(document.Body);
         for (var n = 0; n < pages.Pages.Count; n++)

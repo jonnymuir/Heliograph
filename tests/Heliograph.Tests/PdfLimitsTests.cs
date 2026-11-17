@@ -42,6 +42,7 @@ public class PdfLimitsTests
         { DiagnosticCodes.PdfCannotLayOutDirection, $"<w:p {W}><w:pPr><w:bidi/></w:pPr><w:r><w:t>Right to left</w:t></w:r></w:p>", "right-to-left" },
         { DiagnosticCodes.PdfCannotLayOutTable, $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"2000\"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:vMerge w:val=\"restart\"/></w:tcPr><w:p><w:r><w:t>Merged</w:t></w:r></w:p></w:tc></w:tr></w:tbl>", "merged down a column" },
         { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:tabs><w:tab w:val=\"decimal\" w:pos=\"5000\"/></w:tabs></w:pPr><w:r><w:t>Total</w:t></w:r><w:r><w:tab/><w:t>12.50</w:t></w:r></w:p>", "decimal point" },
+        { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:t>Name</w:t><w:tab/><w:t>Date</w:t></w:r></w:p>", "centred or right-aligned paragraph" },
     };
 
     [Theory]

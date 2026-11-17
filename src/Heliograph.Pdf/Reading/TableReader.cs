@@ -13,7 +13,8 @@ internal static class TableReader
         var tableBorders = tblPr?.Element(W + "tblBorders");
         var rows = tbl.Elements(W + "tr").Select(tr => new Row(
             [.. tr.Elements(W + "tc").Select(tc => Cell(tc, tableBorders, blocks))],
-            On(tr.Element(W + "trPr")?.Element(W + "tblHeader")))).ToList();
+            On(tr.Element(W + "trPr")?.Element(W + "tblHeader")),
+            On(tr.Element(W + "trPr")?.Element(W + "cantSplit")))).ToList();
 
         return new Table(grid, rows, Twips(tblPr?.Element(W + "tblInd"), "w") ?? 0, Margins(tblPr?.Element(W + "tblCellMar")));
     }

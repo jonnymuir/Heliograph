@@ -46,11 +46,11 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         }
 
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
-        var before = pages.HasContent || pages.OnFirstPage ? s.Spacing.Before : 0;
+        // Space before is kept at the top of a page too, as LibreOffice lays out a Word document.
+        var before = s.Spacing.Before;
         if (MustMove(p, lines, before, next))
         {
             pages.NewPage();
-            before = 0;
         }
 
         pages.Y += before;
