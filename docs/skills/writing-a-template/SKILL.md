@@ -32,8 +32,10 @@ which is what you write in a tag; a key, which is what the data calls it; and a 
 
 Dictionaries are kept on the workbench's **Dictionaries** screen, in the left-hand list:
 
-- **Add, change or remove a field.** Give it a name (the key fills itself in), choose its type,
-  and for a field that belongs to a list choose the list. Press **Save the dictionary**. The
+- **Add, change or remove a field.** Give it a name (the key fills itself in) and choose its type.
+  A **list** is a field that repeats, such as payments: its own fields (each payment's date and
+  amount) sit indented beneath it, and **Add a field to …** adds one. See [Lists](#lists) for how
+  a document repeats a row over it. Press **Save the dictionary**. The
   answer says which correspondence use the dictionary and whether any now have a problem, such as
   a tag for a field you removed. Versions already published keep the dictionary they were
   published with, so nothing already being sent changes.

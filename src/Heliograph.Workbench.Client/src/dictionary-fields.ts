@@ -1,13 +1,16 @@
-// A dictionary's JSON, turned into one flat row per field for editing, and back again. A list's own fields are rows
-// that name the list they belong to.
+// A dictionary's JSON as the rows the Dictionaries screen edits, and back again. A list is a field that repeats, such
+// as payments; its own fields (each payment's date and amount) sit inside it.
 
 export const fieldTypes = ['text', 'date', 'address', 'number', 'money', 'yesNo', 'list'] as const;
+
+/** The types a field inside a list may have: a list cannot hold another list. */
+export const innerFieldTypes = fieldTypes.filter((type) => type !== 'list');
 
 export interface FieldRow {
   name: string;
   key: string;
   type: string;
-  list: string;
+  fields: FieldRow[];
 }
 
 interface FieldJson {
@@ -17,25 +20,19 @@ interface FieldJson {
   fields?: FieldJson[];
 }
 
-export function toRows(json: string): FieldRow[] {
-  const fields: FieldJson[] = JSON.parse(json).fields ?? [];
-  return fields.flatMap((field) => [
-    { name: field.name, key: field.key, type: field.type, list: '' },
-    ...(field.fields ?? []).map((inner) => ({ name: inner.name, key: inner.key, type: inner.type, list: field.name })),
-  ]);
-}
+const fromJson = (field: FieldJson): FieldRow => ({ name: field.name, key: field.key, type: field.type, fields: (field.fields ?? []).map(fromJson) });
 
-export function toJson(rows: FieldRow[]): string {
-  const top = rows.filter((row) => !row.list);
-  const fields = top.map((row) => {
-    const own: FieldJson = { name: row.name.trim(), key: row.key.trim(), type: row.type };
-    if (row.type === 'list') {
-      own.fields = rows.filter((inner) => inner.list === row.name).map((inner) => ({ name: inner.name.trim(), key: inner.key.trim(), type: inner.type }));
-    }
-    return own;
-  });
-  return `${JSON.stringify({ fields }, null, 2)}\n`;
-}
+const toFieldJson = (row: FieldRow): FieldJson => {
+  const own: FieldJson = { name: row.name.trim(), key: row.key.trim(), type: row.type };
+  if (row.type === 'list') own.fields = row.fields.map(toFieldJson);
+  return own;
+};
+
+export const toRows = (json: string): FieldRow[] => (JSON.parse(json).fields ?? []).map(fromJson);
+
+export const toJson = (rows: FieldRow[]): string => `${JSON.stringify({ fields: rows.map(toFieldJson) }, null, 2)}\n`;
+
+export const emptyRow = (): FieldRow => ({ name: '', key: '', type: 'text', fields: [] });
 
 /** A key made from a name, as an author would expect: "Member name" becomes "memberName". */
 export function keyFor(name: string): string {
@@ -45,14 +42,9 @@ export function keyFor(name: string): string {
 
 /** A made-up recipient with a value of the right shape for each field, to start a new sample from. */
 export function exampleSample(rows: FieldRow[]): string {
-  const value = (type: string): unknown =>
-    ({ date: '2027-06-19', address: ['1 Example Street', 'Exampletown', 'ZZ1 1ZZ'], number: 1, money: 10, yesNo: true })[type] ?? 'Example';
-  const sample: Record<string, unknown> = {};
-  for (const row of rows.filter((r) => !r.list)) {
-    sample[row.key] =
-      row.type === 'list'
-        ? [Object.fromEntries(rows.filter((inner) => inner.list === row.name).map((inner) => [inner.key, value(inner.type)]))]
-        : value(row.type);
-  }
-  return `${JSON.stringify(sample, null, 2)}\n`;
+  const value = (row: FieldRow): unknown =>
+    row.type === 'list'
+      ? [Object.fromEntries(row.fields.map((inner) => [inner.key, value(inner)]))]
+      : (({ date: '2027-06-19', address: ['1 Example Street', 'Exampletown', 'ZZ1 1ZZ'], number: 1, money: 10, yesNo: true }) as Record<string, unknown>)[row.type] ?? 'Example';
+  return `${JSON.stringify(Object.fromEntries(rows.map((row) => [row.key, value(row)])), null, 2)}\n`;
 }
