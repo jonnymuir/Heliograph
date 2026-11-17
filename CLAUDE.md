@@ -10,10 +10,12 @@ library with no framework dependency, so it can stand alone or sit inside anothe
 first consumer is [Wayfinder](https://github.com/jonnymuir/Wayfinder) and
 [Wayfinder.Umbraco](https://github.com/jonnymuir/Wayfinder.Umbraco).
 
-It deliberately does **not** deliver anything, and it does **not** include an editor. Sending,
-retries, delivery receipts, provider adapters, scheduling and recipient preferences belong to the
-host. Writing happens in Word, Microsoft 365, LibreOffice or anything else that saves the
-standard format.
+It deliberately does **not** deliver anything, and it does **not** include a word processor.
+Sending, retries, delivery receipts, provider adapters, scheduling and recipient preferences
+belong to the host. A document is written in Word, Microsoft 365, LibreOffice or anything else
+that saves the standard format. Heliograph does have a UI, the workbench, and the email and the
+text message are written in it, because they are plain text. Getting a document from the author's
+word processor into Heliograph and back must be as simple as it can be made.
 
 It follows the Wayfinder model: an engine, a reference host that proves it standalone, and
 [Heliograph.Umbraco](https://github.com/jonnymuir/Heliograph.Umbraco) to host it in Umbraco.

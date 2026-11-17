@@ -121,8 +121,10 @@ another PDF route can be added without changing the core.
 3. **No silent failure.** Every way a template can be wrong (unknown field, misspelt field,
    unclosed section, a list used as a value, a missing shared part) has a diagnostic with a
    location and a suggested fix, and a test that proves it.
-4. **Agent parity.** An agent given only the published docs and the MCP server writes a template
-   that compiles, measured by an evaluation that runs when the guidance changes.
+4. **Agent parity.** An agent given only the published docs and the MCP server writes all three
+   parts of a correspondence that compiles, measured by an evaluation that runs when the guidance
+   changes. It makes the document with whatever tools it has; Heliograph supplies the dictionary,
+   the checks and the preview, as it does for a person.
 5. **One call, every part.** Wayfinder.Umbraco sends one correspondence as letter, email and
    text from a single render call, with no wording and no field names in host code.
 6. **Standalone.** A second host with no Wayfinder and no Umbraco renders the benchmark letters
@@ -138,7 +140,7 @@ another PDF route can be added without changing the core.
 |---|---|---|
 | Document, email and SMS parts | Messaging apps such as WhatsApp | Sending, retries, delivery receipts |
 | The dictionary, the compiler and its diagnostics | An add-in that offers the dictionary inside the editor | Provider adapters |
-| Upload, check, preview and publish, for people and for agents | Opening a template for editing straight from the browser | Scheduling and queues |
+| The workbench: write the email and the text, upload, check, preview and publish, for people and for agents | Opening a template for editing straight from the browser | Scheduling and queues |
 | Shared parts | OpenDocument templates | Recipient preferences, consent and contact details |
 | PDF through one converter | Bilingual correspondence | Storing what was sent |
 
@@ -161,8 +163,11 @@ another PDF route can be added without changing the core.
   can do the same.
 - **One correspondence, a part per channel.** Parts share a dictionary, a version and a render
   call. They do not share a body: a good email is not derived from a letter.
-- **Heliograph builds no editor.** Authors use existing word processors. Heliograph supplies the
-  dictionary, the compiler and the preview around them.
+- **Heliograph builds no word processor**, because building one is too much to take on. It has a
+  UI, the workbench, where the email and the text are written in a text editor, since they are
+  plain text. The document is written in an existing word processor, and Heliograph supplies the
+  dictionary, the compiler and the preview around it. Moving a document between the two must be as
+  simple as it can be made: see [Open decisions](#open-decisions).
 - **LibreOffice is the first PDF converter and the reference editor for automated tests.** It
   sits behind the conversion seam like any other route. Its tagged PDF output is checked in
   [the plan](plan.md), step 1.
@@ -212,11 +217,19 @@ another PDF route can be added without changing the core.
    shared part is itself a document.
 3. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
    support-system capability per correspondence, or one capability that takes it as an input.
-4. **How an agent writes the document part.** Over MCP an agent writes the email and the text
-   message, and can upload a `.docx` it has been given, but it cannot lay one out. Success
-   measure 4 asks for an agent that writes a template that compiles. Either the measure means
-   the email and the text, or Heliograph offers a way to start a document from plain text, which
-   edges towards building an editor.
+4. **The document, from start to finish, for a person.** The steps an author takes to start a
+   document, get it into Heliograph, fix it and change it later. Each could be made simpler:
+   - *Starting:* download a starter `.docx` made from the dictionary, with the letterhead, the
+     styles and a page listing every tag ready to copy, instead of starting from a blank page.
+   - *Bringing it in:* drop the file on the workbench, which checks it at once.
+   - *Fixing it:* the author's own document handed back with a comment at each problem
+     (decision 1), so they fix it where they work.
+   - *Changing it later:* "open in Word" or "open in LibreOffice" from the workbench, saving
+     straight back to Heliograph, so there is no download and upload. This is listed under
+     "Later" in the scope; it needs WebDAV or a Microsoft 365 integration, so it is the costliest.
+
+   Recommendation: the first three for the first release, because each is small and together
+   they remove most of the friction; opening in place after it.
 
 ## Chosen while the maintainer was away
 
