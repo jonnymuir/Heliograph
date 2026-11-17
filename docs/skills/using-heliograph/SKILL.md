@@ -160,6 +160,23 @@ Two operations make the document easier for an author:
   problem. Comments whose author is "Heliograph" are taken out when a document is compiled, so
   the author uploads it again without deleting them.
 
+### Opening the document in a word processor
+
+`MapCorrespondenceAuthoringApi` also maps the WebDAV routes Word on the desktop and LibreOffice use
+to open a document from an address and save it back, under `/heliograph/webdav`. The workbench asks
+`POST /correspondence/{key}/document/edit-link` for an address and opens it with `ms-word:` or
+`vnd.libreoffice.command:`.
+
+- **The address is the key.** A word processor cannot send your site's sign-in, so the WebDAV
+  routes are open to anyone holding a link. Each link names one draft document, expires after
+  eight hours, and is signed with ASP.NET Core Data Protection, so it cannot be made up or
+  changed. Only a signed-in author is given one. Treat it like a password.
+- **Share your Data Protection keys** across servers, as you already must for sign-in cookies, or
+  a link made on one server will not open on another.
+- **Use HTTPS** outside development. Word and LibreOffice must trust the certificate.
+- A save is the next revision of the draft. Locks are granted but not held: two saves at once are
+  caught by the revision, as everywhere else.
+
 ## PDF
 
 The core library makes no PDF. It defines `IPdfConverter`, and a host chooses a route.

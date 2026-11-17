@@ -1,7 +1,8 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import './correspondence-view.js';
-import { HttpWorkbenchSource, type Summary, type WorkbenchSource } from './source.js';
+import { HttpWorkbenchSource } from './http-source.js';
+import type { Summary, WorkbenchSource } from './source.js';
 import { shared } from './styles.js';
 
 /**

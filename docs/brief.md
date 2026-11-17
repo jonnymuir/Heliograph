@@ -140,7 +140,7 @@ another PDF route can be added without changing the core.
 |---|---|---|
 | Document, email and SMS parts | Messaging apps such as WhatsApp | Sending, retries, delivery receipts |
 | The dictionary, the compiler and its diagnostics | An add-in that offers the dictionary inside the editor | Provider adapters |
-| The workbench: write the email and the text, upload, check, preview and publish, for people and for agents | Opening a template for editing straight from the browser | Scheduling and queues |
+| The workbench: write the email and the text, upload, check, preview and publish, for people and for agents; open the document in Word or LibreOffice from it | Editing in Word in the browser (Microsoft 365) | Scheduling and queues |
 | Shared parts | OpenDocument templates | Recipient preferences, consent and contact details |
 | PDF through one converter | Bilingual correspondence | Storing what was sent |
 
@@ -245,3 +245,4 @@ choices here. Each can be reversed; the line says what reversing it would cost.
 | Over MCP, a part an agent does not pass is kept, and it names the parts to remove. | Every save replacing the whole draft. | Small: tool arguments only. |
 | The MCP endpoint is `/heliograph/correspondence-authoring/mcp`, mirroring Wayfinder's `/wayfinder/service-blueprint-authoring/mcp`. | Any other address. | Nothing: a host can pass its own. |
 | A document with no title is pointed out with a warning (`HG1020`) and still compiles. | Refusing it, or filling the title in from the first heading. | Small: one check in the compiler. Refusing would block authors whose editor cannot set a title. Filling it in from a heading could be added on top, and would make the warning rare. |
+| "Open in Word" uses WebDAV with signed links that expire after eight hours, reaching Word on the desktop and LibreOffice. | Microsoft 365 (WOPI), which reaches Word in the browser. | Small to add alongside: another route behind the same workbench button. The maintainer chose WebDAV. |

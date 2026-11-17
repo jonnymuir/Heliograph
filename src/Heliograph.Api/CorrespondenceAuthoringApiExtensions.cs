@@ -53,6 +53,7 @@ public static class CorrespondenceAuthoringApiExtensions
         DraftEndpoints.Map(group);
         DocumentEndpoints.Map(group);
         RenderEndpoints.Map(group);
+        WebDavEndpoints.Map(endpoints);
         return group;
     }
 }

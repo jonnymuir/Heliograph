@@ -48,9 +48,14 @@ conditions, and an annual statement with a table of contributions.
 5. **Fix it where you work.** With a problem showing, press **Download with comments**. Your own
    document comes back with a comment on each paragraph that has a problem. Fix it and drop it
    back on the page; Heliograph's comments come out by themselves.
-6. **Publish.** With no problems left, **Publish** makes version 1. A change after that is a
+6. **Change it where it is.** Press **Open in LibreOffice** (or **Open in Word** on the desktop).
+   The document opens in your word processor; change it, save, and come back to the browser: the
+   workbench shows what is now wrong, if anything. The first time, macOS asks whether LibreOffice
+   may reach devices on the local network; allow it, because the reference app is on your
+   machine.
+7. **Publish.** With no problems left, **Publish** makes version 1. A change after that is a
    draft until you publish again.
-7. **What your system sends.** Open `https://localhost:7296/outbox/decision-letter/refused`. This
+8. **What your system sends.** Open `https://localhost:7296/outbox/decision-letter/refused`. This
    is the run-time call your system makes for a real person: it renders the published version
    and says which version it was.
 

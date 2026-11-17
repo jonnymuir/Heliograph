@@ -26,6 +26,17 @@ internal static class DocumentEndpoints
         group.MapGet("/correspondence/{key}/document/starter", async (string key, CorrespondenceLibrary library, CancellationToken ct) =>
             await library.StarterDocumentAsync(key, ct) is { } starter ? Results.File(starter, WordType, $"{key}-starter.docx") : Results.NotFound());
 
+        group.MapPost("/correspondence/{key}/document/edit-link", async (string key, HttpRequest request, EditLinks links, CorrespondenceLibrary library, CancellationToken ct) =>
+        {
+            if (await library.ReadDraftAsync(key, ct) is not { Content.Document: not null } draft)
+            {
+                return Results.NotFound();
+            }
+
+            var url = $"{request.Scheme}://{request.Host}{WebDavEndpoints.Prefix}/{Uri.EscapeDataString(links.Issue(key))}/{Uri.EscapeDataString(FileName(draft.Content.Name))}";
+            return Results.Ok(new EditLinkResponse(url, "ms-word:ofe|u|" + url, "vnd.libreoffice.command:ofv|u|" + url, DateTimeOffset.UtcNow.Add(EditLinks.Lifetime)));
+        });
+
         group.MapGet("/correspondence/{key}/document/annotated", async (string key, CorrespondenceLibrary library, CancellationToken ct) =>
             await library.AnnotatedDocumentAsync(key, ct) is { } annotated ? Results.File(annotated, WordType, $"{key}-with-comments.docx") : Results.NotFound());
     }
