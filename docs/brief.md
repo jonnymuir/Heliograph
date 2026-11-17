@@ -211,6 +211,14 @@ another PDF route can be added without changing the core.
   from the dictionary, with a tag sheet to copy from; a file dropped on the workbench is checked
   at once; the author's own document handed back with a comment at each problem; and opening it
   in Word or LibreOffice straight from the workbench, saving back to Heliograph.
+- **The Wayfinder join: one "send correspondence" capability.** A blueprint stage calls a single
+  support-system capability that names the correspondence and passes the request's fields as
+  the data, lists as arrays. Authors create correspondence without a restart, which a capability
+  per correspondence would need, and the data a correspondence asks for can grow without
+  changing the capability. A value the correspondence needs and the request lacks is reported:
+  at send time the stage resolves to a `failed` outcome with the diagnostics, and a check before
+  anything is sent is to follow. The join is written in the Heliograph.Umbraco reference site
+  first, as the worked example, and becomes a package only when another site needs it.
 - **Prereleases go to nuget.org while both repos are built**, so Heliograph.Umbraco restores the
   engine the way any site would.
 - **The principles and constraints above.**
@@ -219,8 +227,6 @@ another PDF route can be added without changing the core.
 
 1. **Shared parts in detail**: how a letterhead or footer is swapped by a value, and whether a
    shared part is itself a document.
-2. **The Wayfinder join**: reference-app code only, or a small adapter package; and one
-   support-system capability per correspondence, or one capability that takes it as an input.
 
 ## Chosen while the maintainer was away
 
