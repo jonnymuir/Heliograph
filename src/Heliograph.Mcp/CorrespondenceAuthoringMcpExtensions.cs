@@ -1,3 +1,4 @@
+using Heliograph.Documents;
 using Heliograph.Library;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -33,7 +34,8 @@ public static class CorrespondenceAuthoringMcpExtensions
             provider.GetRequiredService<ICorrespondenceStore>(),
             provider.GetRequiredService<IDictionarySource>(),
             provider.GetService<TimeProvider>() ?? TimeProvider.System,
-            provider.GetService<IDictionaryStartingPoints>()));
+            provider.GetService<IDictionaryStartingPoints>(),
+            DocumentChecks(provider)));
 
         services.AddMcpServer(options => options.ServerInstructions = CorrespondenceAuthoringInstructions.Compose(instructions))
             .WithHttpTransport()
@@ -77,4 +79,8 @@ public static class CorrespondenceAuthoringMcpExtensions
 
         return endpoint;
     }
+
+    // A PDF converter that knows what it cannot lay out says so when a template is compiled: registering it is enough.
+    private static List<IDocumentCheck> DocumentChecks(IServiceProvider provider) =>
+        [.. provider.GetServices<IDocumentCheck>().Concat(provider.GetService<IPdfConverter>() is IDocumentCheck check ? [check] : []).Distinct()];
 }

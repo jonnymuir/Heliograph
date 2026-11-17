@@ -17,9 +17,20 @@ public sealed record HeliographPdfOptions
 /// started. The same letter always gives the same bytes. Fonts the letter names are drawn in built-in look-alikes with
 /// the same widths (Liberation Sans for Arial, Liberation Serif for Times New Roman, Liberation Mono for Courier New).
 /// </summary>
-public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null) : IPdfConverter
+/// <remarks>
+/// It is also an <see cref="IDocumentCheck"/>: registered as a host's converter, it says when a template is compiled
+/// what it cannot lay out yet (HG4 codes), so no PDF is ever quietly missing something.
+/// </remarks>
+public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null) : IPdfConverter, IDocumentCheck
 {
     private readonly HeliographPdfOptions _options = options ?? new HeliographPdfOptions();
+
+    /// <summary>What in a template this converter cannot lay out yet, each with its place and a fix.</summary>
+    public IReadOnlyList<Diagnostic> Check(DocumentToCheck document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return Checking.LayoutLimits.Check(document);
+    }
 
     public Task<byte[]> ConvertAsync(byte[] docx, CancellationToken cancellationToken = default)
     {

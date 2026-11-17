@@ -25,6 +25,7 @@
   <ItemGroup>
     <!-- The store a host would supply, shared with the core's tests. -->
     <Compile Include="../Heliograph.Tests/Support/InMemoryLibrary.cs" Link="Support/InMemoryLibrary.cs" />
+    <Compile Include="../Heliograph.Tests/Support/TestDocx.cs" Link="Support/TestDocx.cs" />
     <Compile Include="../Heliograph.Tests/Support/InMemoryDictionarySource.cs" Link="Support/InMemoryDictionarySource.cs" />
     <Compile Include="../Heliograph.Tests/Support/InMemoryDictionarySource.Writing.cs" Link="Support/InMemoryDictionarySource.Writing.cs" />
     <Content Include="../../benchmarks/**/*" LinkBase="benchmarks" CopyToOutputDirectory="PreserveNewest" />
@@ -32,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Heliograph.Api/Heliograph.Api.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Pdf/Heliograph.Pdf.csproj" />
   </ItemGroup>
 
 </Project>

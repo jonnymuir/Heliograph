@@ -27,7 +27,10 @@ public static class Correspondence
     /// Compiles every part against the dictionary. A mistake in any part stops the whole correspondence, and every
     /// part's problems are reported together.
     /// </summary>
-    public static CorrespondenceCompilation Compile(CorrespondenceSource source, FieldDictionary dictionary)
+    public static CorrespondenceCompilation Compile(CorrespondenceSource source, FieldDictionary dictionary) => Compile(source, dictionary, []);
+
+    /// <summary>Compiles every part, with the host's own checks on the document part, such as what its PDF route can lay out.</summary>
+    public static CorrespondenceCompilation Compile(CorrespondenceSource source, FieldDictionary dictionary, IReadOnlyList<IDocumentCheck> documentChecks)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(dictionary);
@@ -36,7 +39,7 @@ public static class Correspondence
             throw new ArgumentException("A correspondence needs at least one part: a document, an email or a text message.", nameof(source));
         }
 
-        var document = source.Document is null ? null : DocumentTemplate.Compile(source.Document, dictionary);
+        var document = source.Document is null ? null : DocumentTemplate.Compile(source.Document, dictionary, documentChecks);
         var email = source.Email is null ? null : EmailTemplate.Compile(source.Email, dictionary);
         var sms = source.Sms is null ? null : SmsTemplate.Compile(source.Sms, dictionary);
         List<Diagnostic> diagnostics = [.. document?.Diagnostics ?? [], .. email?.Diagnostics ?? [], .. sms?.Diagnostics ?? []];

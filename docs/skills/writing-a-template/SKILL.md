@@ -239,6 +239,15 @@ The ones you are most likely to meet:
 `(Name))` where you may have meant `((Name))`, hidden text, which travels inside the file, or a
 character that makes every text message cost more.
 
+## When the PDF cannot be made yet
+
+Some sites make PDFs with Heliograph's own converter, which is new. It does not yet lay out
+everything a word processor can. Where it cannot, the workbench says so when you upload, with
+the place and a fix (codes `HG4001` to `HG4013`). The main ones are pictures, text boxes, links,
+coloured or highlighted text, footnotes, more than one section, and tab stops aligned right or
+on the decimal point. Change the template, or ask whoever runs the site to make that letter's
+PDFs another way for now.
+
 ## What you cannot do yet
 
 - Repeat anything other than a table row for each item in a list: a bullet, say, or a paragraph.

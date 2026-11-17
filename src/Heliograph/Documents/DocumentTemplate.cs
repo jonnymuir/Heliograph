@@ -10,8 +10,14 @@ public static class DocumentTemplate
     /// Checks a .docx against the dictionary. A template that compiles can be rendered; one that does not comes
     /// back with every problem found, each with its place and a fix.
     /// </summary>
-    public static DocumentCompilation Compile(Stream docx, FieldDictionary dictionary)
+    public static DocumentCompilation Compile(Stream docx, FieldDictionary dictionary) => Compile(docx, dictionary, []);
+
+    /// <summary>
+    /// Checks a .docx against the dictionary and against the host's own checks, such as what its PDF route can lay out.
+    /// </summary>
+    public static DocumentCompilation Compile(Stream docx, FieldDictionary dictionary, IReadOnlyList<IDocumentCheck> checks)
     {
+        ArgumentNullException.ThrowIfNull(checks);
         ArgumentNullException.ThrowIfNull(docx);
         ArgumentNullException.ThrowIfNull(dictionary);
 
@@ -47,7 +53,7 @@ public static class DocumentTemplate
 
             return TemplateFitness.Check(package, parts) is { Count: > 0 } unfit
                 ? new DocumentCompilation(null, unfit)
-                : CompileParts(package, parts, dictionary);
+                : CompileParts(package, parts, dictionary, checks);
         }
         catch (XmlException)
         {
@@ -57,9 +63,9 @@ public static class DocumentTemplate
     }
 
     private static DocumentCompilation CompileParts(
-        DocxPackage package, IReadOnlyList<(string Name, string Label)> parts, FieldDictionary dictionary)
+        DocxPackage package, IReadOnlyList<(string Name, string Label)> parts, FieldDictionary dictionary, IReadOnlyList<IDocumentCheck> checks)
     {
-        var diagnostics = new List<Diagnostic>();
+        var diagnostics = HostChecks(package, parts, checks);
         var compiled = new Dictionary<string, XDocument>();
         var nearMiss = new NearMiss(dictionary);
         foreach (var (name, label) in parts)
@@ -89,6 +95,18 @@ public static class DocumentTemplate
         return Rehearsal.Run(document) is { } broken
             ? new DocumentCompilation(null, [.. diagnostics, broken])
             : new DocumentCompilation(document, diagnostics);
+    }
+
+    // The host's checks read the parts as the author saved them, before tags are worked through.
+    private static List<Diagnostic> HostChecks(DocxPackage package, IReadOnlyList<(string Name, string Label)> parts, IReadOnlyList<IDocumentCheck> checks)
+    {
+        if (checks.Count == 0)
+        {
+            return [];
+        }
+
+        var document = new DocumentToCheck([.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!))], package.Xml("word/settings.xml"));
+        return [.. checks.SelectMany(check => check.Check(document))];
     }
 
     private static Diagnostic Refused(DocxRefusal? refusal) => refusal switch

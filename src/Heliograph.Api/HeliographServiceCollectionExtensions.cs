@@ -1,3 +1,4 @@
+using Heliograph.Documents;
 using Heliograph.Library;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,7 +19,8 @@ public static class HeliographServiceCollectionExtensions
             provider.GetRequiredService<ICorrespondenceStore>(),
             provider.GetRequiredService<IDictionarySource>(),
             provider.GetService<TimeProvider>() ?? TimeProvider.System,
-            provider.GetService<IDictionaryStartingPoints>()));
+            provider.GetService<IDictionaryStartingPoints>(),
+            DocumentChecks(provider)));
 
         // Edit links are signed with the host's Data Protection keys. A site with several servers shares its key ring,
         // as it already must for sign-in cookies.
@@ -42,4 +44,8 @@ public static class HeliographServiceCollectionExtensions
         services.TryAddSingleton<IDictionarySource>(new FolderDictionarySource(Path.Combine(folder, "dictionaries")));
         return services.AddCorrespondenceLibrary();
     }
+
+    // A PDF converter that knows what it cannot lay out says so when a template is compiled: registering it is enough.
+    private static List<IDocumentCheck> DocumentChecks(IServiceProvider provider) =>
+        [.. provider.GetServices<IDocumentCheck>().Concat(provider.GetService<IPdfConverter>() is IDocumentCheck check ? [check] : []).Distinct()];
 }

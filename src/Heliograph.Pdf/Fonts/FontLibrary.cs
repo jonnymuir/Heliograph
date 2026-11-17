@@ -24,11 +24,19 @@ internal static class FontLibrary
         return Loaded.GetOrAdd(name, Load);
     }
 
-    private static string Family(string font) => font.ToUpperInvariant() switch
+    /// <summary>Whether a font named in a document has a built-in look-alike, rather than falling back to Liberation Sans.</summary>
+    public static bool HasLookAlike(string font) => font.Length == 0 || Known(font) is not null;
+
+    private static string Family(string font) => Known(font) ?? "LiberationSans";
+
+    private static string? Known(string font) => font.ToUpperInvariant() switch
     {
+        "ARIAL" or "HELVETICA" or "LIBERATION SANS" or "ARIMO" => "LiberationSans",
         "TIMES NEW ROMAN" or "TIMES" or "LIBERATION SERIF" or "TINOS" => "LiberationSerif",
         "COURIER NEW" or "COURIER" or "LIBERATION MONO" or "COUSINE" => "LiberationMono",
-        _ => "LiberationSans",
+        // Symbol is only ever a bullet's font; the bullet is drawn in the text's font.
+        "SYMBOL" => "LiberationSans",
+        _ => null,
     };
 
     private static TrueTypeFont Load(string name)

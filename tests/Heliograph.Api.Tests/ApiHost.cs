@@ -26,7 +26,7 @@ internal sealed class ApiHost : IAsyncDisposable
 
     public InMemoryDictionarySource Dictionaries { get; }
 
-    public static async Task<ApiHost> StartAsync()
+    public static async Task<ApiHost> StartAsync(Action<IServiceCollection>? services = null)
     {
         var dictionaries = new InMemoryDictionarySource();
         var builder = WebApplication.CreateBuilder();
@@ -34,6 +34,7 @@ internal sealed class ApiHost : IAsyncDisposable
         builder.Logging.ClearProviders();
         builder.Services.AddSingleton<ICorrespondenceStore, InMemoryCorrespondenceStore>();
         builder.Services.AddSingleton<IDictionarySource>(dictionaries);
+        services?.Invoke(builder.Services);
         builder.Services.AddCorrespondenceLibrary();
         builder.Services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, HeaderSignIn>("Test", null);
         builder.Services.AddAuthorization();
