@@ -3,7 +3,7 @@ using Heliograph.Library;
 namespace Heliograph.Tests.Support;
 
 /// <summary>Dictionaries held in memory, which a test can change as the people who own the data would.</summary>
-internal sealed class InMemoryDictionarySource : IDictionarySource
+internal sealed partial class InMemoryDictionarySource : IDictionarySource
 {
     private readonly SortedDictionary<string, string> _dictionaries = new(StringComparer.Ordinal);
     private readonly SortedDictionary<(string Dictionary, string Sample), string> _samples = [];

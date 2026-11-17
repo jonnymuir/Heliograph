@@ -70,6 +70,9 @@ public static class DiagnosticCodes
     public const string NoParts = "HG3005";
     public const string ChangedElsewhere = "HG3006";
     public const string KeyNotValid = "HG3007";
+    public const string DictionaryNameNotValid = "HG3008";
+    public const string DictionariesReadOnly = "HG3009";
+    public const string SampleNotValid = "HG3010";
 }
 
 internal static class DiagnosticLists

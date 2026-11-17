@@ -146,6 +146,7 @@ public class AuthoringOverMcpTests
 
         tools.Select(tool => tool.Name).Should().BeEquivalentTo(
             "list_correspondence", "list_dictionaries", "read_dictionary", "list_samples", "starter_document", "annotated_document",
+            "read_dictionary_definition", "list_dictionary_starting_points", "save_dictionary", "save_sample",
             "read_correspondence", "save_correspondence",
             "check_correspondence", "check_dictionary", "preview_correspondence", "publish_correspondence");
         tools.Should().OnlyContain(tool => !string.IsNullOrWhiteSpace(tool.Description));

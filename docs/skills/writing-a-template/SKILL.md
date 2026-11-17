@@ -24,6 +24,28 @@ Write the letter on the first page, copying tags from the sheet. Then delete the
 the line that starts "Heliograph tag sheet" to the end. If you forget, the upload is refused
 (`HG1021`), so the sheet can never reach a recipient.
 
+## The dictionary: which tags you can use
+
+Every correspondence uses a **dictionary**: the list of fields it may use. Each field has a name,
+which is what you write in a tag; a key, which is what the data calls it; and a type. The
+**Tags** tab of a correspondence lists them with a button to copy each one.
+
+Dictionaries are kept on the workbench's **Dictionaries** screen, in the left-hand list:
+
+- **Add, change or remove a field.** Give it a name (the key fills itself in), choose its type,
+  and for a field that belongs to a list choose the list. Press **Save the dictionary**. The
+  answer says which correspondence use the dictionary and whether any now have a problem, such as
+  a tag for a field you removed. Versions already published keep the dictionary they were
+  published with, so nothing already being sent changes.
+- **Sample recipients** are made-up people the preview uses. Pick one to change it, or press
+  **New sample** to start one with a value of the right shape for every field. Never use a real
+  person.
+- **New dictionary** starts from nothing or from a ready-made one the site offers. A site with
+  Wayfinder offers one for each service blueprint, with the blueprint's fields already in it.
+
+Some sites take dictionaries from the system that holds the data. There the screen shows them
+but cannot change them.
+
 ## Tags
 
 A tag is the name of a **field** in double round brackets:

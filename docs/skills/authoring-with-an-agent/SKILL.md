@@ -19,6 +19,10 @@ its drafts are checked by the same compiler, and it is given the same guides you
 | `list_correspondence` | Every correspondence: key, name, dictionary, newest published version |
 | `list_dictionaries` | The names of the dictionaries |
 | `read_dictionary` | Every field in a dictionary, with the tag to write for it |
+| `read_dictionary_definition` | A dictionary as its JSON, to change it |
+| `save_dictionary` | Adds or replaces a dictionary, and says what the change breaks |
+| `save_sample` | Adds or replaces a made-up sample recipient |
+| `list_dictionary_starting_points` | Ready-made dictionaries the site offers, and whether dictionaries can be changed |
 | `list_samples` | A dictionary's made-up recipients, for previews |
 | `starter_document` | A `.docx` to begin the document from, with a tag sheet to copy from |
 | `annotated_document` | The draft's document with a Word comment at each problem |

@@ -1,11 +1,8 @@
+import { HttpDictionaryCalls, enc, ok } from './http-dictionary-calls.js';
 import type { DraftChange, EditLink, FileKind, Parts, Problem, SaveOutcome, Summary, WorkbenchSource, Draft, DictionaryEntry } from './source.js';
 
 /** The workbench's calls over Heliograph.Api. */
-export class HttpWorkbenchSource implements WorkbenchSource {
-  constructor(
-    private readonly base: string,
-    private readonly send: typeof fetch = (input, init) => fetch(input, { credentials: 'same-origin', ...init }),
-  ) {}
+export class HttpWorkbenchSource extends HttpDictionaryCalls implements WorkbenchSource {
 
   list = () => this.json<Summary[]>('GET', 'correspondence');
   dictionaries = () => this.json<string[]>('GET', 'dictionaries');
@@ -54,20 +51,10 @@ export class HttpWorkbenchSource implements WorkbenchSource {
     return ok(await this.send(this.url(path), body === undefined ? { method } : jsonBody(method, body))).json();
   }
 
-  private url = (path: string) => `${this.base.replace(/\/$/, '')}/${path}`;
 }
-
-const enc = encodeURIComponent;
 
 const jsonBody = (method: string, body: unknown): RequestInit => ({
   method,
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
 });
-
-function ok(response: Response): Response {
-  if (!response.ok) {
-    throw new Error(`The server answered ${response.status}.`);
-  }
-  return response;
-}

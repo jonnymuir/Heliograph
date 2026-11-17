@@ -55,9 +55,12 @@ conditions, and an annual statement with a table of contributions.
    machine. On a Mac, LibreOffice cannot take the link from the browser, so the button copies the
    address and tells you how to open it from inside LibreOffice; see
    [Writing a template](../writing-a-template/SKILL.md#changing-a-document-without-downloading-it).
-7. **Publish.** With no problems left, **Publish** makes version 1. A change after that is a
+7. **Change the dictionary.** Choose **acknowledgement** under **Dictionaries**, add a field (say
+   *Contact phone*), and save. Go back to a correspondence: the field is on its **Tags** tab. Remove
+   a field a letter uses and save: the answer names the letter and the tag that no longer exists.
+8. **Publish.** With no problems left, **Publish** makes version 1. A change after that is a
    draft until you publish again.
-8. **What your system sends.** Open `https://localhost:7296/outbox/decision-letter/refused`. This
+9. **What your system sends.** Open `https://localhost:7296/outbox/decision-letter/refused`. This
    is the run-time call your system makes for a real person: it renders the published version
    and says which version it was.
 

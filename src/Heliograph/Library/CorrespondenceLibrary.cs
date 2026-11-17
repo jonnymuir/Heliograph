@@ -14,7 +14,8 @@ namespace Heliograph.Library;
 /// is rendered for a real recipient. The library keeps nothing itself: correspondence comes from the host's
 /// <see cref="ICorrespondenceStore"/> and dictionaries from its <see cref="IDictionarySource"/>.
 /// </remarks>
-public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, IDictionarySource dictionaries, TimeProvider clock)
+public sealed partial class CorrespondenceLibrary(
+    ICorrespondenceStore store, IDictionarySource dictionaries, TimeProvider clock, IDictionaryStartingPoints? startingPoints = null)
 {
     // A published version never changes, so one compiled is good for as long as the process runs.
     private readonly ConcurrentDictionary<(string Key, int Version), CompiledCorrespondence> _published = new();
@@ -24,7 +25,7 @@ public sealed partial class CorrespondenceLibrary(ICorrespondenceStore store, ID
         store.ListAsync(cancellationToken);
 
     /// <summary>The dictionaries a correspondence can use, with their tags and sample recipients.</summary>
-    public DictionaryCatalog Dictionaries { get; } = new(dictionaries);
+    public DictionaryCatalog Dictionaries { get; } = new(dictionaries, startingPoints);
 
     /// <summary>
     /// A Word document to start the correspondence's document part from: its title set, real headings, and a tag

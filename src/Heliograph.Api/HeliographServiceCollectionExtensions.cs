@@ -17,7 +17,8 @@ public static class HeliographServiceCollectionExtensions
         services.TryAddSingleton(provider => new CorrespondenceLibrary(
             provider.GetRequiredService<ICorrespondenceStore>(),
             provider.GetRequiredService<IDictionarySource>(),
-            provider.GetService<TimeProvider>() ?? TimeProvider.System));
+            provider.GetService<TimeProvider>() ?? TimeProvider.System,
+            provider.GetService<IDictionaryStartingPoints>()));
 
         // Edit links are signed with the host's Data Protection keys. A site with several servers shares its key ring,
         // as it already must for sign-in cookies.
