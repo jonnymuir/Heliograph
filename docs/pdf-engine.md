@@ -44,7 +44,8 @@ This plan is built to find out early and keep finding out.
 - **Pages:** widow and orphan control, keep with next, keep together, page breaks.
 - **Lists:** bullets and numbers.
 - **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
-  on each page.
+  on each page. A row breaks across pages, each cell at its own last line that fits, unless it is
+  marked not to.
 - **Headers and footers:** on every page, with a first page of its own, and page numbers and page
   counts.
 
@@ -53,8 +54,31 @@ LibreOffice lays them out to within a point and a half on every line.
 
 What it does not lay out yet is refused when a template is compiled (`HG4001` to `HG4013`; see
 the [diagnostics guide](skills/diagnostics/SKILL.md)). The converter is an `IDocumentCheck`, and
-registering it as the host's `IPdfConverter` is enough. So stage 1 is done; stage 2, the
-measuring net, is next.
+registering it as the host's `IPdfConverter` is enough. Stage 1 is done.
+
+Stage 2, the measuring net, is under way. `RandomLayout` builds documents from everything the
+converter claims, and `MeasuringNetTests` compares each one with LibreOffice line for line. The
+net is a ratchet: it records the first line at which each of 30 seeds still differs, and fails if
+a change makes any seed differ sooner. Its first rounds found, and fixed:
+
+- the first page's text area must follow the first page's own header;
+- a paragraph keeps its space before at the top of a page;
+- a line may break after a hyphen between letters;
+- a word too wide for a line is split where the line is full;
+- an exact or at-least line carries its extra height above its text;
+- a tab past the end of a line starts the next line and still takes effect;
+- the default tab interval comes from the document's settings;
+- table rows break across pages.
+
+It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
+
+What the net still shows is mostly in three places: where a word split across lines breaks, a
+few wrap points, and some page breaks.
+
+Open question: a document whose settings lack `doNotUseHTMLParagraphAutoSpacing` (LibreOffice
+and the benchmark letters write it) is laid out by LibreOffice with the larger of two paragraphs'
+spacing between them, not the sum. A brand-new Word 365 document may lack it. A fixture saved
+from a blank Word document will show what Word does, and the converter will follow Word.
 
 ## How we will know it is right
 

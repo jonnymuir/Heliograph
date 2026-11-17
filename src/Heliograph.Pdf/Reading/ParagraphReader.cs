@@ -4,7 +4,7 @@ using static Heliograph.Pdf.Reading.WordXml;
 namespace Heliograph.Pdf.Reading;
 
 /// <summary>Reads a paragraph: its resolved style, its text, tabs, breaks and fields, and its list label.</summary>
-internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering)
+internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab)
 {
     public Paragraph Read(XElement p)
     {
@@ -17,7 +17,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         paragraphLayers.AddRange(chain.Select(s => s.Element(W + "pPr")));
         paragraphLayers.Add(level?.Element(W + "pPr"));
         paragraphLayers.Add(pPr);
-        var style = PropertyReader.Paragraph(paragraphLayers.OfType<XElement>().ToList());
+        var style = PropertyReader.Paragraph(paragraphLayers.OfType<XElement>().ToList()) with { DefaultTab = defaultTab };
 
         var runLayers = new List<XElement?> { styles.DefaultRun };
         runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));

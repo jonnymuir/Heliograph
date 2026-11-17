@@ -24,7 +24,11 @@ internal sealed record Indent(double Left, double Right, double FirstLine);
 /// <summary>How a paragraph may be split across pages.</summary>
 internal sealed record Flow(bool KeepNext, bool KeepLines, bool WidowControl, bool PageBreakBefore);
 
-internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<double> Tabs);
+/// <summary>How a paragraph is set. DefaultTab is the document's interval between tab stops where none is set.</summary>
+internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<double> Tabs)
+{
+    public double DefaultTab { get; init; } = 36;
+}
 
 internal abstract record Block;
 
@@ -39,7 +43,8 @@ internal sealed record CellBorders(Border? Top, Border? Left, Border? Bottom, Bo
 
 internal sealed record Cell(IReadOnlyList<Block> Blocks, int Span, CellBorders Borders);
 
-internal sealed record Row(IReadOnlyList<Cell> Cells, bool Header);
+/// <summary>A table row. Rows break across pages unless marked not to; heading rows repeat at the top of each page.</summary>
+internal sealed record Row(IReadOnlyList<Cell> Cells, bool Header, bool CantSplit);
 
 internal sealed record CellMargins(double Left, double Right, double Top, double Bottom);
 

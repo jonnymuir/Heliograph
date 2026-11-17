@@ -46,6 +46,8 @@ internal static class PdfLines
         }
     }
 
+    // Words are put into lines by where they sit, not by how pdftotext groups them: a justified line with wide gaps is
+    // still one line. A word starts a new line when its top is more than a few points from the line's first word.
     private static List<PdfLine> Parse(string xhtml)
     {
         XNamespace x = "http://www.w3.org/1999/xhtml";
@@ -54,15 +56,30 @@ internal static class PdfLines
         foreach (var p in XDocument.Parse(xhtml).Descendants(x + "page"))
         {
             page++;
-            foreach (var line in p.Descendants(x + "line"))
+            var words = p.Descendants(x + "word").Select(w => (Top: Number(w, "yMin"), Left: Number(w, "xMin"), Text: w.Value)).OrderBy(w => w.Top).ThenBy(w => w.Left).ToList();
+            var group = new List<(double Top, double Left, string Text)>();
+            foreach (var word in words)
             {
-                var words = line.Elements(x + "word").Select(w => w.Value).ToList();
-                lines.Add(new PdfLine(page, Number(line, "yMin"), Number(line, "xMin"), string.Join(' ', words)));
+                if (group.Count > 0 && Math.Abs(word.Top - group[0].Top) > 4)
+                {
+                    lines.Add(Line(page, group));
+                    group = [];
+                }
+
+                group.Add(word);
+            }
+
+            if (group.Count > 0)
+            {
+                lines.Add(Line(page, group));
             }
         }
 
-        return [.. lines.OrderBy(l => l.Page).ThenBy(l => Math.Round(l.Top)).ThenBy(l => l.Left)];
+        return lines;
     }
+
+    private static PdfLine Line(int page, List<(double Top, double Left, string Text)> words) =>
+        new(page, words.Min(w => w.Top), words.Min(w => w.Left), string.Join(' ', words.OrderBy(w => w.Left).Select(w => w.Text)));
 
     private static double Number(XElement e, string name) => double.Parse((string)e.Attribute(name)!, CultureInfo.InvariantCulture);
 }
