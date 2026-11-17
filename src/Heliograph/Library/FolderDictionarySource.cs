@@ -16,18 +16,18 @@ public sealed partial class FolderDictionarySource(string folder) : IDictionaryS
     private const string SampleSuffix = ".samples";
 
     public Task<IReadOnlyList<string>> ListAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<string>>([.. Entries(folder, "*.json").Keys.Order(StringComparer.Ordinal)]);
+        Task.FromResult<IReadOnlyList<string>>([.. Entries(folder).Keys.Order(StringComparer.Ordinal)]);
 
     public async Task<string?> ReadAsync(string name, CancellationToken cancellationToken = default) =>
-        Entries(folder, "*.json").TryGetValue(name, out var path)
+        Entries(folder).TryGetValue(name, out var path)
             ? await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false)
             : null;
 
     public Task<IReadOnlyList<string>> ListSamplesAsync(string name, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<string>>(SamplesFolder(name) is { } samples ? [.. Entries(samples, "*.json").Keys.Order(StringComparer.Ordinal)] : []);
+        Task.FromResult<IReadOnlyList<string>>(SamplesFolder(name) is { } samples ? [.. Entries(samples).Keys.Order(StringComparer.Ordinal)] : []);
 
     public async Task<string?> ReadSampleAsync(string name, string sample, CancellationToken cancellationToken = default) =>
-        SamplesFolder(name) is { } samples && Entries(samples, "*.json").TryGetValue(sample, out var path)
+        SamplesFolder(name) is { } samples && Entries(samples).TryGetValue(sample, out var path)
             ? await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false)
             : null;
 
@@ -38,8 +38,8 @@ public sealed partial class FolderDictionarySource(string folder) : IDictionaryS
         : null;
 
     /// <summary>The files a folder holds, by name without the extension. Only plain names are listed.</summary>
-    private static Dictionary<string, string> Entries(string directory, string pattern) => Directory.Exists(directory)
-        ? Directory.GetFiles(directory, pattern)
+    private static Dictionary<string, string> Entries(string directory) => Directory.Exists(directory)
+        ? Directory.GetFiles(directory, "*.json")
             .Select(path => (Name: Path.GetFileNameWithoutExtension(path), Path: path))
             .Where(entry => IsName(entry.Name))
             .ToDictionary(entry => entry.Name, entry => entry.Path, StringComparer.Ordinal)
