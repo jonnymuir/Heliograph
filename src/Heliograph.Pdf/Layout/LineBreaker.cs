@@ -256,7 +256,7 @@ internal static class LineBreaker
                     Words(field(f.Field), f.Style, pieces);
                     break;
                 case NoteInline n:
-                    pieces.Add(Segments.Piece(n.Mark, n.Style, PieceKind.Word) with { Note = n.Id });
+                    pieces.Add(n.End ? Segments.Piece(n.Mark, n.Style, PieceKind.Word) with { Endnote = n.Id } : Segments.Piece(n.Mark, n.Style, PieceKind.Word) with { Note = n.Id });
                     break;
                 case PictureInline picture:
                     pieces.Add(new Piece("", picture.Style, picture.Width, PieceKind.Word) { Picture = picture });

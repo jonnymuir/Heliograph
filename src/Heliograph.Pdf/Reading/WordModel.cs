@@ -8,6 +8,9 @@ internal sealed record PartLinks(Func<string, byte[]?> Files, Func<string, strin
 {
     /// <summary>The footnotes' numbers, given in the order they are referred to.</summary>
     public NoteNumbers Notes { get; init; } = new();
+
+    /// <summary>The endnotes' numbers, counted on their own.</summary>
+    public NoteNumbers Endnotes { get; init; } = new("lowerRoman");
 }
 
 internal abstract record Inline(RunStyle Style);
@@ -21,7 +24,11 @@ internal sealed record BreakInline(RunStyle Style) : Inline(Style);
 internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style);
 
 /// <summary>A reference to a footnote: its mark, the note's number, and the note it refers to.</summary>
-internal sealed record NoteInline(string Mark, string Id, RunStyle Style) : Inline(Style);
+internal sealed record NoteInline(string Mark, string Id, RunStyle Style) : Inline(Style)
+{
+    /// <summary>Whether it refers to an endnote, laid out after the letter, not a footnote at the foot of the page.</summary>
+    public bool End { get; init; }
+}
 
 /// <summary>
 /// A picture set in the line, on the baseline, at its size in points. Alt is what a screen reader says; null for a
@@ -139,6 +146,9 @@ internal sealed record WordDocument(string Title, string Language, IReadOnlyList
 {
     /// <summary>Each footnote referred to, by its id: its paragraphs.</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<Block>> Notes { get; init; } = new Dictionary<string, IReadOnlyList<Block>>();
+
+    /// <summary>Each endnote referred to, in the order it is first referred to: its id and its paragraphs.</summary>
+    public IReadOnlyList<(string Id, IReadOnlyList<Block> Blocks)> Endnotes { get; init; } = [];
 
     /// <summary>
     /// An empty single-spaced paragraph in the document's default style. LibreOffice leaves one such line between the text and

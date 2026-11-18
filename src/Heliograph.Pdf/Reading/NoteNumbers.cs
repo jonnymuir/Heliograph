@@ -1,9 +1,10 @@
-using System.Globalization;
-
 namespace Heliograph.Pdf.Reading;
 
-/// <summary>Footnotes numbered 1, 2, 3 in the order the letter refers to them, as Word numbers them.</summary>
-internal sealed class NoteNumbers
+/// <summary>
+/// Notes numbered in the order the letter refers to them, as Word numbers them: footnotes 1, 2, 3 and endnotes i, ii, iii
+/// unless the document says otherwise, from where it says.
+/// </summary>
+internal sealed class NoteNumbers(string format = "decimal", int start = 1)
 {
     private readonly Dictionary<string, int> _numbers = new(StringComparer.Ordinal);
     private readonly List<string> _order = [];
@@ -23,7 +24,7 @@ internal sealed class NoteNumbers
             _order.Add(id);
         }
 
-        return number.ToString(CultureInfo.InvariantCulture);
+        return ListLabels.Number(start - 1 + number, format);
     }
 
     /// <summary>The mark at the start of a note's text: the number of the note being read.</summary>

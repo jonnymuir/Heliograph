@@ -13,18 +13,21 @@ internal static class RunContent
         "tab" => new TabInline(style),
         "br" or "cr" => new BreakInline(style),
         "drawing" => PictureReader.Read(c, links.Files, style),
-        _ => Note(c, style, links.Notes),
+        _ => Note(c, style, links),
     };
 
-    // A reference to a footnote in the text, or the mark that opens the note itself: either way, the note's number.
-    private static Inline? Note(XElement c, RunStyle style, NoteNumbers notes)
+    // A reference to a footnote or an endnote in the text, or the mark that opens the note itself: either way, the note's
+    // number, each kind counted on its own.
+    private static Inline? Note(XElement c, RunStyle style, PartLinks links)
     {
-        if (c.Name.LocalName == "footnoteRef")
+        var (end, name) = c.Name.LocalName.StartsWith("endnote", StringComparison.Ordinal) ? (true, c.Name.LocalName[7..]) : (false, c.Name.LocalName.Replace("footnote", "", StringComparison.Ordinal));
+        var numbers = end ? links.Endnotes : links.Notes;
+        if (name == "Ref")
         {
-            return new TextInline(notes.Mark(), style);
+            return new TextInline(numbers.Mark(), style);
         }
 
-        var id = c.Name.LocalName == "footnoteReference" ? (string?)c.Attribute(W + "id") ?? "" : null;
-        return id is null ? null : new NoteInline(notes.Refer(id), id, style);
+        var id = name == "Reference" ? (string?)c.Attribute(W + "id") ?? "" : null;
+        return id is null ? null : new NoteInline(numbers.Refer(id), id, style) { End = end };
     }
 }

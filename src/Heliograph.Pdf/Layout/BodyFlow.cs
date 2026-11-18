@@ -6,11 +6,11 @@ namespace Heliograph.Pdf.Layout;
 /// Lays out a document's body on pages: paragraphs split with widow, orphan, keep-with-next and keep-together rules,
 /// tables row by row, and the structure a screen reader follows built as it goes.
 /// </summary>
-internal sealed class BodyFlow(PageSet pages, StructNode root, Footnotes notes)
+internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
 {
     private readonly TableFlow _tables = new(pages);
     private readonly ListNesting _lists = new(root);
-    private readonly PageFit _fit = new(pages, notes);
+    private readonly PageFit _fit = new(pages, notes.Footnotes);
     private ParagraphFrame? _frame;
 
     /// <summary>Lays out a section's blocks from where the page set stands.</summary>
@@ -32,6 +32,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, Footnotes notes)
                     _lists.Clear();
                     _frame = null;
                     _tables.Run(t, root.Add("Table"));
+                    pages.TextFoot = pages.Y;
                     break;
             }
         }
@@ -67,6 +68,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, Footnotes notes)
             {
                 LinePlacer.Place(pages.Current, lines[placed + k], pages.Geometry.Left, pages.Y, owner);
                 notes.Place(lines[placed + k], owner.Node);
+                pages.TextFoot = pages.Y + lines[placed + k].Height - lines[placed + k].Hang;
                 pages.Y += lines[placed + k].Height;
                 pages.HasContent = true;
             }

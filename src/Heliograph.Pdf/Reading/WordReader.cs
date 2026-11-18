@@ -13,7 +13,8 @@ internal sealed class WordReader : IDisposable
     private readonly Dictionary<string, string> _relationshipTypes;
     private readonly bool _largerSpacing;
     private readonly bool _evenPages;
-    private readonly NoteNumbers _notes = new();
+    private readonly NoteNumbers _notes;
+    private readonly NoteNumbers _endnotes;
     private string _part = "word/document.xml";
 
     private WordReader(byte[] docx)
@@ -31,8 +32,9 @@ internal sealed class WordReader : IDisposable
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
         _evenPages = On(settings?.Element(W + "evenAndOddHeaders"));
+        (_notes, _endnotes) = NoteNumbering(settings);
         _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab,
-            new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)) { Notes = _notes });
+            new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)) { Notes = _notes, Endnotes = _endnotes });
     }
 
     private StyleSheet Styles { get; }
@@ -64,6 +66,7 @@ internal sealed class WordReader : IDisposable
         return new WordDocument(title, Styles.Language, sections)
         {
             Notes = Notes(),
+            Endnotes = NotesIn(NoteKind.Endnote, _endnotes),
             NoteSeparator = _paragraphs.Read(new XElement(W + "p", new XElement(W + "pPr", new XElement(W + "spacing",
                 new XAttribute(W + "before", 0), new XAttribute(W + "after", 0), new XAttribute(W + "line", 240), new XAttribute(W + "lineRule", "auto"))))),
         };
@@ -113,27 +116,44 @@ internal sealed class WordReader : IDisposable
         return new PageNumbers((int?)type?.Attribute(W + "start"), (string?)type?.Attribute(W + "fmt") ?? "decimal");
     }
 
-    // The paragraphs of each footnote the body refers to, each opening with its number.
-    private Dictionary<string, IReadOnlyList<Block>> Notes()
+    // Notes are numbered as the document's settings say, and as its sections say over that, as Word writes it.
+    private (NoteNumbers Footnotes, NoteNumbers Endnotes) NoteNumbering(XElement? settings)
     {
-        var notes = new Dictionary<string, IReadOnlyList<Block>>(StringComparer.Ordinal);
-        var target = _relationships.Where(r => r.Value.Length > 0).FirstOrDefault(r => _relationshipTypes.GetValueOrDefault(r.Key)?.EndsWith("/footnotes", StringComparison.Ordinal) == true).Value;
+        var last = _package.Part("word/document.xml")?.Root?.Element(W + "body")?.Element(W + "sectPr");
+        return (Numbering(NoteKind.Footnote, settings, last), Numbering(NoteKind.Endnote, settings, last));
+    }
+
+    // How the document numbers its footnotes or endnotes: the format, and the number the first takes, each from the
+    // section's settings or else the document's.
+    private static NoteNumbers Numbering(NoteKind kind, params XElement?[] layers)
+    {
+        string? Setting(string setting) => layers.Select(l => Val(l?.Element(W + kind.Settings)?.Element(W + setting))).LastOrDefault(v => v is not null);
+        return new(Setting("numFmt") ?? kind.Format, int.TryParse(Setting("numStart"), out var start) ? start : 1);
+    }
+
+    // The paragraphs of each footnote the body refers to, each opening with its number.
+    private Dictionary<string, IReadOnlyList<Block>> Notes() => NotesIn(NoteKind.Footnote, _notes).ToDictionary(n => n.Id, n => n.Blocks, StringComparer.Ordinal);
+
+    // The paragraphs of each note of a kind the body refers to, in the order first referred to.
+    private List<(string Id, IReadOnlyList<Block> Blocks)> NotesIn(NoteKind kind, NoteNumbers numbers)
+    {
+        var notes = new List<(string Id, IReadOnlyList<Block> Blocks)>();
+        var target = _relationships.FirstOrDefault(r => _relationshipTypes.GetValueOrDefault(r.Key)?.EndsWith("/" + kind.Part, StringComparison.Ordinal) == true).Value;
         var name = target is null ? null : "word/" + target;
-        var footnotes = name is null ? null : Part(name)?.Root;
-        if (footnotes is null)
+        if ((name is null ? null : Part(name)?.Root) is not { } root)
         {
             return notes;
         }
 
         _part = name!;
-        foreach (var id in _notes.Order.ToList())
+        foreach (var id in numbers.Order.ToList())
         {
-            _notes.Current = id;
-            var note = footnotes.Elements(W + "footnote").FirstOrDefault(f => (string?)f.Attribute(W + "id") == id);
-            notes[id] = note is null ? [] : Blocks(note);
+            numbers.Current = id;
+            var note = root.Elements(W + kind.Element).FirstOrDefault(f => (string?)f.Attribute(W + "id") == id);
+            notes.Add((id, note is null ? [] : Blocks(note)));
         }
 
-        (_notes.Current, _part) = (null, "word/document.xml");
+        (numbers.Current, _part) = (null, "word/document.xml");
         return notes;
     }
 

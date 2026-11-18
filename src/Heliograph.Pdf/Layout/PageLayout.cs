@@ -13,14 +13,15 @@ internal static class PageLayout
     {
         var pages = new PageSet(maxPages, cancellation);
         var root = new StructNode("Document", null);
-        Footnotes? notes = null;
+        PageNotes? notes = null;
         foreach (var section in document.Sections)
         {
             pages.StartSection(section);
-            notes ??= new Footnotes(document, pages);
+            notes ??= new PageNotes(new Footnotes(document, pages), new Endnotes(document, pages, root));
             new BodyFlow(pages, root, notes).Run(section.Body);
         }
 
+        notes?.Endnotes.Run();
         pages.Finish();
         foreach (var page in pages.Pages)
         {

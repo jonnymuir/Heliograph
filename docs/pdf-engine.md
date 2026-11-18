@@ -85,8 +85,13 @@ This plan is built to find out early and keep finding out.
   document, the separator takes one single line of the default style, whatever the document's
   own separator says, and the body stops above it; a line that refers to a note goes on a page
   only with its note. A note is not split across pages, where Word and LibreOffice may carry the
-  rest of a long one over. Endnotes, notes in a table, and notes numbered or placed some other
-  way are still refused.
+  rest of a long one over. Footnotes in a table, and notes numbered or placed some other way, are
+  still refused.
+- **Endnotes**, numbered i, ii, iii in the order they are referred to, after the letter's text:
+  one single line of the default style below the foot of its last line, with the separator drawn
+  across it, as for footnotes, then the notes, carrying on to further pages as they need. Notes of
+  both kinds are numbered as the document's settings, and its sections' over them, say: from where
+  they say, in figures, letters or Roman numerals.
 - **Pictures** set in line with the text, in the body, tables, headers and footers:
   - PNG of every colour type and bit depth, interlaced or not, with its transparency;
   - JPEG, grey, colour or CMYK, written into the PDF as it is;
@@ -283,7 +288,7 @@ generated documents through both routes. Add the Word fixtures.
   page).
 - Even-page headers (done).
 - Page-number formats (done), and section page counts.
-- Footnotes, tagged as notes (done, in the body); endnotes.
+- Footnotes, tagged as notes (done, in the body); endnotes (done).
 - Columns.
 
 ### 9. Switch over (done early: the maintainer chose to switch while still in alpha)
