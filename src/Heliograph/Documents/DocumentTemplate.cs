@@ -86,6 +86,8 @@ public static class DocumentTemplate
             diagnostics.Add(NoTitle());
         }
 
+        diagnostics.AddRange(PictureDescriptions.Missing(package, parts));
+
         if (diagnostics.Errors() > 0)
         {
             return new DocumentCompilation(null, diagnostics);
@@ -105,7 +107,9 @@ public static class DocumentTemplate
             return [];
         }
 
-        var document = new DocumentToCheck([.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!))], package.Xml("word/settings.xml"),
+        var document = new DocumentToCheck(
+            [.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!, id => package.Target(part.Name, id) is { } target ? package.Bytes(target) : null))],
+            package.Xml("word/settings.xml"),
             package.Xml("word/styles.xml"), package.Xml("word/numbering.xml"));
         return [.. checks.SelectMany(check => check.Check(document))];
     }

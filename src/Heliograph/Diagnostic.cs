@@ -62,6 +62,7 @@ public static class DiagnosticCodes
     public const string EmailLinkNotSafe = "HG1019";
     public const string DocumentHasNoTitle = "HG1020";
     public const string TagSheetLeftIn = "HG1021";
+    public const string PictureHasNoDescription = "HG1022";
 
     public const string ValueMissing = "HG2001";
     public const string ValueWrongType = "HG2002";

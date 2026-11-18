@@ -17,16 +17,19 @@ internal static class DocumentWriter
         var objects = new PdfObjects();
         var (catalog, pagesId, structRoot, info) = (objects.Reserve(), objects.Reserve(), objects.Reserve(), objects.Reserve());
         var fonts = new FontEmbedder(objects);
+        var images = new ImageEmbedder(objects);
         var pageIds = pages.Select(_ => objects.Reserve()).ToList();
         var marked = new List<List<StructNode>>();
         var g = document.Section.Page;
         for (var n = 0; n < pages.Count; n++)
         {
-            var writer = new ContentWriter(fonts, g.Height);
+            var writer = new ContentWriter(fonts, images, g.Height);
             var content = objects.Stream(writer.Write(n, pages[n]));
             var fontDict = string.Join(" ", writer.FontsUsed.Select(f => Invariant($"/{f.Name} {f.Id} 0 R")));
+            var imageDict = string.Join(" ", writer.ImagesUsed.Select(i => Invariant($"/{i.Name} {i.Id} 0 R")));
+            var xobjects = imageDict.Length > 0 ? $" /XObject <<{imageDict}>>" : "";
             objects.Set(pageIds[n], Invariant($"<</Type /Page /Parent {pagesId} 0 R /MediaBox [0 0 {N(g.Width)} {N(g.Height)}] ") +
-                Invariant($"/Resources <</Font <<{fontDict}>>>> /Contents {content} 0 R /StructParents {n} /Tabs /S>>"));
+                Invariant($"/Resources <</Font <<{fontDict}>>{xobjects}>> /Contents {content} 0 R /StructParents {n} /Tabs /S>>"));
             marked.Add(writer.Marked);
         }
 

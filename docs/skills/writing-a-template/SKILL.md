@@ -205,6 +205,14 @@ because a screen reader announces the title first. Write it for the recipient ("
 statement"), and do not put a tag in it. If you leave it out you are told when you upload
 (`HG1020`), and the template still works.
 
+## Describe each picture
+
+Give every picture alternative text that says what it shows ("The National Juggling Federation
+logo"): right-click it, then **Edit Alt Text** in Word, or **Properties > Options > Alternative
+(Text only)** in LibreOffice. A screen reader reads it out from the PDF. A picture that is only
+decoration can be marked as decorative in Word, and is then passed over. A picture with neither
+is a warning when you upload (`HG1022`), and a screen reader skips it.
+
 ## Where tags work
 
 | Place | Works |
@@ -243,9 +251,10 @@ character that makes every text message cost more.
 
 Some sites make PDFs with Heliograph's own converter, which is new. It does not yet lay out
 everything a word processor can. Where it cannot, the workbench says so when you upload, with
-the place and a fix (codes `HG4001` to `HG4014`). The main ones are pictures, text boxes, links,
+the place and a fix (codes `HG4001` to `HG4014`). The main ones are floating pictures, text boxes, links,
 coloured or highlighted text, footnotes, more than one section, and tab stops aligned right or
-on the decimal point. Lists can have several levels, numbered with numbers, letters or Roman
+on the decimal point. Pictures set in line with the text are drawn (PNG and JPEG); a picture that
+floats with text around it is not yet, so set it **In Line with Text**. Lists can have several levels, numbered with numbers, letters or Roman
 numerals, with Word's ordinary bullets; a picture used as a bullet, or a number style such as
 "1st, 2nd", cannot be drawn yet. Change the template, or ask whoever runs the site to make that letter's
 PDFs another way for now.

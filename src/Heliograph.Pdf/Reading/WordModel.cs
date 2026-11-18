@@ -15,6 +15,12 @@ internal sealed record BreakInline(RunStyle Style) : Inline(Style);
 
 internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style);
 
+/// <summary>
+/// A picture set in the line, on the baseline, at its size in points. Alt is what a screen reader says; null for a
+/// picture marked as decorative or with no description, which is drawn as an artifact.
+/// </summary>
+internal sealed record PictureInline(Pictures.PictureFile File, double Width, double Height, string? Alt, RunStyle Style) : Inline(Style);
+
 /// <summary>Space around and between the lines of a paragraph. Line is in 240ths of a line for "auto", else twips.</summary>
 internal sealed record Spacing(double Before, double After, double Line, string LineRule);
 

@@ -56,6 +56,13 @@ This plan is built to find out early and keep finding out.
   marked not to.
 - **Headers and footers:** on every page, with a first page of its own, and page numbers and page
   counts.
+- **Pictures** set in line with the text, in the body, tables, headers and footers:
+  - PNG of every colour type and bit depth, interlaced or not, with its transparency;
+  - JPEG, grey, colour or CMYK, written into the PDF as it is;
+  - each standing on the baseline, its line as tall as it needs; line spacing over single adds a
+    share of the text's height, not the picture's;
+  - a described picture is a figure with its description; a decorative one, one with no
+    description, or one in a header or footer is passed over by a screen reader.
 
 All six benchmark letters pass PDF/UA, give the same bytes every time, and are laid out as
 LibreOffice lays them out to within a point and a half on every line.
@@ -83,6 +90,10 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
   are kept together, moves to the next page whole;
 - a line is as tall as its tallest font reaches above the baseline plus its deepest below, plus
   the largest gap;
+- a tab with a word straight after it that does not fit moves down with the word, and takes
+  effect on the next line;
+- a paragraph kept with the next is kept with all of it when the next keeps its lines together;
+- a paragraph a keep rule moves to a new page starts at its top, without its space before;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
@@ -197,8 +208,8 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 7. Pictures
 
-- PNG (transparency kept) and JPEG.
-- Inline pictures first, then floating ones with square or top-and-bottom wrapping.
+- PNG (transparency kept) and JPEG. Done.
+- Inline pictures first (done), then floating ones with square or top-and-bottom wrapping.
 - Each picture is tagged as a figure with its alternative text. A picture without alternative
   text is a compile warning, which helps every route, not only this one.
 

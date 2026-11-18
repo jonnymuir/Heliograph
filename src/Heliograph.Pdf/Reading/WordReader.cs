@@ -13,6 +13,7 @@ internal sealed class WordReader : IDisposable
     private readonly ParagraphReader _paragraphs;
     private readonly Dictionary<string, string> _relationships;
     private readonly bool _largerSpacing;
+    private string _part = "word/document.xml";
 
     private WordReader(byte[] docx)
     {
@@ -23,7 +24,7 @@ internal sealed class WordReader : IDisposable
         var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
-        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab);
+        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab, id => Linked(_part, id));
         _relationships = (Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
             .ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
     }
@@ -84,7 +85,58 @@ internal sealed class WordReader : IDisposable
             return null;
         }
 
-        return Part("word/" + target)?.Root is { } root ? Blocks(root) : null;
+        if (Part("word/" + target)?.Root is not { } root)
+        {
+            return null;
+        }
+
+        // A header's pictures are found through the header's own relationships.
+        _part = "word/" + target;
+        var blocks = Blocks(root);
+        _part = "word/document.xml";
+        return blocks;
+    }
+
+    // The bytes of what a part links to by relationship id, inside the package only.
+    private byte[]? Linked(string partName, string id)
+    {
+        var folder = partName[..(partName.LastIndexOf('/') + 1)];
+        var relationship = Part($"{folder}_rels/{partName[folder.Length..]}.rels")?.Root?.Elements()
+            .FirstOrDefault(e => (string?)e.Attribute("Id") == id && (string?)e.Attribute("TargetMode") != "External");
+        if ((string?)relationship?.Attribute("Target") is not { } target)
+        {
+            return null;
+        }
+
+        var name = target.StartsWith('/') ? target.TrimStart('/') : Normalise(folder + target);
+        if (_zip.GetEntry(name) is not { } entry)
+        {
+            return null;
+        }
+
+        using var stream = entry.Open();
+        using var bytes = new MemoryStream();
+        stream.CopyTo(bytes);
+        return bytes.ToArray();
+    }
+
+    // "word/../media/a.png" as "media/a.png".
+    private static string Normalise(string path)
+    {
+        var segments = new List<string>();
+        foreach (var segment in path.Split('/'))
+        {
+            if (segment == ".." && segments.Count > 0)
+            {
+                segments.RemoveAt(segments.Count - 1);
+            }
+            else if (segment is not ("." or ".." or ""))
+            {
+                segments.Add(segment);
+            }
+        }
+
+        return string.Join('/', segments);
     }
 
     private XDocument? Part(string name)

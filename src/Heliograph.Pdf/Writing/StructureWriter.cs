@@ -43,7 +43,8 @@ internal static class StructureWriter
         var parent = node.Parent is { } p ? ids[p] : structRoot;
         var table = (node.Scope is { } scope ? $" /Scope /{scope}" : "") + (node.ColumnSpan > 1 ? Invariant($" /ColSpan {node.ColumnSpan}") : "");
         var attributes = table.Length > 0 ? $" /A <</O /Table{table}>>" : "";
-        return Invariant($"<</Type /StructElem /S /{node.Type} /P {parent} 0 R /K [{kids}]{attributes}>>");
+        var alt = node.Alt is { } text ? $" /Alt {Utf16(text)}" : "";
+        return Invariant($"<</Type /StructElem /S /{node.Type} /P {parent} 0 R /K [{kids}]{attributes}{alt}>>");
     }
 
     // An element with nothing in it would only confuse a screen reader; a table's empty cells and rows still hold their place.

@@ -1,4 +1,5 @@
 using Heliograph.Pdf.Fonts;
+using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
@@ -25,6 +26,12 @@ internal static class LinePlacer
             var (x, piece) = line.Pieces[i];
             var node = owner.Node is null ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
 
+            if (piece.Picture is { } picture)
+            {
+                Picture(page, picture, left + x + shift + added, baseline, owner);
+                continue;
+            }
+
             // A space is real text, so copying and screen readers keep words apart. Justified lines widen the gap after it.
             Emit(page, new TextOp(left + x + shift + added, baseline, piece.Text, piece.Style, node));
             if (piece.Kind == PieceKind.Space)
@@ -32,6 +39,13 @@ internal static class LinePlacer
                 added += extra;
             }
         }
+    }
+
+    // A described picture is a figure in its paragraph; any other is an artifact a screen reader passes over.
+    private static void Picture(LaidOutPage page, PictureInline picture, double x, double baseline, Owner owner)
+    {
+        var figure = owner.Node is { } node && picture.Alt is { } alt ? node.Add("Figure", alt: alt) : null;
+        page.Ops.Add(new ImageOp(x, baseline - picture.Height, picture.Width, picture.Height, picture.File, figure));
     }
 
     // A run of text in one style, owner and place joins what came just before, so the page's content stays small.

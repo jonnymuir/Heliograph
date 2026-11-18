@@ -9,10 +9,11 @@ namespace Heliograph.Pdf.Writing;
 /// Writes one page's content stream. Text that belongs to the structure is marked with its node and a marked-content
 /// id; everything else (headers, footers, borders) is marked as an artifact, so a screen reader skips it.
 /// </summary>
-internal sealed class ContentWriter(FontEmbedder fonts, double pageHeight)
+internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, double pageHeight)
 {
     private readonly StringBuilder _content = new();
     private readonly HashSet<(string Name, int Id)> _fonts = [];
+    private readonly HashSet<(string Name, int Id)> _images = [];
     private StructNode? _open;
     private bool _inArtifact;
 
@@ -20,6 +21,8 @@ internal sealed class ContentWriter(FontEmbedder fonts, double pageHeight)
     public List<StructNode> Marked { get; } = [];
 
     public IEnumerable<(string Name, int Id)> FontsUsed => _fonts;
+
+    public IEnumerable<(string Name, int Id)> ImagesUsed => _images.OrderBy(i => i.Id);
 
     public byte[] Write(int pageIndex, LaidOutPage page)
     {
@@ -30,6 +33,12 @@ internal sealed class ContentWriter(FontEmbedder fonts, double pageHeight)
                 case TextOp text:
                     Mark(pageIndex, text.Node, "/Artifact <</Type /Pagination>> BDC\n");
                     Text(text);
+                    break;
+                case ImageOp image:
+                    Mark(pageIndex, image.Node, "/Artifact BMC\n");
+                    var (name, id) = images.Use(image.File);
+                    _images.Add((name, id));
+                    _content.Append(Invariant($"q {N(image.Width)} 0 0 {N(image.Height)} {N(image.X)} {N(pageHeight - image.Top - image.Height)} cm /{name} Do Q\n"));
                     break;
                 case LineOp line:
                     Mark(pageIndex, null, "/Artifact BMC\n");

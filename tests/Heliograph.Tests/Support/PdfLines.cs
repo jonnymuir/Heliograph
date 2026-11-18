@@ -110,6 +110,19 @@ internal sealed class PdfLinesFactAttribute : FactAttribute
     }
 }
 
+/// <summary>A theory that needs only Poppler, to read or draw the PDF.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+internal sealed class PdfLinesTheoryAttribute : TheoryAttribute
+{
+    public PdfLinesTheoryAttribute()
+    {
+        if (PdfLines.Executable is null && !LibreOffice.Required)
+        {
+            Skip = "This needs Poppler, to read or draw the PDF.";
+        }
+    }
+}
+
 /// <summary>A test that needs only the PDF validator, which runs in Docker.</summary>
 [AttributeUsage(AttributeTargets.Method)]
 internal sealed class VeraPdfTheoryAttribute : TheoryAttribute

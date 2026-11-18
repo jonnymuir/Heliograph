@@ -220,10 +220,13 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
 - **It refuses what it cannot lay out, at compile.** `HeliographPdfConverter` is also an
   `IDocumentCheck`. Registered as the host's `IPdfConverter`, as `AddCorrespondenceLibrary`
   reads it, it makes every check, preview and publish report what a template has that it does
-  not lay out yet: pictures, links and coloured text, for example (`HG4001` to `HG4013`). So no
+  not lay out yet: floating pictures, links and coloured text, for example (`HG4001` to `HG4014`). So no
   PDF quietly loses anything. A version already published goes on rendering as it was. Without
   the library, pass it yourself:
   `DocumentTemplate.Compile(docx, dictionary, [new HeliographPdfConverter()])`.
+- **Your own check** implements `IDocumentCheck`. `DocumentToCheck` gives it each part's XML, the
+  settings, styles and list definitions, and `DocumentPart.Linked(id)` reads a file a part links
+  to, such as a picture's.
 
 Both routes:
 
