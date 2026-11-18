@@ -72,43 +72,8 @@ internal sealed class RowLayout
     private static CellLayout Cell(Table t, Cell cell, double x, double width, StructNode? cellNode)
     {
         var text = width - t.Margins.Left - t.Margins.Right - (((cell.Borders.Left?.Width ?? 0) + (cell.Borders.Right?.Width ?? 0)) / 2);
-        var (lines, height) = Lines(cell.Blocks, text, cellNode);
+        var (lines, height) = CellLines.Of(cell.Blocks, text, cellNode);
         return new CellLayout(x, width, x + t.Margins.Left, cell.Borders, lines, height) { VAlign = cell.VAlign, Background = cell.Background };
-    }
-
-    // A cell's paragraphs broken into lines down its text, each at its top, and a table inside it as one line of its own.
-    private static (List<(double, Line, Owner)> Lines, double Height) Lines(IReadOnlyList<Block> blocks, double text, StructNode? cellNode)
-    {
-        var lines = new List<(double, Line, Owner)>();
-        var y = 0.0;
-        foreach (var block in blocks)
-        {
-            if (block is Table inner)
-            {
-                var nested = NestedTable.Lay(inner, text, cellNode?.Add("Table"));
-                lines.Add((y, nested, Owner.Artifact));
-                y += nested.Height;
-            }
-            else if (block is Paragraph p)
-            {
-                y = Paragraph(p, text, cellNode, lines, y);
-            }
-        }
-
-        return (lines, y);
-    }
-
-    private static double Paragraph(Paragraph p, double text, StructNode? cellNode, List<(double, Line, Owner)> lines, double y)
-    {
-        y += p.Style.SpaceAbove;
-        var owner = cellNode is null ? Owner.Artifact : new Owner(cellNode.Add("P"), null);
-        foreach (var line in LineBreaker.Break(p, text, _ => ""))
-        {
-            lines.Add((y, line, owner));
-            y += line.Height;
-        }
-
-        return y + p.Style.Spacing.After;
     }
 
     /// <summary>The height the row needs from these lines on, up to these lines (or to the end).</summary>
