@@ -13,10 +13,19 @@ internal sealed class TableFlow(PageSet pages)
     {
         var headings = t.Rows.TakeWhile(r => r.Header).ToList();
         RowLayout? last = null;
-        foreach (var row in t.Rows)
+        for (var r = 0; r < t.Rows.Count; r++)
         {
-            last = RowLayout.Of(t, row, node.Add("TR"), pages.Geometry.ContentWidth);
-            Place(t, row, last, headings);
+            var end = MergedRows.End(t.Rows, r);
+            if (end > r)
+            {
+                var group = Enumerable.Range(r, end - r + 1).Select(k => RowLayout.Of(t, t.Rows[k], node.Add("TR"), pages.Geometry.ContentWidth)).ToList();
+                PlaceMerged(t, group, headings, t.Rows[r]);
+                (last, r) = (group[^1], end);
+                continue;
+            }
+
+            last = RowLayout.Of(t, t.Rows[r], node.Add("TR"), pages.Geometry.ContentWidth);
+            Place(t, t.Rows[r], last, headings);
         }
 
         // The table's bottom border sits below its last row.
@@ -51,6 +60,32 @@ internal sealed class TableFlow(PageSet pages)
         Draw(cells, from, null, cells.Need(from));
     }
 
+    // Rows joined by cells merged down a column, kept together on a page, each merged cell drawn once down them all.
+    private void PlaceMerged(Table t, List<RowLayout> group, List<Row> headings, Row first)
+    {
+        var heights = MergedRows.Heights(group);
+        if (heights.Sum() > pages.Room + 0.01 && pages.HasContent && heights.Sum() <= pages.BodyBottom - pages.BodyTop)
+        {
+            NewPage(t, headings, first);
+        }
+
+        for (var k = 0; k < group.Count; k++)
+        {
+            var cells = group[k];
+            for (var c = 0; c < cells.Count; c++)
+            {
+                if (cells.Merge(c) != "continue")
+                {
+                    var height = cells.Merge(c) == "restart" ? MergedRows.Down(group, heights, k, c) : heights[k];
+                    DrawCell(cells, c, 0, cells[c].Lines.Count, height, cells.Offset(c, height));
+                }
+            }
+
+            pages.Y += heights[k];
+            pages.HasContent = true;
+        }
+    }
+
     // A heading row never breaks; a row marked not to break may still have to, once it has started on a page of its own.
     private static bool Breakable(Row row, int[] from) => !row.Header && !(row.CantSplit && from.All(f => f == 0));
 
@@ -71,28 +106,38 @@ internal sealed class TableFlow(PageSet pages)
         }
     }
 
-    // Draws each cell's lines from one index up to another (or to the end), and the cell borders round that part.
+    // Draws each cell's lines from one index up to another (or to the end), and the cell borders round that part. In a row
+    // placed whole, a cell's text sits at its top, middle or foot; in a row broken across pages, at its top, as LibreOffice
+    // lays it out.
     private void Draw(RowLayout cells, int[] from, int[]? to, double height)
     {
+        var whole = to is null && from.All(f => f == 0);
         for (var c = 0; c < cells.Count; c++)
         {
-            var cell = cells[c];
-            var end = to?[c] ?? cell.Lines.Count;
-            var offset = from[c] < cell.Lines.Count ? cell.Lines[from[c]].Top : 0;
-            // In a row placed whole, a cell's text sits at its top, middle or foot; in a row broken across pages, at its top,
-            // as LibreOffice lays it out.
-            offset -= to is null && from.All(f => f == 0) ? cells.Offset(c, height) : 0;
-            for (var k = from[c]; k < end; k++)
-            {
-                var (top, line, owner) = cell.Lines[k];
-                LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
-            }
-
-            Borders(cell.Borders, pages.Geometry.Left + cell.Left, cell.Width, height);
+            DrawCell(cells, c, from[c], to?[c] ?? cells[c].Lines.Count, height, whole ? cells.Offset(c, height) : 0);
         }
 
         pages.Y += height;
         pages.HasContent = true;
+    }
+
+    // One cell's shading, its lines from one index to another, moved down by an offset, and its borders.
+    private void DrawCell(RowLayout cells, int c, int from, int end, double height, double down)
+    {
+        var cell = cells[c];
+        var (left, offset) = (pages.Geometry.Left + cell.Left, (from < cell.Lines.Count ? cell.Lines[from].Top : 0) - down);
+        if (cells.Background(c) is { } shading)
+        {
+            pages.Current.Ops.Add(new FillOp(left, pages.Y, cell.Width, height, shading));
+        }
+
+        for (var k = from; k < end; k++)
+        {
+            var (top, line, owner) = cell.Lines[k];
+            LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
+        }
+
+        Borders(cell.Borders, left, cell.Width, height);
     }
 
     private void Borders(CellBorders b, double x, double width, double height)

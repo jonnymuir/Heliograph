@@ -24,16 +24,60 @@ internal static class RandomTables
         var style = random.Next(2) == 0 ? "<w:tblStyle w:val=\"TableGrid\"/>" : "";
         var align = random.Next(4) switch { 0 => "<w:jc w:val=\"center\"/>", 1 => "<w:jc w:val=\"right\"/>", _ => "" };
         table = table.Replace("<w:tblPr>", $"<w:tblPr>{style}", StringComparison.Ordinal).Replace("</w:tblPr>", $"{align}</w:tblPr>", StringComparison.Ordinal);
-        return Cells(Rows(table, random), random);
+        return Merges(Cells(Rows(table, random), random), random);
+    }
+
+    // A third of tables merge their first column down a few rows at a time, where that column's cells span no further.
+    private static string Merges(string table, Random random)
+    {
+        if (random.Next(3) != 0)
+        {
+            return table;
+        }
+
+        var rows = System.Text.RegularExpressions.Regex.Split(table, "(?=<w:tr>)");
+        var run = 0;
+        for (var r = 1; r < rows.Length; r++)
+        {
+            var plain = rows[r].StartsWith("<w:tr>", StringComparison.Ordinal) && !First(rows[r]).Contains("gridSpan", StringComparison.Ordinal);
+            run = !plain ? 0 : run > 0 && random.Next(3) != 0 ? run + 1 : random.Next(4) == 0 ? 1 : 0;
+            if (run == 1)
+            {
+                rows[r] = Mark(rows[r], "<w:vMerge w:val=\"restart\"/>", empty: false);
+            }
+            else if (run > 1)
+            {
+                rows[r] = Mark(rows[r], "<w:vMerge/>", empty: true);
+            }
+        }
+
+        return string.Concat(rows);
+    }
+
+    private static string First(string row) => row[..(row.IndexOf("</w:tc>", StringComparison.Ordinal) + 7)];
+
+    // The row's first cell marked as merged; a cell merged into the one above keeps an empty paragraph, as Word saves it.
+    private static string Mark(string row, string merge, bool empty)
+    {
+        var first = First(row);
+        var marked = first.Replace("</w:tcPr>", merge + "</w:tcPr>", StringComparison.Ordinal);
+        if (empty)
+        {
+            var start = marked.IndexOf("<w:p>", StringComparison.Ordinal);
+            marked = marked[..start] + "<w:p/></w:tc>";
+        }
+
+        return marked + row[first.Length..];
     }
 
     // A fifth of rows set a height: at least, or exactly, 18 to 40 points.
     private static string Rows(string table, Random random) => Each(table, "<w:tr><w:tc>", () => random.Next(5) != 0 ? "<w:tr><w:tc>"
         : $"<w:tr><w:trPr><w:trHeight w:val=\"{random.Next(18, 40) * 20}\"{(random.Next(3) == 0 ? " w:hRule=\"exact\"" : "")}/></w:trPr><w:tc>");
 
-    // A quarter of cells set their text at the middle or the foot.
-    private static string Cells(string table, Random random) => Each(table, "</w:tcPr>", () => random.Next(4) != 0 ? "</w:tcPr>"
-        : $"<w:vAlign w:val=\"{(random.Next(2) == 0 ? "center" : "bottom")}\"/></w:tcPr>");
+    // A quarter of cells set their text at the middle or the foot, and a sixth are shaded.
+    private static string Cells(string table, Random random) => Each(table, "</w:tcPr>", () =>
+        (random.Next(6) == 0 ? "<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"FFF2CC\"/>" : "")
+        + (random.Next(4) != 0 ? "</w:tcPr>" : $"<w:vAlign w:val=\"{(random.Next(2) == 0 ? "center" : "bottom")}\"/></w:tcPr>"));
 
     private static string Each(string text, string marker, Func<string> replacement)
     {

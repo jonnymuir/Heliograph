@@ -51,6 +51,10 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
                 case LinkOp link:
                     Links.Add(link);
                     break;
+                case FillOp fill:
+                    Mark(pageIndex, null, "/Artifact BMC\n");
+                    _content.Append(Invariant($"q {Rgb(fill.Color)} rg {N(fill.X)} {N(pageHeight - fill.Top - fill.Height)} {N(fill.Width)} {N(fill.Height)} re f Q\n"));
+                    break;
                 case LineOp line:
                     Mark(pageIndex, null, "/Artifact BMC\n");
                     _content.Append(Invariant($"{N(line.Width)} w 0 J {N(line.X1)} {N(pageHeight - line.Y1)} m {N(line.X2)} {N(pageHeight - line.Y2)} l S\n"));

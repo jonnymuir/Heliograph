@@ -65,6 +65,12 @@ internal sealed record CellBorders(Border? Top, Border? Left, Border? Bottom, Bo
 internal sealed record Cell(IReadOnlyList<Block> Blocks, int Span, CellBorders Borders)
 {
     public string VAlign { get; init; } = "top";
+
+    /// <summary>"restart" for a cell that starts a run merged down its column, "continue" for one merged into the cell above, else "".</summary>
+    public string VMerge { get; init; } = "";
+
+    /// <summary>The cell's shading, as RGB hex, or null for none.</summary>
+    public string? Background { get; init; }
 }
 
 /// <summary>A table row. Rows break across pages unless marked not to; heading rows repeat at the top of each page.</summary>

@@ -65,7 +65,8 @@ internal sealed class RowLayout
         _ => 0,
     };
 
-    private double Natural(int c) => Above + _cells[c].Height + _below;
+    /// <summary>The height a cell's text needs, with the row's padding and top border.</summary>
+    public double Natural(int c) => Above + _cells[c].Height + _below;
 
     // The cell's text area is the cell less its padding and half of each side border.
     private static CellLayout Cell(Table t, Cell cell, double x, double width, StructNode? cellNode)
@@ -102,11 +103,25 @@ internal sealed class RowLayout
             content = Math.Max(content, bottom - start);
         }
 
-        // A whole row is exactly the height it sets, or at least that height below its top border, as LibreOffice lays it out.
-        var need = Above + content + _below;
-        var whole = to is null && from.All(f => f == 0);
-        return !whole || _row.Height <= 0 ? need : _row.ExactHeight ? _row.Height : Math.Max(need, _row.Height + _topBorder);
+        return Settle(Above + content + _below, to is null && from.All(f => f == 0));
     }
+
+    /// <summary>The height the whole row needs for its cells that are not merged down a column.</summary>
+    public double OwnNeed() =>
+        Settle(Above + Enumerable.Range(0, _cells.Count).Where(c => Merge(c) == "").Select(c => _cells[c].Height).DefaultIfEmpty(0).Max() + _below, whole: true);
+
+    /// <summary>How a cell is merged down its column: "restart", "continue", or "".</summary>
+    public string Merge(int c) => _row.Cells[c].VMerge;
+
+    /// <summary>The grid column a cell starts in.</summary>
+    public int Column(int c) => _row.Cells.Take(c).Sum(cell => cell.Span);
+
+    /// <summary>The cell's shading, if any.</summary>
+    public string? Background(int c) => _row.Cells[c].Background;
+
+    // A whole row is exactly the height it sets, or at least that height below its top border, as LibreOffice lays it out.
+    private double Settle(double need, bool whole) =>
+        !whole || _row.Height <= 0 ? need : _row.ExactHeight ? _row.Height : Math.Max(need, _row.Height + _topBorder);
 
     /// <summary>
     /// Where each cell's lines stop to fit in the room left: after its last line whose foot is within it. Null when no

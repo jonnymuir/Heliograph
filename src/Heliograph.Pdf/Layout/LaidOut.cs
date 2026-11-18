@@ -42,6 +42,9 @@ internal sealed record LinkOp(double X1, double Top, double X2, double Bottom, s
 /// <summary>A link's clickable area, as its Link holds it: the page it is on and its annotation object.</summary>
 internal sealed record AnnotationRef(int Page, int Id);
 
+/// <summary>A filled rectangle, such as a cell's shading; always an artifact. Y runs down the page.</summary>
+internal sealed record FillOp(double X, double Top, double Width, double Height, string Color) : Op;
+
 /// <summary>A ruled line, such as a table border; always an artifact. Y runs down the page.</summary>
 internal sealed record LineOp(double X1, double Y1, double X2, double Y2, double Width) : Op;
 
