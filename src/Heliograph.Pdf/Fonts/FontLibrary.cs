@@ -13,6 +13,17 @@ internal static class FontLibrary
 {
     private static readonly ConcurrentDictionary<string, TrueTypeFont> Loaded = new(StringComparer.Ordinal);
 
+    // The host's own fonts for the conversion or check under way, drawn in before any look-alike.
+    private static readonly AsyncLocal<HostFonts?> Host = new();
+
+    /// <summary>Uses a host's own fonts until the returned scope ends.</summary>
+    public static IDisposable Use(HostFonts? fonts)
+    {
+        var before = Host.Value;
+        Host.Value = fonts;
+        return new Scope(() => Host.Value = before);
+    }
+
     // Each font a document may name, in capitals, and the built-in family that draws it. Symbol is only ever a bullet's
     // font; the bullet is drawn in the text's font.
     private static readonly Dictionary<string, string> LookAlikes = new(StringComparer.Ordinal)
@@ -27,6 +38,11 @@ internal static class FontLibrary
 
     public static TrueTypeFont Face(RunStyle style)
     {
+        if (Host.Value?.Face(style.Font, style.Bold, style.Italic) is { } own)
+        {
+            return own;
+        }
+
         var name = $"{Family(style.Font)}-{(style.Bold, style.Italic) switch
         {
             (true, true) => "BoldItalic",
@@ -63,7 +79,7 @@ internal static class FontLibrary
         Face(style).Has(character) ? style : Fallbacks.Select(font => style with { Font = font }).FirstOrDefault(s => Face(s).Has(character));
 
     /// <summary>Whether a font named in a document has a built-in look-alike, rather than falling back to Liberation Sans.</summary>
-    public static bool HasLookAlike(string font) => font.Length == 0 || Known(font) is not null;
+    public static bool HasLookAlike(string font) => font.Length == 0 || Known(font) is not null || Host.Value?.Has(font) == true;
 
     private static string Family(string font) => Known(font) ?? "LiberationSans";
 
@@ -76,5 +92,10 @@ internal static class FontLibrary
         using var bytes = new MemoryStream();
         stream.CopyTo(bytes);
         return new TrueTypeFont(bytes.ToArray());
+    }
+
+    private sealed class Scope(Action end) : IDisposable
+    {
+        public void Dispose() => end();
     }
 }

@@ -214,8 +214,20 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
   - Calibri in Carlito;
   - Cambria in Caladea.
 
-  Any other font, Aptos (Word's default since 2024) included, is drawn in Liberation Sans for now,
-  and is a warning at compile (`HG4013`).
+  Any other font, Aptos (Word's default since 2024) included, is drawn in Liberation Sans, and is
+  a warning at compile (`HG4013`), unless you give the converter the font yourself:
+
+  ```csharp
+  var converter = new HeliographPdfConverter(new HeliographPdfOptions
+  {
+      Fonts = [File.ReadAllBytes("fonts/HouseSans-Regular.ttf"), File.ReadAllBytes("fonts/HouseSans-Bold.ttf")],
+  });
+  ```
+
+  Each file must be TrueType (`.ttf`); its family and whether it is bold or italic are read from
+  the font, and a style you give no file for is drawn in the regular face. You must hold a licence
+  to embed each font in a PDF, and one that says it may not be embedded is refused when the
+  converter is made.
 - **Deterministic:** the same letter always gives the same bytes.
 - **Characters:** one the letter's font lacks is drawn from another built-in font that has it.
   One none has (Chinese, Arabic, an emoji) is refused in a template (`HG4015`); in a recipient's

@@ -28,7 +28,13 @@ internal sealed class TrueTypeFont
         (WinAscent, WinDescent) = (Data.U16(os2 + 74), Data.U16(os2 + 76));
         CapHeight = Data.U16(os2) >= 2 ? Data.S16(os2 + 88) : Ascender;
         ItalicAngle = BinaryPrimitives.ReadInt32BigEndian(Data.Bytes.AsSpan(Data.Offset("post") + 4)) / 65536.0;
-        PostScriptName = Name(6) ?? "Font";
+        PostScriptName = string.Concat((Name(6) ?? "Font").Where(c => char.IsAsciiLetterOrDigit(c) || c == '-')) is { Length: > 0 } ps ? ps : "Font";
+        Family = Name(16) ?? Name(1) ?? "";
+        var style = Data.U16(head + 44);
+        (Bold, Italic) = ((style & 1) != 0, (style & 2) != 0);
+        // Embedding is forbidden when the font says restricted, or bitmap only, and nothing more lenient.
+        var fsType = Data.U16(os2 + 8);
+        Embeddable = (fsType & 0x000F) != 0x0002 && (fsType & 0x0200) == 0;
         _cmap = CharacterMap.Read(Data);
     }
 
@@ -48,6 +54,16 @@ internal sealed class TrueTypeFont
     public int Weight { get; }
     public double ItalicAngle { get; }
     public string PostScriptName { get; }
+
+    /// <summary>The font's family name, as its name table gives it: the typographic family, else the family.</summary>
+    public string Family { get; }
+
+    public bool Bold { get; }
+
+    public bool Italic { get; }
+
+    /// <summary>Whether the font's licence lets it be embedded in a document, as a PDF must embed it.</summary>
+    public bool Embeddable { get; }
 
     public ushort Glyph(int codePoint) => _cmap.TryGetValue(codePoint, out var g) ? g : (ushort)0;
 

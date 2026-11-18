@@ -230,8 +230,9 @@ generated documents through both routes. Add the Word fixtures.
 ### 3. Fonts
 
 - **A font source.** The package carries free look-alike fonts (SIL OFL and Apache 2.0); a host
-  can add its own files, the real Arial included if it holds a licence. Still to come: the host's
-  own files.
+  can add its own files, the real Arial included if it holds a licence (done: TrueType files in
+  `HeliographPdfOptions.Fonts`, read by family, bold and italic from the font itself, refused when
+  the font may not be embedded).
 - **A mapping table** that Word and LibreOffice already agree on (done, with theme fonts resolved
   and the same files LibreOffice ships):
   - Arial → Liberation Sans;

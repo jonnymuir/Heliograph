@@ -21,7 +21,10 @@ byte[] file = await pdf.ConvertAsync(render.Docx!);
   - Cambria in Caladea.
 
   Liberation and Carlito are under the SIL Open Font License, Caladea under the Apache License
-  2.0; see the `LICENSE-*.txt` files in the package.
+  2.0; see the `LICENSE-*.txt` files in the package. A host can give it fonts of its own as
+  TrueType files (`HeliographPdfOptions.Fonts`), drawn wherever a letter names their family: a
+  house font, or Aptos, which has no free look-alike. The host must hold a licence to embed each
+  one; a font that says it may not be embedded is refused.
 - **Limits:** a letter that runs past 500 pages (`HeliographPdfOptions.MaxPages`) is refused.
 
 It is new. What it lays out so far is listed in
