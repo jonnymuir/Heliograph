@@ -255,8 +255,8 @@ the place and a fix (codes `HG4001` to `HG4014`). The main ones are floating pic
 small capitals, a section break that does not start a new page, and a tab in a centred or
 right-aligned paragraph. Sections that start a new page are laid out, each with its
 own page size, orientation, margins, headers and footers (different on the first page or on even
-pages if you ask), and page numbers. Footnotes in the body of the letter are laid out at the foot of the page, and endnotes after
-the letter, numbered as you set them in Word; a footnote in a table is not yet. Tab stops aligned left, right, centred or on the decimal point, with or without a
+pages if you ask), and page numbers. Footnotes are laid out at the foot of the page, in the body or in a table, and endnotes after
+the letter, numbered as you set them in Word. Tab stops aligned left, right, centred or on the decimal point, with or without a
 leader, are laid out, and links in the body to a web page, an email address or a telephone number
 can be clicked. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
 and character spacing are all drawn, and so are borders and shading round paragraphs in the body

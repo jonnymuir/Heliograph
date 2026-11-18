@@ -8,7 +8,7 @@ namespace Heliograph.Pdf.Layout;
 /// </summary>
 internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
 {
-    private readonly TableFlow _tables = new(pages);
+    private readonly TableFlow _tables = new(pages, notes);
     private readonly ListNesting _lists = new(root);
     private readonly PageFit _fit = new(pages, notes.Footnotes);
     private ParagraphFrame? _frame;

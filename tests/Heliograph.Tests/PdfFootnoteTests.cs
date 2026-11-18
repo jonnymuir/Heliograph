@@ -17,7 +17,7 @@ public class PdfFootnoteTests
     private const string Long = "Charged on fees paid after the end of April, which is a long note that runs on to a second line of note text.";
     private static readonly FieldDictionary NoFields = new([]);
 
-    public static TheoryData<string> Letters => ["two notes", "a note pushing its line over", "notes on two pages", "a long note"];
+    public static TheoryData<string> Letters => ["two notes", "a note pushing its line over", "notes on two pages", "a long note", "a note in a table"];
 
     [ComparedPdfTheory]
     [MemberData(nameof(Letters))]
@@ -26,8 +26,20 @@ public class PdfFootnoteTests
         var docx = Rendered(Letter(kind));
         var expected = PdfLines.Read(await new LibreOfficePdfConverter().ConvertAsync(docx));
         var actual = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(docx));
-
         PdfComparison.FirstDifference(expected, actual, "LibreOffice").Difference.Should().BeNull(kind);
+    }
+
+    // LibreOffice moves the row to the next page too, but leaves a gap a row high above it; Word's own layout of the probe
+    // (WordProbes) is the judge of where it goes.
+    [PdfLinesFact]
+    public async Task A_table_row_goes_to_the_next_page_with_its_note()
+    {
+        var lines = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(Rendered(Letter("a table row pushed over by its note"))));
+        var row = lines.Single(l => l.Text.StartsWith("Late charge", StringComparison.Ordinal));
+
+        row.Page.Should().Be(2);
+        lines.Where(l => l.Page == 2).Should().Contain(l => l.Text.StartsWith("2 Charged", StringComparison.Ordinal));
+        lines.First(l => l.Page == 2).Should().Be(row);
     }
 
     [PdfLinesFact]
@@ -65,15 +77,6 @@ public class PdfFootnoteTests
     }
 
     [Fact]
-    public void A_footnote_in_a_table_is_refused_at_compile()
-    {
-        var table = $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"4000\"/></w:tblGrid><w:tr><w:tc>{NoteLetters.Referring("In a cell.", 1).Replace($" {W}", "", StringComparison.Ordinal)}</w:tc></w:tr></w:tbl>";
-
-        DocumentTemplate.Compile(NoteLetters.Letter([table], "A note."), NoFields, [new HeliographPdfConverter()]).Diagnostics
-            .Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotLayOutNotes).Which.Message.Should().Contain("in a table");
-    }
-
-    [Fact]
     public void An_ordinary_footnote_is_not_refused()
     {
         DocumentTemplate.Compile(Letter("two notes"), NoFields, [new HeliographPdfConverter()]).Diagnostics.Should().BeEmpty();
@@ -82,14 +85,19 @@ public class PdfFootnoteTests
     private static MemoryStream Letter(string kind)
     {
         var body = new List<string>();
-        var plain = kind switch { "a note pushing its line over" => 25, "notes on two pages" => 40, _ => 2 };
+        var plain = kind switch { "a note pushing its line over" => 25, "notes on two pages" => 40, "a table row pushed over by its note" => 27, _ => 2 };
         for (var i = 0; i < plain; i++)
         {
             body.Add(NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership."));
         }
 
         body.Insert(0, NoteLetters.Referring("Your membership renews in April.", 1));
-        body.Insert(Math.Min(body.Count, kind == "notes on two pages" ? 32 : body.Count), NoteLetters.Referring("The late charge is ten pounds.", 2));
+        if (kind.Contains("table", StringComparison.Ordinal))
+        {
+            body.Insert(kind == "a note in a table" ? 1 : body.Count, NoteLetters.FeesTable(2));
+        }
+
+        body.Insert(Math.Min(body.Count, kind == "notes on two pages" ? 32 : body.Count), NoteLetters.Referring("The late charge is ten pounds.", kind.Contains("table", StringComparison.Ordinal) ? 3 : 2));
         if (kind == "a note pushing its line over")
         {
             body.Add(NoteLetters.Referring("And a third note, at the foot of the page.", 3));

@@ -32,6 +32,13 @@ internal static class WordProbes
         {
             yield return (probe.Name, Rendered(probe.Template));
         }
+
+        // A table row whose footnote does not fit at the foot of the page, which LibreOffice moves leaving a gap above it.
+        var body = new List<string> { NoteLetters.Referring("Your membership renews in April.", 1) };
+        body.AddRange(Enumerable.Range(0, 27).Select(i => NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership.")));
+        body.Add(NoteLetters.FeesTable(2));
+        body.Add(NoteLetters.Referring("The late charge is ten pounds.", 3));
+        yield return ("probe-table-footnote", Rendered(NoteLetters.Letter(body, "Membership runs from April to March.", "Charged on fees paid after the end of April.", "A third note.")));
     }
 
     private static IEnumerable<(string Name, MemoryStream Template)> Probes()
