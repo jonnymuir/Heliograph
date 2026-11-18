@@ -52,6 +52,16 @@ internal static class FontLibrary
         return (face.Ascender * scale, face.WinDescent * scale, gap * scale);
     }
 
+    // Where a character the run's font lacks is looked for next, in this order.
+    private static readonly string[] Fallbacks = ["Liberation Sans", "Liberation Serif", "Liberation Mono", "Carlito", "Caladea"];
+
+    /// <summary>
+    /// The style that draws a character: the run's own when its font has it, else the same style in the first built-in font
+    /// that does; null when none does.
+    /// </summary>
+    public static RunStyle? Covering(RunStyle style, int character) =>
+        Face(style).Has(character) ? style : Fallbacks.Select(font => style with { Font = font }).FirstOrDefault(s => Face(s).Has(character));
+
     /// <summary>Whether a font named in a document has a built-in look-alike, rather than falling back to Liberation Sans.</summary>
     public static bool HasLookAlike(string font) => font.Length == 0 || Known(font) is not null;
 

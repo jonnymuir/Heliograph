@@ -217,6 +217,10 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
   Any other font, Aptos (Word's default since 2024) included, is drawn in Liberation Sans for now,
   and is a warning at compile (`HG4013`).
 - **Deterministic:** the same letter always gives the same bytes.
+- **Characters:** one the letter's font lacks is drawn from another built-in font that has it.
+  One none has (Chinese, Arabic, an emoji) is refused in a template (`HG4015`); in a recipient's
+  data it makes that letter's conversion throw `PdfConversionException`, whose message does not
+  quote it. Send that letter another way, or use `Heliograph.Pdf.LibreOffice` for it.
 - **Limits:** a letter past `HeliographPdfOptions.MaxPages` (500) is refused, and a cancelled
   token stops the conversion.
 - **Checked against LibreOffice:** its benchmark letters are laid out as LibreOffice lays them

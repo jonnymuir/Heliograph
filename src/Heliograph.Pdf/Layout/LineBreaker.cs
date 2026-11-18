@@ -111,7 +111,7 @@ internal static class LineBreaker
                 }
             }
 
-            if (piece.Picture is not null)
+            if (piece.Picture is not null || piece.Segments is not null)
             {
                 Put(piece);
                 return;
@@ -277,7 +277,7 @@ internal static class LineBreaker
 
             foreach (var chunk in space ? [text[i..j]] : BreakableParts(text[i..j]))
             {
-                pieces.Add(new Piece(chunk, style, TextLook.Width(chunk, style), space ? PieceKind.Space : PieceKind.Word));
+                pieces.Add(Segments.Piece(chunk, style, space ? PieceKind.Space : PieceKind.Word));
             }
 
             i = j;

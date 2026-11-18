@@ -92,6 +92,7 @@ public static class DiagnosticCodes
     public const string PdfCannotLayOutEvenPages = "HG4012";
     public const string PdfFontDrawnInLookAlike = "HG4013";
     public const string PdfCannotDrawListLabel = "HG4014";
+    public const string PdfCannotDrawCharacter = "HG4015";
 }
 
 internal static class DiagnosticLists
