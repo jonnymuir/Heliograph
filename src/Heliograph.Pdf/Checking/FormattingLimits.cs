@@ -29,31 +29,22 @@ internal static class FormattingLimits
             "w" or "position" => Scaled(e),
             "em" when Val(e) is not (null or "none") => "emphasis marks",
             "fitText" => "text fitted to a set width",
-            "pBdr" when e.Ancestors(W + "tc").Any() || e.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr") => "a border round a paragraph in a table, header or footer",
-            "pBdr" when e.Element(W + "bar") is not null => "a bar beside a paragraph",
+            "pBdr" => FrameLimits.Border(e),
             "spacing" when Auto(e, "beforeAutospacing") || Auto(e, "afterAutospacing") => "spacing set to automatic, as in text pasted from a web page",
             _ => null,
         };
 
     private static bool Auto(XElement spacing, string attribute) => (string?)spacing.Attribute(W + attribute) is "1" or "true" or "on";
 
-    // Clear or solid shading behind a run is drawn; patterned shading, or shading behind a paragraph or cell, is not.
+    // Clear or solid shading behind a run or a cell is drawn; patterned shading is not.
     private static string? Shading(XElement shd)
     {
-        if (shd.Parent?.Name == W + "rPr")
+        if (shd.Parent?.Name == W + "rPr" || shd.Parent?.Name == W + "tcPr")
         {
             return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
         }
 
-        // A cell's shading is drawn; a paragraph's, or a whole table's, is not yet.
-        if (shd.Parent?.Name == W + "tcPr")
-        {
-            return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
-        }
-
-        // A paragraph's shading is drawn in the body; in a table, header or footer, or behind a whole table, it is not yet.
-        var inBody = shd.Parent?.Name == W + "pPr" && !shd.Ancestors(W + "tc").Any() && !shd.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr");
-        return inBody || (string?)shd.Attribute(W + "fill") is not { } fill || fill is "auto" or "FFFFFF" or "ffffff" ? null : "shading behind a paragraph in a table, header or footer, or behind a whole table";
+        return FrameLimits.Shading(shd);
     }
 
     // Characters scaled, or raised or lowered by a set amount, in a run.

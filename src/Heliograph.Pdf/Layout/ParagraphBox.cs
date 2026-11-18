@@ -46,15 +46,62 @@ internal sealed class ParagraphBox
     public static ParagraphBox? Of(Paragraph p, PageSet pages, ParagraphFrame? above, Block? next) =>
         p.Style.Frame is not { } frame ? null : new ParagraphBox(frame, pages, p, above == frame, next is Paragraph n && n.Style.Frame == frame);
 
+    /// <summary>
+    /// Opens the box round the paragraph's space before: joined to the paragraph above, through that space; else after it.
+    /// Then moves past the box's top border.
+    /// </summary>
+    public void Open(double before)
+    {
+        if (_joinedAbove)
+        {
+            Start();
+        }
+
+        _pages.Y += before;
+        if (!_joinedAbove)
+        {
+            Start();
+        }
+
+        _pages.Y += Above;
+    }
+
+    /// <summary>Ends this page's part of the box, and starts the next part on a new page.</summary>
+    public void Break()
+    {
+        End(last: false);
+        _pages.NewPage();
+        Start();
+    }
+
+    /// <summary>
+    /// Closes the box after the paragraph's last line, with its bottom border, and moves past the space after: the box goes
+    /// through that space when it carries on into the paragraph below.
+    /// </summary>
+    public void Close(double after)
+    {
+        _pages.Y += Below;
+        if (!JoinedBelow)
+        {
+            End(last: true);
+        }
+
+        _pages.Y = Math.Min(_pages.Y + after, _pages.BodyBottom);
+        if (JoinedBelow)
+        {
+            End(last: true);
+        }
+    }
+
     /// <summary>Starts a part of the box here, at the page's current position.</summary>
-    public void Start()
+    private void Start()
     {
         _top = _pages.Y;
         _behind = _pages.Current.Ops.Count;
     }
 
-    /// <summary>Draws the part of the box from where it started to the page's current position.</summary>
-    public void End(bool last)
+    // Draws the part of the box from where it started to the page's current position.
+    private void End(bool last)
     {
         var (left, right) = (_text.Left - Space(_frame.Left), _text.Right + Space(_frame.Right));
         var (top, bottom, ops) = (_top, _pages.Y, _pages.Current.Ops);
@@ -71,7 +118,7 @@ internal sealed class ParagraphBox
             ops.Add(new LineOp(left, y, right, y, over.Width));
         }
 
-        if (last && !JoinedBelow && _frame.Bottom is { } under)
+        if (Closes(last) is { } under)
         {
             ops.Add(new LineOp(left, bottom - (under.Width / 2), right, bottom - (under.Width / 2), under.Width));
         }
@@ -80,6 +127,9 @@ internal sealed class ParagraphBox
         Side(_frame.Right, right, top, bottom);
         _first = false;
     }
+
+    // The bottom border, drawn at the end of the box's last part.
+    private BorderLine? Closes(bool last) => last && !JoinedBelow ? _frame.Bottom : null;
 
     private static double Space(BorderLine? b) => b is null ? 0 : b.Space + (b.Width / 2);
 

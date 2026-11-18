@@ -56,18 +56,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         }
 
         var box = ParagraphBox.Of(p, pages, _frame, next);
-        if (box?.JoinedAbove == true)
-        {
-            box.Start();
-        }
-
-        pages.Y += before;
-        if (box?.JoinedAbove == false)
-        {
-            box.Start();
-        }
-
-        pages.Y += box?.Above ?? 0;
+        Open(box, before);
         FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         var placed = 0;
         while (placed < lines.Count)
@@ -83,28 +72,46 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
             placed += fit;
             if (placed < lines.Count)
             {
-                box?.End(last: false);
-                pages.NewPage();
-                box?.Start();
+                NextPage(box);
             }
         }
 
         Finish(p, box);
     }
 
-    // The paragraph's space after, and its box drawn: through that space when the box carries on into the paragraph below.
-    private void Finish(Paragraph p, ParagraphBox? box)
+    // A new page for the rest of the paragraph, with the next part of its box if it has one.
+    private void NextPage(ParagraphBox? box)
     {
-        pages.Y += box?.Below ?? 0;
-        if (box is { JoinedBelow: false })
+        if (box is null)
         {
-            box.End(last: true);
+            pages.NewPage();
+            return;
         }
 
-        pages.Y = Math.Min(pages.Y + p.Style.Spacing.After, pages.BodyBottom);
-        if (box is { JoinedBelow: true })
+        box.Break();
+    }
+
+    private void Open(ParagraphBox? box, double before)
+    {
+        if (box is null)
         {
-            box.End(last: true);
+            pages.Y += before;
+            return;
+        }
+
+        box.Open(before);
+    }
+
+    // The paragraph's space after, and its box drawn.
+    private void Finish(Paragraph p, ParagraphBox? box)
+    {
+        if (box is null)
+        {
+            pages.Y = Math.Min(pages.Y + p.Style.Spacing.After, pages.BodyBottom);
+        }
+        else
+        {
+            box.Close(p.Style.Spacing.After);
         }
 
         _frame = p.Style.Frame;
