@@ -99,7 +99,7 @@ internal static class WordProbes
             .Part("word/theme/theme1.xml", TestTheme.Xml(font, font), "application/vnd.openxmlformats-officedocument.theme+xml").Relationship($"{Rel}/theme", "theme/theme1.xml", external: false);
         if (lists)
         {
-            docx.Part("word/numbering.xml", $"<w:numbering {W}>{RandomLists.Definitions}</w:numbering>", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
+            docx.Part("word/numbering.xml", $"<w:numbering {W}>{RandomLists.Definitions}{RandomLists.Lists}</w:numbering>", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
                 .Relationship($"{Rel}/numbering", "numbering.xml", external: false);
         }
 
