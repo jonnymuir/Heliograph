@@ -23,12 +23,13 @@ public class MeasuringNetTests
     private static readonly int Seeds = int.TryParse(Environment.GetEnvironmentVariable("HELIOGRAPH_NET_SEEDS"), CultureInfo.InvariantCulture, out var n) ? n : 30;
 
     // Seed: the first line, counting from 1, that still differs from LibreOffice. A seed not listed matches throughout.
-    // LibreOffice versions differ a little, so each number is the lower of the CI runner's (Ubuntu) and a Mac's.
+    // LibreOffice versions differ a little, so each number is the lower of the CI runner's (Ubuntu) and a Mac's. Odd seeds
+    // became new-Word-document spacing on 18 November 2026, so seed 21's document changed and its number was set again.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
-        [1] = 128, [2] = 54, [3] = 59, [4] = 39, [5] = 17, [6] = 74, [8] = 10, [9] = 46, [10] = 24, [11] = 44, [12] = 161, [13] = 97,
-        [14] = 39, [15] = 531, [16] = 48, [17] = 48, [18] = 32, [19] = 1022, [20] = 539, [21] = 186, [22] = 43, [23] = 41, [24] = 28,
-        [25] = 86, [26] = 39, [27] = 37, [28] = 27, [29] = 47, [30] = 145,
+        [1] = 128, [2] = 54, [3] = 59, [4] = 39, [5] = 17, [6] = 74, [8] = 10, [9] = 46, [10] = 24, [11] = 44, [12] = 161, [13] = 100,
+        [14] = 39, [15] = 531, [16] = 48, [17] = 48, [18] = 32, [19] = 1022, [20] = 544, [21] = 45, [22] = 43, [23] = 41, [24] = 28,
+        [25] = 86, [26] = 39, [28] = 27, [29] = 47, [30] = 145,
     };
     private static readonly FieldDictionary NoFields = new([]);
 

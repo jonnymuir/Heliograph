@@ -34,6 +34,9 @@ internal sealed class RandomLayout
     public RandomLayout(int seed)
     {
         _random = new Random(seed);
+        // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
+        // drawn, so every other choice for a seed stays as it was.
+        LargerSpacing = seed % 2 == 1;
         Font = Fonts[_random.Next(Fonts.Length)];
         Size = new[] { 20, 22, 24 }[_random.Next(3)];
         TitlePage = _random.Next(3) == 0;
@@ -57,6 +60,8 @@ internal sealed class RandomLayout
     private int Height { get; }
     private int Margin { get; }
     private int DefaultTab { get; }
+
+    private bool LargerSpacing { get; }
     private int ContentWidth => Width - (2 * Margin);
 
     public byte[] Docx()
@@ -254,9 +259,10 @@ internal sealed class RandomLayout
     }
 
     // The compatibility settings LibreOffice and Microsoft 365 write (see the benchmark letters): space between paragraphs
-    // is the sum of one's space after and the next one's space before.
+    // is the sum of one's space after and the next one's space before. A new Word document leaves out
+    // doNotUseHTMLParagraphAutoSpacing, and then it is the larger of the two (tests/Heliograph.Tests/Fixtures/Word).
     private string SettingsXml() => Invariant($"<w:settings xmlns:w=\"{W}\"><w:defaultTabStop w:val=\"{DefaultTab}\"/><w:compat><w:adjustLineHeightInTable/>")
-        + "<w:doNotUseHTMLParagraphAutoSpacing/><w:compatSetting w:name=\"compatibilityMode\" w:uri=\"http://schemas.microsoft.com/office/word\" w:val=\"12\"/></w:compat></w:settings>";
+        + (LargerSpacing ? "" : "<w:doNotUseHTMLParagraphAutoSpacing/>") + "<w:compatSetting w:name=\"compatibilityMode\" w:uri=\"http://schemas.microsoft.com/office/word\" w:val=\"12\"/></w:compat></w:settings>";
 
     private static string Story(string root, string paragraphs) => $"<w:{root} xmlns:w=\"{W}\">{paragraphs}</w:{root}>";
 

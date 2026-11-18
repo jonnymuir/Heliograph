@@ -27,7 +27,7 @@ internal static class PageLayout
     }
 
     private static double Height(IReadOnlyList<Block> blocks, PageGeometry g) =>
-        blocks.OfType<Paragraph>().Sum(p => p.Style.Spacing.Before + LineBreaker.Break(p, g.ContentWidth, _ => "9").Sum(l => l.Height) + p.Style.Spacing.After);
+        blocks.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, _ => "9").Sum(l => l.Height) + p.Style.Spacing.After);
 
     private static void Decorate(LaidOutPage page, int index, int count, Section section)
     {
@@ -48,7 +48,7 @@ internal static class PageLayout
             y = Story(page, p, y, g, Field);
         }
 
-        y = g.Height - g.FooterDistance - footer.OfType<Paragraph>().Sum(p => p.Style.Spacing.Before + LineBreaker.Break(p, g.ContentWidth, Field).Sum(l => l.Height) + p.Style.Spacing.After);
+        y = g.Height - g.FooterDistance - footer.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, Field).Sum(l => l.Height) + p.Style.Spacing.After);
         foreach (var p in footer.OfType<Paragraph>())
         {
             y = Story(page, p, y, g, Field);
@@ -57,7 +57,7 @@ internal static class PageLayout
 
     private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<string, string> field)
     {
-        y += p.Style.Spacing.Before;
+        y += p.Style.SpaceAbove;
         foreach (var line in LineBreaker.Break(p, g.ContentWidth, field))
         {
             LinePlacer.Place(page, line, g.Left, y, Owner.Artifact);

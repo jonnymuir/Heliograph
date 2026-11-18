@@ -52,7 +52,7 @@ internal sealed class RowLayout
         var y = 0.0;
         foreach (var p in cell.Blocks.OfType<Paragraph>())
         {
-            y += p.Style.Spacing.Before;
+            y += p.Style.SpaceAbove;
             var owner = cellNode is null ? Owner.Artifact : new Owner(cellNode.Add("P"), null);
             foreach (var line in LineBreaker.Break(p, text, _ => ""))
             {

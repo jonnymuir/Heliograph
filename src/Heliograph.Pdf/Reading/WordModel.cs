@@ -24,10 +24,19 @@ internal sealed record Indent(double Left, double Right, double FirstLine);
 /// <summary>How a paragraph may be split across pages.</summary>
 internal sealed record Flow(bool KeepNext, bool KeepLines, bool WidowControl, bool PageBreakBefore);
 
-/// <summary>How a paragraph is set. DefaultTab is the document's interval between tab stops where none is set.</summary>
+/// <summary>
+/// How a paragraph is set. DefaultTab is the document's interval between tab stops where none is set. Overlap is how much
+/// of its space before is shared with the space after the paragraph above it: in a document without
+/// doNotUseHTMLParagraphAutoSpacing, Word and LibreOffice put the larger of the two between paragraphs, not their sum.
+/// </summary>
 internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<double> Tabs)
 {
     public double DefaultTab { get; init; } = 36;
+
+    public double Overlap { get; init; }
+
+    /// <summary>The space before this paragraph when it follows another paragraph.</summary>
+    public double SpaceAbove => Spacing.Before - Overlap;
 }
 
 internal abstract record Block;
