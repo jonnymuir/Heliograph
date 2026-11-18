@@ -33,9 +33,9 @@ internal static class MergedRows
         {
             for (var c = 0; c < group[k].Count; c++)
             {
-                if (group[k].Merge(c) == "restart")
+                if (group[k].Source[c].VMerge == "restart")
                 {
-                    var last = Last(group, k, group[k].Column(c));
+                    var last = Last(group, k, group[k].Columns[c]);
                     var sum = heights[k..(last + 1)].Sum();
                     heights[last] += Math.Max(0, group[k].Natural(c) - sum);
                 }
@@ -46,13 +46,17 @@ internal static class MergedRows
     }
 
     /// <summary>How tall a merged cell is: the rows it reaches down, added up.</summary>
-    public static double Down(List<RowLayout> group, double[] heights, int k, int c) => heights[k..(Last(group, k, group[k].Column(c)) + 1)].Sum();
+    public static double Down(List<RowLayout> group, double[] heights, int k, int c) => heights[k..(Last(group, k, group[k].Columns[c]) + 1)].Sum();
+
+    // Whether a row's cell in this grid column is merged into the one above.
+    private static bool Continues(RowLayout row, int column) =>
+        row.Source.Where((cell, c) => row.Columns[c] == column).Any(cell => cell.VMerge == "continue");
 
     // The last row below this one whose cell in the same grid column continues the merge.
     private static int Last(List<RowLayout> group, int k, int column)
     {
         var last = k;
-        while (last + 1 < group.Count && Enumerable.Range(0, group[last + 1].Count).Any(c => group[last + 1].Column(c) == column && group[last + 1].Merge(c) == "continue"))
+        while (last + 1 < group.Count && Continues(group[last + 1], column))
         {
             last++;
         }

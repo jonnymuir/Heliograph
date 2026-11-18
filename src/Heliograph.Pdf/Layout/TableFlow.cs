@@ -64,7 +64,7 @@ internal sealed class TableFlow(PageSet pages)
     private void PlaceMerged(Table t, List<RowLayout> group, List<Row> headings, Row first)
     {
         var heights = MergedRows.Heights(group);
-        if (heights.Sum() > pages.Room + 0.01 && pages.HasContent && heights.Sum() <= pages.BodyBottom - pages.BodyTop)
+        if (Moves(heights.Sum()))
         {
             NewPage(t, headings, first);
         }
@@ -74,9 +74,9 @@ internal sealed class TableFlow(PageSet pages)
             var cells = group[k];
             for (var c = 0; c < cells.Count; c++)
             {
-                if (cells.Merge(c) != "continue")
+                if (cells.Source[c].VMerge != "continue")
                 {
-                    var height = cells.Merge(c) == "restart" ? MergedRows.Down(group, heights, k, c) : heights[k];
+                    var height = cells.Source[c].VMerge == "restart" ? MergedRows.Down(group, heights, k, c) : heights[k];
                     DrawCell(cells, c, 0, cells[c].Lines.Count, height, cells.Offset(c, height));
                 }
             }
@@ -85,6 +85,9 @@ internal sealed class TableFlow(PageSet pages)
             pages.HasContent = true;
         }
     }
+
+    // Whether rows kept together go to the next page: they do not fit here, but would on a page of their own.
+    private bool Moves(double height) => pages.HasContent && height > pages.Room + 0.01 && height <= pages.BodyBottom - pages.BodyTop;
 
     // A heading row never breaks; a row marked not to break may still have to, once it has started on a page of its own.
     private static bool Breakable(Row row, int[] from) => !row.Header && !(row.CantSplit && from.All(f => f == 0));
@@ -126,7 +129,7 @@ internal sealed class TableFlow(PageSet pages)
     {
         var cell = cells[c];
         var (left, offset) = (pages.Geometry.Left + cell.Left, (from < cell.Lines.Count ? cell.Lines[from].Top : 0) - down);
-        if (cells.Background(c) is { } shading)
+        if (cells.Source[c].Background is { } shading)
         {
             pages.Current.Ops.Add(new FillOp(left, pages.Y, cell.Width, height, shading));
         }

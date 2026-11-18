@@ -108,16 +108,13 @@ internal sealed class RowLayout
 
     /// <summary>The height the whole row needs for its cells that are not merged down a column.</summary>
     public double OwnNeed() =>
-        Settle(Above + Enumerable.Range(0, _cells.Count).Where(c => Merge(c) == "").Select(c => _cells[c].Height).DefaultIfEmpty(0).Max() + _below, whole: true);
+        Settle(Above + Enumerable.Range(0, _cells.Count).Where(c => _row.Cells[c].VMerge == "").Select(c => _cells[c].Height).DefaultIfEmpty(0).Max() + _below, whole: true);
 
-    /// <summary>How a cell is merged down its column: "restart", "continue", or "".</summary>
-    public string Merge(int c) => _row.Cells[c].VMerge;
+    /// <summary>The row's cells as read: how each is merged down its column, its shading.</summary>
+    public IReadOnlyList<Cell> Source => _row.Cells;
 
-    /// <summary>The grid column a cell starts in.</summary>
-    public int Column(int c) => _row.Cells.Take(c).Sum(cell => cell.Span);
-
-    /// <summary>The cell's shading, if any.</summary>
-    public string? Background(int c) => _row.Cells[c].Background;
+    /// <summary>The grid column each cell starts in.</summary>
+    public IReadOnlyList<int> Columns => [.. _row.Cells.Select((_, c) => _row.Cells.Take(c).Sum(cell => cell.Span))];
 
     // A whole row is exactly the height it sets, or at least that height below its top border, as LibreOffice lays it out.
     private double Settle(double need, bool whole) =>

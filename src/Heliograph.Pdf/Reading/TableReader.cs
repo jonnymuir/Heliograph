@@ -55,22 +55,7 @@ internal static class TableReader
         var borders = new CellBorders(
             Side("top", "insideH", edges.Top), Side("left", "insideV", edges.Left), Side("bottom", "insideH", edges.Bottom), Side("right", "insideV", edges.Right));
         var span = (int)Number(Val(tcPr?.Element(W + "gridSpan")) ?? "1");
-        var merge = tcPr?.Element(W + "vMerge");
-        return new Cell(blocks(tc), span, borders)
-        {
-            VAlign = Val(tcPr?.Element(W + "vAlign")) switch { "center" => "center", "bottom" => "bottom", _ => "top" },
-            VMerge = merge is null ? "" : Val(merge) == "restart" ? "restart" : "continue",
-            Background = Shading(tcPr?.Element(W + "shd")),
-        };
-    }
-
-    // Clear shading is its fill; solid shading is its pattern colour, black when automatic.
-    private static string? Shading(XElement? shd)
-    {
-        var colour = Val(shd) == "solid" ? (string?)shd!.Attribute(W + "color") ?? "000000" : (string?)shd?.Attribute(W + "fill");
-        return colour is { Length: 6 } && colour != "auto" && int.TryParse(colour, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out _)
-            ? colour.ToUpperInvariant()
-            : null;
+        return CellProperties.Read(new Cell(blocks(tc), span, borders), tcPr);
     }
 
     // A border's size is in eighths of a point.

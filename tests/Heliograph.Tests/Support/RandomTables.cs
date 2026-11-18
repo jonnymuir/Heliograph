@@ -39,19 +39,30 @@ internal static class RandomTables
         var run = 0;
         for (var r = 1; r < rows.Length; r++)
         {
-            var plain = rows[r].StartsWith("<w:tr>", StringComparison.Ordinal) && !First(rows[r]).Contains("gridSpan", StringComparison.Ordinal);
-            run = !plain ? 0 : run > 0 && random.Next(3) != 0 ? run + 1 : random.Next(4) == 0 ? 1 : 0;
-            if (run == 1)
+            run = Next(run, Plain(rows[r]), random);
+            rows[r] = run switch
             {
-                rows[r] = Mark(rows[r], "<w:vMerge w:val=\"restart\"/>", empty: false);
-            }
-            else if (run > 1)
-            {
-                rows[r] = Mark(rows[r], "<w:vMerge/>", empty: true);
-            }
+                1 => Mark(rows[r], "<w:vMerge w:val=\"restart\"/>", empty: false),
+                > 1 => Mark(rows[r], "<w:vMerge/>", empty: true),
+                _ => rows[r],
+            };
         }
 
         return string.Concat(rows);
+    }
+
+    // A row whose first cell spans one column only.
+    private static bool Plain(string row) => row.StartsWith("<w:tr>", StringComparison.Ordinal) && !First(row).Contains("gridSpan", StringComparison.Ordinal);
+
+    // How far into a merge a row is: 0 for none, 1 where one starts, more as it carries on.
+    private static int Next(int run, bool plain, Random random)
+    {
+        if (!plain)
+        {
+            return 0;
+        }
+
+        return run > 0 && random.Next(3) != 0 ? run + 1 : random.Next(4) == 0 ? 1 : 0;
     }
 
     private static string First(string row) => row[..(row.IndexOf("</w:tc>", StringComparison.Ordinal) + 7)];
