@@ -49,19 +49,62 @@ internal sealed class WordReader : IDisposable
     private WordDocument Document()
     {
         var body = Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
-        var sect = body.Element(W + "sectPr") ?? new XElement(W + "sectPr");
-        var titlePage = On(sect.Element(W + "titlePg"));
-        var stories = new Stories(
-            Story(sect, "header", "default") ?? [], Story(sect, "footer", "default") ?? [],
-            titlePage ? Story(sect, "header", "first") ?? [] : null, titlePage ? Story(sect, "footer", "first") ?? [] : null);
+        var sections = new List<Section>();
+        Stories? before = null;
+        foreach (var (sect, elements) in SectionParts(body))
+        {
+            var stories = StoriesOf(sect, before);
+            sections.Add(new Section(Geometry(sect), stories) { Numbers = Numbers(sect), Body = Blocks(elements) });
+            before = stories;
+        }
+
         var title = _package.Part("docProps/core.xml")?.Root?.Element(Dc + "title")?.Value ?? "";
-        var blocks = Blocks(body);
-        return new WordDocument(title, Styles.Language, new Section(Geometry(sect), stories), blocks)
+        return new WordDocument(title, Styles.Language, sections)
         {
             Notes = Notes(),
             NoteSeparator = _paragraphs.Read(new XElement(W + "p", new XElement(W + "pPr", new XElement(W + "spacing",
                 new XAttribute(W + "before", 0), new XAttribute(W + "after", 0), new XAttribute(W + "line", 240), new XAttribute(W + "lineRule", "auto"))))),
         };
+    }
+
+    // The body split at each section break: a paragraph whose properties hold a section's settings ends that section, and
+    // the body's own settings are the last section's.
+    private static IEnumerable<(XElement Settings, List<XElement> Elements)> SectionParts(XElement body)
+    {
+        var elements = new List<XElement>();
+        foreach (var e in body.Elements().Where(e => e.Name != W + "sectPr"))
+        {
+            elements.Add(e);
+            if (e.Element(W + "pPr")?.Element(W + "sectPr") is { } settings)
+            {
+                yield return (settings, elements);
+                elements = [];
+            }
+        }
+
+        yield return (body.Element(W + "sectPr") ?? new XElement(W + "sectPr"), elements);
+    }
+
+    // A section's headers and footers: each it does not set is the section before's, as in Word. The first page has its
+    // own only when the section says so.
+    private Stories StoriesOf(XElement sect, Stories? before)
+    {
+        var titlePage = On(sect.Element(W + "titlePg"));
+        var header = Story(sect, "header", "default") ?? before?.Header ?? [];
+        var footer = Story(sect, "footer", "default") ?? before?.Footer ?? [];
+        var firstHeader = Story(sect, "header", "first") ?? before?.InheritedFirstHeader ?? [];
+        var firstFooter = Story(sect, "footer", "first") ?? before?.InheritedFirstFooter ?? [];
+        return new Stories(header, footer, titlePage ? firstHeader : null, titlePage ? firstFooter : null)
+        {
+            InheritedFirstHeader = firstHeader,
+            InheritedFirstFooter = firstFooter,
+        };
+    }
+
+    private static PageNumbers Numbers(XElement sect)
+    {
+        var type = sect.Element(W + "pgNumType");
+        return new PageNumbers((int?)type?.Attribute(W + "start"), (string?)type?.Attribute(W + "fmt") ?? "decimal");
     }
 
     // The paragraphs of each footnote the body refers to, each opening with its number.
@@ -88,10 +131,12 @@ internal sealed class WordReader : IDisposable
         return notes;
     }
 
-    private IReadOnlyList<Block> Blocks(XElement container)
+    private IReadOnlyList<Block> Blocks(XElement container) => Blocks(container.Elements());
+
+    private List<Block> Blocks(IEnumerable<XElement> elements)
     {
         var blocks = new List<Block>();
-        foreach (var e in container.Elements())
+        foreach (var e in elements)
         {
             if (e.Name == W + "p")
             {

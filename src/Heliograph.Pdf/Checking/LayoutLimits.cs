@@ -31,8 +31,8 @@ internal static class LayoutLimits
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
             $"Put the note's text in the body of the letter, or make it an ordinary footnote there, {Instead}"),
-        new(DiagnosticCodes.PdfCannotLayOutSections, Sections, _ => $"This document has more than one section. {Route} lays out one section only, so pages after a section break would take the first section's page and margins.",
-            $"Remove the section break, keeping one page size and set of margins for the whole letter, {Instead}"),
+        new(DiagnosticCodes.PdfCannotLayOutSections, SectionLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet.",
+            $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
         new(DiagnosticCodes.PdfCannotWorkOutField, Fields, what => $"This document has a {what} field. {Route} works out page numbers and page counts only, so this field would print nothing.",
@@ -110,11 +110,6 @@ internal static class LayoutLimits
         return root.Descendants().Where(e => (e.Name == A + "graphicData" && !((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
             || e.Name == Mc + "AlternateContent" || (e.Name.Namespace == V && e.Name.LocalName is "shape" or "rect" or "roundrect" or "oval" or "line" && !e.Descendants(V + "imagedata").Any()))
             .Select(e => (e, "a text box, shape or chart"));
-    }
-
-    private static IEnumerable<(XElement, string)> Sections(XElement root)
-    {
-        return root.Descendants(W + "sectPr").Where(s => s.Parent?.Name == W + "pPr").Select(s => (s, "a section break"));
     }
 
     private static IEnumerable<(XElement, string)> Columns(XElement root)
