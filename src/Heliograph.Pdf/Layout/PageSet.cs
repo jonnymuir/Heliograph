@@ -33,6 +33,9 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     public IReadOnlyList<LaidOutPage> Pages => _pages;
     public LaidOutPage Current { get; private set; } = null!;
     public double Y { get; set; }
+
+    /// <summary>The foot of the text laid out last: its last line's, less any line spacing over single, or a table's.</summary>
+    public double TextFoot { get; set; }
     public bool HasContent { get; set; }
     public double Room => BodyBottom - Y;
 
@@ -76,7 +79,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), Geometry);
         (BodyTop, _areaBottom) = (area.Top, area.Bottom);
         _sectionStarts = false;
-        Y = BodyTop;
+        Y = TextFoot = BodyTop;
         Reserved = 0;
         HasContent = false;
     }

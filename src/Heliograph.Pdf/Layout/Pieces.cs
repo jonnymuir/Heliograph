@@ -23,4 +23,7 @@ internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKin
 
     /// <summary>For a footnote's mark in the text, the note it refers to.</summary>
     public string? Note { get; init; }
+
+    /// <summary>For an endnote's mark in the text, the endnote it refers to.</summary>
+    public string? Endnote { get; init; }
 }

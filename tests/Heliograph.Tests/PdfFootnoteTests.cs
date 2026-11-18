@@ -55,7 +55,6 @@ public class PdfFootnoteTests
     }
 
     [Theory]
-    [InlineData("<w:footnoteReference w:id=\"1\"/>", "<w:endnoteReference w:id=\"1\"/>", "an endnote")]
     [InlineData("<w:footnoteReference w:id=\"1\"/>", "<w:footnoteReference w:customMarkFollows=\"1\" w:id=\"1\"/><w:t>*</w:t>", "a mark of its own")]
     public void A_note_it_cannot_lay_out_is_refused_at_compile(string from, string to, string named)
     {
