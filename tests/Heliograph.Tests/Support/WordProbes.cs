@@ -7,7 +7,7 @@ namespace Heliograph.Tests.Support;
 /// The documents Word is asked to lay out, as rendered letters: the benchmark letters, a few of the measuring net's
 /// documents, and small probes, one for each rule the converter took from LibreOffice where Word may differ (Symbol
 /// bullets, exact lines in Calibri, superscript, a tab at the line's end, space between paragraphs of one style, row
-/// heights, merged cells).
+/// heights, merged cells, where each font's line gap goes).
 /// </summary>
 internal static class WordProbes
 {
@@ -51,6 +51,16 @@ internal static class WordProbes
             Plain(Words), Styled("ListParagraph", "Entry to every meeting"), Styled("ListParagraph", "The quarterly newsletter"),
             Spaced("A paragraph that says to leave out space, after one that does not.", "w:before=\"180\" w:after=\"80\"", contextual: true),
             Spaced("One that does not, after one that does.", "w:before=\"180\" w:after=\"240\""), Plain(Words))));
+        // Each pair of paragraphs a case of the rule: one that says to leave out space, then one that does not, and so on.
+        var pairs = Body(Plain(Words), Spaced("Leaves out space, with 9 after.", "w:before=\"0\" w:after=\"180\"", contextual: true),
+            Spaced("Does not, with 9 before and 6 after.", "w:before=\"180\" w:after=\"120\""), Spaced("Leaves out space, with 4 before.", "w:before=\"80\" w:after=\"0\"", contextual: true),
+            Spaced("Leaves out space, with 10 before and 5 after.", "w:before=\"200\" w:after=\"100\"", contextual: true), Spaced("Does not, with 3 before.", "w:before=\"60\" w:after=\"0\""),
+            Plain(Words));
+        yield return ("probe-contextual-pairs", Letter("Arial", lists: false, pairs));
+        yield return ("probe-contextual-sum", Letter("Arial", lists: false, pairs, sum: true));
+        // Each font set in an exact line, where Word and the converter agree, then in a single line, to show where its gap goes.
+        yield return ("probe-gaps", Letter("Arial", lists: false, Body(new[] { ("Calibri", 22), ("Calibri", 40), ("Arial", 22), ("Times New Roman", 22), ("Cambria", 22) }
+            .SelectMany(f => new[] { InFont(f.Item1, f.Item2, "w:line=\"480\" w:lineRule=\"exact\""), InFont(f.Item1, f.Item2, "w:line=\"240\" w:lineRule=\"auto\"") }).ToArray())));
         yield return ("probe-tables", Letter("Arial", lists: false, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March.")), tables: true));
     }
 
@@ -65,6 +75,12 @@ internal static class WordProbes
 
     private static string Spaced(string text, string spacing, bool contextual = false) =>
         $"<w:p><w:pPr><w:spacing {spacing}/>{(contextual ? "<w:contextualSpacing/>" : "")}</w:pPr><w:r><w:t>{text}</w:t></w:r></w:p>";
+
+    private static string InFont(string font, int size, string line)
+    {
+        var rPr = $"<w:rPr><w:rFonts w:ascii=\"{font}\" w:hAnsi=\"{font}\"/><w:sz w:val=\"{size}\"/></w:rPr>";
+        return $"<w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\" {line}/>{rPr}</w:pPr><w:r>{rPr}<w:t>{font} at {size / 2} points, a line set to show where it sits.</w:t></w:r></w:p>";
+    }
 
     private static string Styled(string style, string text) => $"<w:p><w:pPr><w:pStyle w:val=\"{style}\"/></w:pPr><w:r><w:t>{text}</w:t></w:r></w:p>";
 
@@ -87,7 +103,7 @@ internal static class WordProbes
 
     // A letter in one font, through the theme as Word writes it, with Word's List Paragraph and, when asked, the
     // measuring net's lists and Word's Table Grid.
-    private static MemoryStream Letter(string font, bool lists, string body, bool tables = false)
+    private static MemoryStream Letter(string font, bool lists, string body, bool tables = false, bool sum = false)
     {
         var styles = $"<w:styles {W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:asciiTheme=\"minorHAnsi\" w:hAnsiTheme=\"minorHAnsi\"/><w:sz w:val=\"22\"/></w:rPr></w:rPrDefault>"
             + "<w:pPrDefault><w:pPr><w:spacing w:after=\"160\" w:line=\"259\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults>"
@@ -97,6 +113,13 @@ internal static class WordProbes
         var docx = new TestDocx()
             .Part("word/styles.xml", styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml").Relationship($"{Rel}/styles", "styles.xml", external: false)
             .Part("word/theme/theme1.xml", TestTheme.Xml(font, font), "application/vnd.openxmlformats-officedocument.theme+xml").Relationship($"{Rel}/theme", "theme/theme1.xml", external: false);
+        if (sum)
+        {
+            // As a document from an older Word saves it: the space between paragraphs is the sum of the two, not the larger.
+            docx.Part("word/settings.xml", $"<w:settings {W}><w:compat><w:doNotUseHTMLParagraphAutoSpacing/></w:compat></w:settings>", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
+                .Relationship($"{Rel}/settings", "settings.xml", external: false);
+        }
+
         if (lists)
         {
             docx.Part("word/numbering.xml", $"<w:numbering {W}>{RandomLists.Definitions}{RandomLists.Lists}</w:numbering>", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")

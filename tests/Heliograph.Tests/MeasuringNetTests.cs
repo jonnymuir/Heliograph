@@ -32,12 +32,13 @@ public class MeasuringNetTests
     // Runs gained formatting the same day, so seeds 7, 9, 13 and 19 (and lists seed 10) were set again once more; and
     // paragraphs began leaving out space between paragraphs of one style, so lists seed 4 was set again. Tables gained
     // styles, row heights, alignment and text at the middle or foot of a cell, so seeds with tables were set again, and
-    // again when they gained cells merged down a column and cell shading.
+    // again when they gained cells merged down a column and cell shading. Space between paragraphs of one style began
+    // following Word, not LibreOffice, so the seeds where the two differ were set again (docs/pdf-engine.md).
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
-        [1] = 241, [2] = 66, [3] = 22, [4] = 165, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44,
-        [12] = 92, [13] = 3, [14] = 39, [15] = 56, [16] = 48, [17] = 38, [18] = 13, [19] = 89, [20] = 201, [21] = 45,
-        [22] = 54, [23] = 99, [24] = 28, [25] = 33, [26] = 17, [27] = 189, [28] = 27, [29] = 52, [30] = 61,
+        [1] = 241, [2] = 35, [3] = 22, [4] = 46, [5] = 25, [6] = 27, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44,
+        [12] = 81, [13] = 3, [14] = 15, [15] = 56, [16] = 48, [17] = 12, [18] = 13, [19] = 12, [20] = 51, [21] = 45,
+        [22] = 54, [23] = 99, [24] = 22, [25] = 33, [26] = 17, [27] = 47, [28] = 8, [29] = 52, [30] = 12,
     };
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
