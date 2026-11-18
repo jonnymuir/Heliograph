@@ -25,8 +25,8 @@ internal static class LayoutLimits
     // Objects and page structure.
     private static Limit[] ThingsOnThePage() =>
     [
-        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} draws pictures set in line with the text only, so its PDFs would be missing it.",
-            $"Set the picture in line with text (Wrap Text > In Line with Text in Word), {Instead}"),
+        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} draws pictures in line with the text, or floating in front of or behind it, only, so its PDFs would be missing it.",
+            $"Set the picture in line with text, or in front of or behind it (Wrap Text in Word), {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, Notes, what => $"This document has {what}. {Route} does not lay out footnotes or endnotes yet.",
@@ -94,11 +94,14 @@ internal static class LayoutLimits
 
     // A picture in line with the text is drawn (PictureLimits checks its file); one that floats, or an old-style VML
     // picture, is not yet.
+    // A picture in line with the text, or floating with no text wrapped round it outside a table, is drawn (PictureLimits
+    // checks its file); one with text wrapped round it, one floating in a table, or an old-style VML picture is not yet.
     private static IEnumerable<(XElement, string)> Pictures(XElement root)
     {
-        return root.Descendants().Where(e => (e.Name == A + "graphicData" && ((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)
-                && e.Ancestors(Wp + "anchor").Any())
-            || e.Name == V + "imagedata").Select(e => (e, "a picture that floats, with text around it or over it"));
+        var floating = root.Descendants(Wp + "anchor").Where(a => a.Descendants(A + "graphicData").Any(g => ((string?)g.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)))
+            .Select(a => (a, What: a.Element(Wp + "wrapNone") is null ? "a picture with text wrapped round it" : a.Ancestors(W + "tbl").Any() ? "a picture that floats in a table" : null))
+            .Where(f => f.What is not null);
+        return floating.Concat(root.Descendants(V + "imagedata").Select(e => (e, (string?)"an old-style picture")))!;
     }
 
     private static IEnumerable<(XElement, string)> Shapes(XElement root)

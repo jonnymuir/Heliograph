@@ -58,6 +58,7 @@ internal static class PageLayout
     private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<string, string> field)
     {
         y += p.Style.SpaceAbove;
+        FloatPlacer.Place(page, p, g, y, null);
         foreach (var line in LineBreaker.Break(p, g.ContentWidth, field))
         {
             LinePlacer.Place(page, line, g.Left, y, Owner.Artifact);

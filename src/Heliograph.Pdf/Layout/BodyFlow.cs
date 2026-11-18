@@ -54,6 +54,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         }
 
         pages.Y += before;
+        FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         var placed = 0;
         while (placed < lines.Count)
         {
