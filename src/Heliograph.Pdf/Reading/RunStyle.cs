@@ -16,6 +16,9 @@ internal sealed record RunStyle(bool Bold, bool Italic, bool Underline, double S
 
     public bool Caps { get; init; }
 
+    /// <summary>Small capitals: lowercase letters drawn as capitals at a smaller size.</summary>
+    public bool SmallCaps { get; init; }
+
     public double CharacterSpacing { get; init; }
 
     public bool Hidden { get; init; }

@@ -38,7 +38,7 @@ public class PdfLimitsTests
         { DiagnosticCodes.PdfCannotLayOutColumns, $"<w:p {W}><w:pPr><w:sectPr><w:cols w:num=\"2\"/></w:sectPr></w:pPr></w:p>", "columns" },
         { DiagnosticCodes.PdfCannotWorkOutField, $"<w:p {W}><w:fldSimple w:instr=\" DATE \\@ &quot;d MMMM yyyy&quot; \"><w:r><w:t>1 June</w:t></w:r></w:fldSimple></w:p>", "DATE field" },
         { DiagnosticCodes.PdfCannotMakeLink, $"<w:p {W}><w:hyperlink w:anchor=\"top\"><w:r><w:t>Go to the top</w:t></w:r></w:hyperlink></w:p>", "link" },
-        { DiagnosticCodes.PdfCannotDrawFormatting, $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small capitals</w:t></w:r></w:p>", "small capitals" },
+        { DiagnosticCodes.PdfCannotDrawFormatting, $"<w:p {W}><w:r><w:rPr><w:outline/></w:rPr><w:t>Outlined</w:t></w:r></w:p>", "outlined" },
         { DiagnosticCodes.PdfCannotLayOutDirection, $"<w:p {W}><w:pPr><w:bidi/></w:pPr><w:r><w:t>Right to left</w:t></w:r></w:p>", "right-to-left" },
         { DiagnosticCodes.PdfCannotLayOutTable, $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"4000\"/></w:tblGrid><w:tr><w:tc><w:tbl><w:tblGrid><w:gridCol w:w=\"2000\"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>Inner</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p/></w:tc></w:tr></w:tbl>", "inside it" },
         { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:tabs><w:tab w:val=\"bar\" w:pos=\"4320\"/></w:tabs></w:pPr><w:r><w:t>Name</w:t></w:r></w:p>", "bar" },
@@ -75,9 +75,9 @@ public class PdfLimitsTests
     [Fact]
     public void Each_limit_is_reported_once_in_a_part_however_often_it_occurs()
     {
-        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
+        var outlined = $"<w:p {W}><w:r><w:rPr><w:outline/></w:rPr><w:t>Outlined</w:t></w:r></w:p>";
 
-        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).RawParagraph(smallCaps).Build(), Dictionary, Checks);
+        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(outlined).RawParagraph(outlined).Build(), Dictionary, Checks);
 
         compilation.Diagnostics.Where(d => d.Code == DiagnosticCodes.PdfCannotDrawFormatting).Should().ContainSingle();
     }
@@ -85,9 +85,9 @@ public class PdfLimitsTests
     [Fact]
     public void A_host_that_makes_PDFs_another_way_is_not_held_to_these_limits()
     {
-        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
+        var outlined = $"<w:p {W}><w:r><w:rPr><w:outline/></w:rPr><w:t>Outlined</w:t></w:r></w:p>";
 
-        DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).Build(), Dictionary).Succeeded.Should().BeTrue();
+        DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(outlined).Build(), Dictionary).Succeeded.Should().BeTrue();
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public class PdfLimitsTests
         var store = new InMemoryCorrespondenceStore();
         var dictionaries = new InMemoryDictionarySource();
         dictionaries["members"] = """{ "fields": [ { "name": "Member name", "key": "memberName", "type": "text" } ] }""";
-        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
-        var content = new CorrespondenceContent { Name = "Welcome", Dictionary = "members", Document = TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).Build().ToArray() };
+        var outlined = $"<w:p {W}><w:r><w:rPr><w:outline/></w:rPr><w:t>Outlined</w:t></w:r></w:p>";
+        var content = new CorrespondenceContent { Name = "Welcome", Dictionary = "members", Document = TestDocx.With("Dear ((Member name)),").RawParagraph(outlined).Build().ToArray() };
 
         var before = new CorrespondenceLibrary(store, dictionaries, TimeProvider.System);
         await before.SaveDraftAsync("welcome", content, 0);

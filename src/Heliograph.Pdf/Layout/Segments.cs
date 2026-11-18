@@ -9,18 +9,24 @@ internal sealed class UndrawableCharacterException() : Exception("The letter has
 
 /// <summary>
 /// A piece of text split where its font lacks a character, each part drawn in a built-in font that has it: the run's own
-/// first, then Liberation Sans, Serif and Mono, Carlito and Caladea.
+/// first, then Liberation Sans, Serif and Mono, Carlito and Caladea. In small capitals, its lowercase letters are drawn
+/// as capitals at four fifths of the size, as LibreOffice draws them, in parts of their own; it is still one word.
 /// </summary>
 internal static class Segments
 {
+    private const double SmallCapitals = 0.8;
+
     public static Piece Piece(string text, RunStyle style, PieceKind kind)
     {
         var parts = new List<(string Text, RunStyle Style)>();
         var current = new StringBuilder();
         RunStyle? font = null;
-        foreach (var rune in text.EnumerateRunes())
+        var small = style.SmallCaps && !style.Caps ? style with { Size = style.Size * SmallCapitals, SmallCaps = false } : null;
+        foreach (var original in text.EnumerateRunes())
         {
-            var covering = FontLibrary.Covering(style, rune.Value) ?? throw new UndrawableCharacterException();
+            var lower = small is not null && Rune.IsLower(original);
+            var rune = lower ? Rune.ToUpperInvariant(original) : original;
+            var covering = FontLibrary.Covering(lower ? small! : style, rune.Value) ?? throw new UndrawableCharacterException();
             if (font is not null && covering != font)
             {
                 parts.Add((current.ToString(), font));
