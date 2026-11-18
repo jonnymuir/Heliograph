@@ -65,29 +65,22 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
     {
         foreach (var c in r.Elements())
         {
-            if (field.Consume(c, style, inlines))
+            if (!field.Consume(c, style, inlines) && Inline(c, style) is { } inline)
             {
-                continue;
-            }
-
-            if (c.Name == W + "t")
-            {
-                inlines.Add(new TextInline(c.Value, style));
-            }
-            else if (c.Name == W + "tab")
-            {
-                inlines.Add(new TabInline(style));
-            }
-            else if (c.Name == W + "br" || c.Name == W + "cr")
-            {
-                inlines.Add(new BreakInline(style));
-            }
-            else if (c.Name == W + "drawing" && PictureReader.Read(c, linked, style) is { } picture)
-            {
-                inlines.Add(picture);
+                inlines.Add(inline);
             }
         }
     }
+
+    // What one element of a run adds: text, a tab, a break or a picture; null for anything else.
+    private Inline? Inline(XElement c, RunStyle style) => c.Name.Namespace != W ? null : c.Name.LocalName switch
+    {
+        "t" => new TextInline(c.Value, style),
+        "tab" => new TabInline(style),
+        "br" or "cr" => new BreakInline(style),
+        "drawing" => PictureReader.Read(c, linked, style),
+        _ => null,
+    };
 
     /// <summary>
     /// A complex field runs from a begin mark, through its instruction, to a separate mark, then its last result, to an end

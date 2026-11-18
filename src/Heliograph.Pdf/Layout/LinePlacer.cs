@@ -24,16 +24,9 @@ internal static class LinePlacer
         for (var i = 0; i <= lastWord; i++)
         {
             var (x, piece) = line.Pieces[i];
-            var node = owner.Node is null ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
-
-            if (piece.Picture is { } picture)
-            {
-                Picture(page, picture, left + x + shift + added, baseline, owner);
-                continue;
-            }
+            Draw(page, piece, (left + x + shift + added, baseline), owner);
 
             // A space is real text, so copying and screen readers keep words apart. Justified lines widen the gap after it.
-            Emit(page, new TextOp(left + x + shift + added, baseline, piece.Text, piece.Style, node));
             if (piece.Kind == PieceKind.Space)
             {
                 added += extra;
@@ -41,11 +34,23 @@ internal static class LinePlacer
         }
     }
 
+    private static void Draw(LaidOutPage page, Piece piece, (double X, double Baseline) at, Owner owner)
+    {
+        if (piece.Picture is { } picture)
+        {
+            Picture(page, picture, at, owner);
+            return;
+        }
+
+        var node = owner.Node is null ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
+        Emit(page, new TextOp(at.X, at.Baseline, piece.Text, piece.Style, node));
+    }
+
     // A described picture is a figure in its paragraph; any other is an artifact a screen reader passes over.
-    private static void Picture(LaidOutPage page, PictureInline picture, double x, double baseline, Owner owner)
+    private static void Picture(LaidOutPage page, PictureInline picture, (double X, double Baseline) at, Owner owner)
     {
         var figure = owner.Node is { } node && picture.Alt is { } alt ? node.Add("Figure", alt: alt) : null;
-        page.Ops.Add(new ImageOp(x, baseline - picture.Height, picture.Width, picture.Height, picture.File, figure));
+        page.Ops.Add(new ImageOp(at.X, at.Baseline - picture.Height, picture.Width, picture.Height, picture.File, figure));
     }
 
     // A run of text in one style, owner and place joins what came just before, so the page's content stays small.

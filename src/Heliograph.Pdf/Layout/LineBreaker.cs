@@ -52,6 +52,7 @@ internal static class LineBreaker
         private Line _line;
         private double _x;
         private bool _tabbed;
+        private bool _afterTab;
 
         public LineBuilder(ParagraphStyle style, double limit)
         {
@@ -93,7 +94,8 @@ internal static class LineBreaker
                     _x = stop;
                     break;
                 case PieceKind.Word when _x + piece.Width > _line.Limit + 0.01:
-                    Wrap(piece, tabbed);
+                    _afterTab = tabbed;
+                    Wrap(piece);
                     break;
                 default:
                     Put(piece);
@@ -103,12 +105,12 @@ internal static class LineBreaker
 
         // A word that does not fit starts the next line, and a tab just before it goes with it and takes effect there. A
         // word too wide for any line is split where the line is full; a picture never is, and goes on a line of its own.
-        private void Wrap(Piece piece, bool tabbed)
+        private void Wrap(Piece piece)
         {
             if (_line.Pieces.Any(q => q.Piece.Kind == PieceKind.Word && !q.Piece.IsLabel))
             {
                 Next();
-                _x = tabbed ? NextTab(_x, _style, hanging: false) : _x;
+                _x = _afterTab ? NextTab(_x, _style, hanging: false) : _x;
             }
 
             if (piece.Picture is not null)

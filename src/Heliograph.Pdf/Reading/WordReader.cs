@@ -77,18 +77,19 @@ internal sealed class WordReader : IDisposable
     private IReadOnlyList<Block>? Story(XElement sect, string kind, string type)
     {
         var reference = sect.Elements(W + kind + "Reference").FirstOrDefault(e => (string?)e.Attribute(W + "type") == type);
-        if (reference is null || !_relationships.TryGetValue((string)reference.Attribute(R + "id")!, out var target))
+        var target = reference is null ? null : _relationships.GetValueOrDefault((string)reference.Attribute(R + "id")!);
+        return target is null ? null : StoryIn("word/" + target);
+    }
+
+    // A header's or footer's blocks; its pictures are found through its own relationships.
+    private IReadOnlyList<Block>? StoryIn(string name)
+    {
+        if (_package.Part(name)?.Root is not { } root)
         {
             return null;
         }
 
-        if (_package.Part("word/" + target)?.Root is not { } root)
-        {
-            return null;
-        }
-
-        // A header's pictures are found through the header's own relationships.
-        _part = "word/" + target;
+        _part = name;
         var blocks = Blocks(root);
         _part = "word/document.xml";
         return blocks;
