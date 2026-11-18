@@ -6,7 +6,7 @@ namespace Heliograph.Pdf.Layout;
 /// The rules for where a paragraph's lines fall on pages: keep together, keep with the next paragraph's opening lines, and
 /// widow and orphan control, as LibreOffice lays out a Word document.
 /// </summary>
-internal sealed class PageFit(PageSet pages)
+internal sealed class PageFit(PageSet pages, Footnotes notes)
 {
     // Keep together, or keep with the first line of what follows: move to a new page when that cannot fit here but can there.
     public bool MustMove(Paragraph p, List<Line> lines, double before, Block? next)
@@ -26,7 +26,8 @@ internal sealed class PageFit(PageSet pages)
     {
         var fit = 0;
         var y = pages.Y;
-        while (placed + fit < lines.Count && y + lines[placed + fit].Height - lines[placed + fit].Hang <= pages.BodyBottom + 0.01)
+        // A line that refers to a footnote fits only with its note below.
+        while (placed + fit < lines.Count && y + lines[placed + fit].Height - lines[placed + fit].Hang <= pages.BodyBottom - notes.Cost(lines.Skip(placed).Take(fit + 1)) + 0.01)
         {
             y += lines[placed + fit++].Height;
         }

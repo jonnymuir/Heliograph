@@ -48,7 +48,7 @@ internal static class StructureWriter
         var parent = node.Parent is { } p ? ids[p] : structRoot;
         var table = (node.Scope is { } scope ? $" /Scope /{scope}" : "") + (node.ColumnSpan > 1 ? Invariant($" /ColSpan {node.ColumnSpan}") : "");
         var attributes = table.Length > 0 ? $" /A <</O /Table{table}>>" : "";
-        var alt = node.Alt is { } text ? $" /Alt {Utf16(text)}" : "";
+        var alt = (node.Alt is { } text ? $" /Alt {Utf16(text)}" : "") + (node.Id is { } id ? $" /ID ({id})" : "");
         return Invariant($"<</Type /StructElem /S /{node.Type} /P {parent} 0 R /K [{kids}]{attributes}{alt}>>");
     }
 

@@ -73,6 +73,13 @@ This plan is built to find out early and keep finding out.
     rows joined by a merged cell are kept together on a page where LibreOffice may break them.
 - **Headers and footers:** on every page, with a first page of its own, and page numbers and page
   counts.
+- **Footnotes** referred to from the body: numbered 1, 2, 3 in the order they are referred to, at
+  the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
+  document, the separator takes one single line of the default style, whatever the document's
+  own separator says, and the body stops above it; a line that refers to a note goes on a page
+  only with its note. A note is not split across pages, where Word and LibreOffice may carry the
+  rest of a long one over. Endnotes, notes in a table, and notes numbered or placed some other
+  way are still refused.
 - **Pictures** set in line with the text, in the body, tables, headers and footers:
   - PNG of every colour type and bit depth, interlaced or not, with its transparency;
   - JPEG, grey, colour or CMYK, written into the PDF as it is;
@@ -261,7 +268,7 @@ generated documents through both routes. Add the Word fixtures.
 - Several sections with their own page size, orientation and margins.
 - Even-page headers.
 - Page-number formats, and section page counts.
-- Footnotes and endnotes, tagged as notes.
+- Footnotes, tagged as notes (done, in the body); endnotes.
 - Columns.
 
 ### 9. Switch over (done early: the maintainer chose to switch while still in alpha)

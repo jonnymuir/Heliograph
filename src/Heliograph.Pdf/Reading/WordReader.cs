@@ -10,7 +10,9 @@ internal sealed class WordReader : IDisposable
     private readonly ThemeFonts _theme;
     private readonly ParagraphReader _paragraphs;
     private readonly Dictionary<string, string> _relationships;
+    private readonly Dictionary<string, string> _relationshipTypes;
     private readonly bool _largerSpacing;
+    private readonly NoteNumbers _notes = new();
     private string _part = "word/document.xml";
 
     private WordReader(byte[] docx)
@@ -18,6 +20,7 @@ internal sealed class WordReader : IDisposable
         _package = new PackageParts(docx);
         var relationships = _package.Part("word/_rels/document.xml.rels")?.Root?.Elements().ToList() ?? [];
         _relationships = relationships.ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
+        _relationshipTypes = relationships.ToDictionary(e => (string)e.Attribute("Id")!, e => (string?)e.Attribute("Type") ?? "");
         var theme = relationships.FirstOrDefault(e => ((string?)e.Attribute("Type"))?.EndsWith("/theme", StringComparison.Ordinal) == true);
         _theme = ThemeFonts.Read(theme is null ? null : _package.Part("word/" + (string)theme.Attribute("Target")!));
         Styles = new StyleSheet(Part("word/styles.xml"));
@@ -27,7 +30,7 @@ internal sealed class WordReader : IDisposable
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
         _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab,
-            new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)));
+            new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)) { Notes = _notes });
     }
 
     private StyleSheet Styles { get; }
@@ -52,7 +55,37 @@ internal sealed class WordReader : IDisposable
             Story(sect, "header", "default") ?? [], Story(sect, "footer", "default") ?? [],
             titlePage ? Story(sect, "header", "first") ?? [] : null, titlePage ? Story(sect, "footer", "first") ?? [] : null);
         var title = _package.Part("docProps/core.xml")?.Root?.Element(Dc + "title")?.Value ?? "";
-        return new WordDocument(title, Styles.Language, new Section(Geometry(sect), stories), Blocks(body));
+        var blocks = Blocks(body);
+        return new WordDocument(title, Styles.Language, new Section(Geometry(sect), stories), blocks)
+        {
+            Notes = Notes(),
+            NoteSeparator = _paragraphs.Read(new XElement(W + "p", new XElement(W + "pPr", new XElement(W + "spacing",
+                new XAttribute(W + "before", 0), new XAttribute(W + "after", 0), new XAttribute(W + "line", 240), new XAttribute(W + "lineRule", "auto"))))),
+        };
+    }
+
+    // The paragraphs of each footnote the body refers to, each opening with its number.
+    private Dictionary<string, IReadOnlyList<Block>> Notes()
+    {
+        var notes = new Dictionary<string, IReadOnlyList<Block>>(StringComparer.Ordinal);
+        var target = _relationships.Where(r => r.Value.Length > 0).FirstOrDefault(r => _relationshipTypes.GetValueOrDefault(r.Key)?.EndsWith("/footnotes", StringComparison.Ordinal) == true).Value;
+        var name = target is null ? null : "word/" + target;
+        var footnotes = name is null ? null : Part(name)?.Root;
+        if (footnotes is null)
+        {
+            return notes;
+        }
+
+        _part = name!;
+        foreach (var id in _notes.Order.ToList())
+        {
+            _notes.Current = id;
+            var note = footnotes.Elements(W + "footnote").FirstOrDefault(f => (string?)f.Attribute(W + "id") == id);
+            notes[id] = note is null ? [] : Blocks(note);
+        }
+
+        (_notes.Current, _part) = (null, "word/document.xml");
+        return notes;
     }
 
     private IReadOnlyList<Block> Blocks(XElement container)

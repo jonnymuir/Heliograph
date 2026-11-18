@@ -17,6 +17,9 @@ internal sealed class StructNode(string type, StructNode? parent)
     public string? Alt { get; init; }
     public int ColumnSpan { get; init; } = 1;
 
+    /// <summary>The element's id, which a note must have.</summary>
+    public string? Id { get; init; }
+
     public StructNode Add(string type, string? scope = null, int columnSpan = 1, string? alt = null)
     {
         var child = new StructNode(type, this) { Scope = scope, ColumnSpan = columnSpan, Alt = alt };
