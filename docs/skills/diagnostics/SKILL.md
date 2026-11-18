@@ -105,7 +105,7 @@ it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-
 
 | Code | Meaning | What to do |
 |---|---|---|
-| `HG4001` | A picture the converter cannot draw yet: one that floats, with text around it or over it, an old-style picture, or a file that is not a PNG or JPEG, is damaged, or has more than 25 million pixels. | Set the picture in line with text, or save it as a PNG or JPEG and insert it again, or use the LibreOffice route for this letter. |
+| `HG4001` | A picture the converter cannot draw yet: one with text wrapped round it, one floating in a table, an old-style picture, or a file that is not a PNG or JPEG, is damaged, or has more than 25 million pixels. Pictures in line with the text, or floating in front of or behind it, are drawn. | Set the picture in line with text or in front of or behind it, save it as a PNG or JPEG and insert it again, or use the LibreOffice route for this letter. |
 | `HG4002` | A text box, shape or chart. | Put the text in an ordinary paragraph or table. |
 | `HG4003` | A footnote or endnote. | Put the note's text in the body of the letter. |
 | `HG4004` | More than one section, so pages after the break would take the first section's page and margins. | Keep one page size and set of margins for the whole letter. |

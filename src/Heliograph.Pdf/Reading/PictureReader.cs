@@ -13,10 +13,35 @@ internal static class PictureReader
     private static readonly XNamespace R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private static readonly XNamespace Decorative = "http://schemas.microsoft.com/office/drawing/2017/decorative";
 
-    /// <summary>The picture in a drawing, or null for anything else (the compile-time check has refused what it cannot draw).</summary>
-    public static PictureInline? Read(XElement drawing, Func<string, byte[]?> linked, RunStyle style)
+    /// <summary>
+    /// The picture in a drawing, set in the line or floating with no text wrapped round it, or null for anything else (the
+    /// compile-time check has refused what it cannot draw).
+    /// </summary>
+    public static Inline? Read(XElement drawing, Func<string, byte[]?> linked, RunStyle style)
     {
-        var inline = drawing.Element(Wp + "inline");
+        if (drawing.Element(Wp + "anchor") is { } anchor)
+        {
+            return Picture(anchor, linked, style) is { } picture ? new FloatingPicture(picture, Position(anchor), On(anchor.Attribute("behindDoc"))) : null;
+        }
+
+        return Picture(drawing.Element(Wp + "inline"), linked, style);
+    }
+
+    private static bool On(XAttribute? a) => (string?)a is "1" or "true";
+
+    private static Anchor Position(XElement anchor)
+    {
+        var (h, v) = (anchor.Element(Wp + "positionH"), anchor.Element(Wp + "positionV"));
+        return new Anchor(
+            (string?)h?.Attribute("relativeFrom") ?? "column", Emu(h?.Element(Wp + "posOffset")), h?.Element(Wp + "align")?.Value,
+            (string?)v?.Attribute("relativeFrom") ?? "paragraph", Emu(v?.Element(Wp + "posOffset")), v?.Element(Wp + "align")?.Value);
+    }
+
+    private static double Emu(XElement? offset) =>
+        double.TryParse(offset?.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v * PointsPerEmu : 0;
+
+    private static PictureInline? Picture(XElement? inline, Func<string, byte[]?> linked, RunStyle style)
+    {
         var embed = (string?)inline?.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed");
         if (inline is null || embed is null || linked(embed) is not { } bytes)
         {

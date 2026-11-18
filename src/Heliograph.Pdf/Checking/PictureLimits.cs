@@ -20,7 +20,7 @@ internal static class PictureLimits
         foreach (var part in document.Parts)
         {
             // A picture with no file in the document, such as one linked to a file elsewhere, is a missing file.
-            var found = part.Xml.Descendants(Wp + "inline")
+            var found = part.Xml.Descendants().Where(e => e.Name == Wp + "inline" || e.Name == Wp + "anchor")
                 .Where(inline => inline.Descendants(A + "graphicData").Any(g => ((string?)g.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)))
                 .Select(inline => (Inline: inline, Embed: (string?)inline.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")))
                 .Select(p => (p.Inline, Problem: PictureFile.Problem(p.Embed is null ? null : part.Linked(p.Embed))))

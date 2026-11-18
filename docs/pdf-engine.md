@@ -76,6 +76,8 @@ This plan is built to find out early and keep finding out.
   - JPEG, grey, colour or CMYK, written into the PDF as it is;
   - each standing on the baseline, its line as tall as it needs; line spacing over single adds a
     share of the text's height, not the picture's;
+  - or floating in front of or behind the text, with no text wrapped round it (a letterhead logo,
+    say), anchored to the page, the margins or its paragraph, by an offset or aligned;
   - a described picture is a figure with its description; a decorative one, one with no
     description, or one in a header or footer is passed over by a screen reader.
 
@@ -245,7 +247,8 @@ generated documents through both routes. Add the Word fixtures.
 ### 7. Pictures
 
 - PNG (transparency kept) and JPEG. Done.
-- Inline pictures first (done), then floating ones with square or top-and-bottom wrapping.
+- Inline pictures first (done), then floating ones: in front of or behind the text (done), then
+  with square or top-and-bottom wrapping.
 - Each picture is tagged as a figure with its alternative text. A picture without alternative
   text is a compile warning, which helps every route, not only this one.
 

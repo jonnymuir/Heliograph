@@ -122,12 +122,13 @@ public class PdfPictureTests
     }
 
     [Fact]
-    public void A_picture_that_floats_is_refused_at_compile()
+    public void A_picture_with_text_wrapped_round_it_is_refused_at_compile()
     {
-        var floating = Picture(40, 40, "A picture").Replace("wp:inline", "wp:anchor", StringComparison.Ordinal);
+        var floating = Picture(40, 40, "A picture").Replace("wp:inline", "wp:anchor", StringComparison.Ordinal)
+            .Replace("<wp:extent", "<wp:wrapSquare wrapText=\"bothSides\"/><wp:extent", StringComparison.Ordinal);
         var compilation = DocumentTemplate.Compile(Docx(Png(2, 8, [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]), "image/png", floating), NoFields, [new HeliographPdfConverter()]);
 
-        compilation.Diagnostics.Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotDrawPicture).Which.Message.Should().Contain("floats");
+        compilation.Diagnostics.Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotDrawPicture).Which.Message.Should().Contain("wrapped round it");
     }
 
     [Theory]
