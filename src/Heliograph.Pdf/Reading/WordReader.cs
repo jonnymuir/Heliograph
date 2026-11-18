@@ -58,7 +58,7 @@ internal sealed class WordReader : IDisposable
         foreach (var (sect, elements) in SectionParts(body))
         {
             var stories = StoriesOf(sect, before);
-            sections.Add(new Section(Geometry(sect), stories) { Numbers = Numbers(sect), Body = Blocks(elements) });
+            sections.Add(new Section(PageGeometry.Of(sect), stories) { Numbers = Numbers(sect), Body = Blocks(elements) });
             before = stories;
         }
 
@@ -216,17 +216,5 @@ internal sealed class WordReader : IDisposable
         var blocks = Blocks(root);
         _part = "word/document.xml";
         return blocks;
-    }
-
-    private static PageGeometry Geometry(XElement sect)
-    {
-        var size = sect.Element(W + "pgSz");
-        var margin = sect.Element(W + "pgMar");
-        // A document that leaves its page out is laid out on Word's own default, as Word and LibreOffice do: US Letter with
-        // inch margins and the header and footer half an inch from the edge.
-        return new PageGeometry(
-            Twips(size, "w") ?? 612, Twips(size, "h") ?? 792,
-            Twips(margin, "top") ?? 72, Twips(margin, "bottom") ?? 72, Twips(margin, "left") ?? 72, Twips(margin, "right") ?? 72,
-            Twips(margin, "header") ?? 36, Twips(margin, "footer") ?? 36);
     }
 }

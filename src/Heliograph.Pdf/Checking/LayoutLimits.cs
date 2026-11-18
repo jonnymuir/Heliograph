@@ -27,8 +27,8 @@ internal static class LayoutLimits
     // Objects and page structure.
     private static Limit[] ThingsOnThePage() =>
     [
-        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} draws pictures in line with the text, or floating in front of or behind it, only, so its PDFs would be missing it.",
-            $"Set the picture in line with text, or in front of or behind it (Wrap Text in Word), {Instead}"),
+        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} does not lay that out yet, so its PDFs would be missing it or set it out wrongly.",
+            $"Set the picture in line with text, in front of or behind it, or wrap text Square or Top and Bottom on one side of it in the body of the letter (Wrap Text in Word), {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
@@ -37,7 +37,7 @@ internal static class LayoutLimits
             $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
-        new(DiagnosticCodes.PdfCannotWorkOutField, Fields, what => $"This document has a {what} field. {Route} works out page numbers and page counts only, so this field would print nothing.",
+        new(DiagnosticCodes.PdfCannotWorkOutField, FieldLimits.Found, what => $"This document has {what}. {Route} works out page numbers and counts of pages, in figures, letters or Roman numerals, only, so it would not print as it should.",
             $"Type the text in, or use a tag from the dictionary for a value, {Instead}"),
     ];
 
@@ -102,7 +102,7 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Pictures(XElement root)
     {
         var floating = root.Descendants(Wp + "anchor").Where(a => a.Descendants(A + "graphicData").Any(g => ((string?)g.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)))
-            .Select(a => (a, What: a.Element(Wp + "wrapNone") is null ? "a picture with text wrapped round it" : a.Ancestors(W + "tbl").Any() ? "a picture that floats in a table" : null))
+            .Select(a => (a, What: a.Ancestors(W + "tbl").Any() ? "a picture that floats in a table" : WrapLimits.Wrapped(a)))
             .Where(f => f.What is not null);
         return floating.Concat(root.Descendants(V + "imagedata").Select(e => (e, (string?)"an old-style picture")))!;
     }
@@ -117,13 +117,6 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Columns(XElement root)
     {
         return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
-    }
-
-    private static IEnumerable<(XElement, string)> Fields(XElement root)
-    {
-        return root.Descendants().Where(e => e.Name == W + "instrText" || e.Name == W + "fldSimple")
-            .Select(e => (e, Name: (e.Name == W + "fldSimple" ? (string?)e.Attribute(W + "instr") ?? "" : e.Value).Trim().Split(' ', 2)[0].ToUpperInvariant()))
-            .Where(f => f.Name.Length > 0 && f.Name is not ("PAGE" or "NUMPAGES"));
     }
 
     private static IEnumerable<(XElement, string)> Direction(XElement root)

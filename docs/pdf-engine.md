@@ -74,8 +74,11 @@ This plan is built to find out early and keep finding out.
   - a row breaks across pages, each cell at its own last line that fits, unless it is marked not
     to. A row with a set height that breaks across a page can still differ from LibreOffice, and
     rows joined by a merged cell are kept together on a page where LibreOffice may break them.
-- **Headers and footers:** on every page, with a first page of its own, and page numbers and page
-  counts.
+- **Headers and footers:** on every page, with a first page of its own, and page numbers and counts
+  of pages in the letter (`NUMPAGES`) and in its section (`SECTIONPAGES`), each in figures, letters
+  or Roman numerals as its switch says, its instruction read whole though Word may split it across
+  runs. LibreOffice is no guide to the counts: it prints a section's as last saved, and counts a
+  blank page it would add before a page numbered 1 again; a Word probe is.
 - **Sections** that start a new page, each with its own page size, orientation and margins, its
   headers and footers (each one it does not set carried on from the section before, as Word does),
   a first page of its own, different headers and footers on even pages (even and odd by the page's
@@ -103,6 +106,11 @@ This plan is built to find out early and keep finding out.
     share of the text's height, not the picture's;
   - or floating in front of or behind the text, with no text wrapped round it (a letterhead logo,
     say), anchored to the page, the margins or its paragraph, by an offset or aligned;
+  - or, in the body, with text wrapped round its box: beside it (Square), on the side it says or
+    the wider, or above and below it, with the space it keeps clear; a paragraph on that page is
+    broken line by line, each as wide as the room at its height, and a table starts below any
+    picture it would meet, as LibreOffice lays them out. Wrapped tight to its outline, in a header
+    or footer, or with room for text on both sides, is refused;
   - a described picture is a figure with its description; a decorative one, one with no
     description, or one in a header or footer is passed over by a screen reader.
 
@@ -231,8 +239,9 @@ generated documents through both routes. Add the Word fixtures.
 ### 3. Fonts
 
 - **A font source.** The package carries free look-alike fonts (SIL OFL and Apache 2.0); a host
-  can add its own files, the real Arial included if it holds a licence. Still to come: the host's
-  own files.
+  can add its own files, the real Arial included if it holds a licence (done: TrueType files in
+  `HeliographPdfOptions.Fonts`, read by family, bold and italic from the font itself, refused when
+  the font may not be embedded).
 - **A mapping table** that Word and LibreOffice already agree on (done, with theme fonts resolved
   and the same files LibreOffice ships):
   - Arial → Liberation Sans;
@@ -283,7 +292,7 @@ generated documents through both routes. Add the Word fixtures.
 
 - PNG (transparency kept) and JPEG. Done.
 - Inline pictures first (done), then floating ones: in front of or behind the text (done), then
-  with square or top-and-bottom wrapping.
+  with square or top-and-bottom wrapping (done, in the body, text on one side).
 - Each picture is tagged as a figure with its alternative text. A picture without alternative
   text is a compile warning, which helps every route, not only this one.
 
@@ -292,7 +301,7 @@ generated documents through both routes. Add the Word fixtures.
 - Several sections with their own page size, orientation and margins (done, each starting a new
   page).
 - Even-page headers (done).
-- Page-number formats (done), and section page counts.
+- Page-number formats, and section page counts (both done, with the format switches Word offers).
 - Footnotes, tagged as notes (done, in the body); endnotes (done).
 - Columns.
 
