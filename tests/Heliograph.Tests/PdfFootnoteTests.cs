@@ -89,7 +89,7 @@ public class PdfFootnoteTests
         body.Insert(0, NoteLetters.Referring("Your membership renews in April.", 1));
         if (table)
         {
-            body.Insert(kind == "a note in a table" ? 1 : body.Count, NoteLetters.FeesTable(2));
+            body.Insert(kind == "a note in a table" ? 1 : body.Count, NoteTables.FeesTable(2));
         }
 
         body.Insert(kind == "notes on two pages" ? 32 : body.Count, NoteLetters.Referring("The late charge is ten pounds.", table ? 3 : 2));
