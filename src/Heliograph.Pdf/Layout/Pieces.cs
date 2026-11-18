@@ -11,8 +11,13 @@ internal enum PieceKind
     Leader,
 }
 
-/// <summary>A word, a run of spaces, a tab or a line break, measured in its style. A picture is a word that never splits.</summary>
+/// <summary>
+/// A word, a run of spaces, a tab or a line break, measured in its style. A picture is a word that never splits. A word with
+/// characters its font lacks has Segments, each drawn in a font that has them, and is still one word to break lines at.
+/// </summary>
 internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKind Kind, bool IsLabel = false)
 {
     public PictureInline? Picture { get; init; }
+
+    public IReadOnlyList<(string Text, RunStyle Style)>? Segments { get; init; }
 }
