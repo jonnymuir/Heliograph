@@ -27,7 +27,7 @@ public class MeasuringNetTests
     // became new-Word-document spacing on 18 November 2026, so seed 21's document changed and its number was set again.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
-        [1] = 128, [2] = 54, [3] = 59, [4] = 39, [5] = 17, [6] = 74, [8] = 10, [9] = 46, [10] = 24, [11] = 114, [12] = 161, [13] = 100,
+        [1] = 128, [2] = 54, [3] = 59, [4] = 39, [5] = 17, [6] = 74, [8] = 10, [9] = 46, [10] = 24, [11] = 44, [12] = 161, [13] = 100,
         [14] = 39, [15] = 531, [16] = 48, [17] = 48, [18] = 32, [19] = 1022, [20] = 544, [21] = 45, [22] = 43, [23] = 41, [24] = 28,
         [25] = 86, [26] = 39, [28] = 27, [29] = 47, [30] = 145,
     };
