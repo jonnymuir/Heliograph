@@ -47,7 +47,9 @@ This plan is built to find out early and keep finding out.
     hyphens or a line;
   - links in the body to web pages, email addresses and telephone numbers, clickable and tagged
     as links (a link that wraps onto a second line is two links, each to the same address);
-  - the three line-spacing modes, and space before and after.
+  - the three line-spacing modes, and space before and after;
+  - borders and shading round paragraphs in the body, paragraphs with the same frame sharing one
+    box, with a line between them if asked.
 - **Pages:** widow and orphan control, keep with next, keep together, page breaks.
 - **Lists:** as Word numbers them:
   - several levels, each in its own style: numbers, with or without a leading zero, letters and
@@ -232,7 +234,8 @@ generated documents through both routes. Add the Word fixtures.
 
 - Numbering: done early (several levels, restarts, letters, Roman numerals, legal styles). Still
   to come: picture bullets and the rarer number styles ("1st", "one", other scripts).
-- Paragraph borders and shading, and contextual spacing.
+- Paragraph borders and shading, and contextual spacing. Done in the body (contextual spacing
+  everywhere); in a table cell, header or footer, still refused.
 - Every keep and break rule, including space before at the top of a page.
 - Line spacing modes, checked against Word fixtures.
 

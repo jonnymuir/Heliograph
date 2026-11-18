@@ -25,6 +25,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
             DefaultTab = defaultTab,
             StyleId = styleId,
             Contextual = layers.LastOrDefault(l => l.Element(W + "contextualSpacing") is not null)?.Element(W + "contextualSpacing") is { } c && On(c),
+            Frame = FrameReader.Read(layers),
         };
 
         var runLayers = RunLayers(chain);

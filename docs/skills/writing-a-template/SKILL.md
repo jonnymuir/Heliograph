@@ -256,7 +256,8 @@ small capitals, footnotes, more than one section, and a tab in a centred or righ
 paragraph. Tab stops aligned left, right, centred or on the decimal point, with or without a
 leader, are laid out, and links in the body to a web page, an email address or a telephone number
 can be clicked. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
-and character spacing are all drawn. Pictures set in line with the text, or in front of or behind it, are drawn (PNG
+and character spacing are all drawn, and so are borders and shading round paragraphs in the body
+of the letter. Pictures set in line with the text, or in front of or behind it, are drawn (PNG
 and JPEG); a picture with text wrapped round it is not yet, so set it **In Line with Text**, **In
 Front of Text** or **Behind Text**. Lists can have several levels, numbered with numbers, letters or Roman
 numerals, with Word's ordinary bullets; a picture used as a bullet, or a number style such as

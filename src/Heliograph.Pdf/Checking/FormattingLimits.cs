@@ -29,28 +29,22 @@ internal static class FormattingLimits
             "w" or "position" => Scaled(e),
             "em" when Val(e) is not (null or "none") => "emphasis marks",
             "fitText" => "text fitted to a set width",
-            "pBdr" => "a border round a paragraph",
+            "pBdr" => FrameLimits.Border(e),
             "spacing" when Auto(e, "beforeAutospacing") || Auto(e, "afterAutospacing") => "spacing set to automatic, as in text pasted from a web page",
             _ => null,
         };
 
     private static bool Auto(XElement spacing, string attribute) => (string?)spacing.Attribute(W + attribute) is "1" or "true" or "on";
 
-    // Clear or solid shading behind a run is drawn; patterned shading, or shading behind a paragraph or cell, is not.
+    // Clear or solid shading behind a run or a cell is drawn; patterned shading is not.
     private static string? Shading(XElement shd)
     {
-        if (shd.Parent?.Name == W + "rPr")
+        if (shd.Parent?.Name == W + "rPr" || shd.Parent?.Name == W + "tcPr")
         {
             return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
         }
 
-        // A cell's shading is drawn; a paragraph's, or a whole table's, is not yet.
-        if (shd.Parent?.Name == W + "tcPr")
-        {
-            return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
-        }
-
-        return (string?)shd.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") ? "shading behind a paragraph or table" : null;
+        return FrameLimits.Shading(shd);
     }
 
     // Characters scaled, or raised or lowered by a set amount, in a run.
