@@ -29,8 +29,8 @@ internal static class LayoutLimits
             $"Set the picture in line with text, or in front of or behind it (Wrap Text in Word), {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
-        new(DiagnosticCodes.PdfCannotLayOutNotes, Notes, what => $"This document has {what}. {Route} does not lay out footnotes or endnotes yet.",
-            $"Put the note's text in the body of the letter, {Instead}"),
+        new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
+            $"Put the note's text in the body of the letter, or make it an ordinary footnote there, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutSections, Sections, _ => $"This document has more than one section. {Route} lays out one section only, so pages after a section break would take the first section's page and margins.",
             $"Remove the section break, keeping one page size and set of margins for the whole letter, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
@@ -82,6 +82,7 @@ internal static class LayoutLimits
                 $"Turn off automatic hyphenation (Layout > Hyphenation in Word), {Instead}"));
         }
 
+        diagnostics.AddRange(NoteLimits.Check(document));
         diagnostics.AddRange(ListLimits.Check(document));
         diagnostics.AddRange(PictureLimits.Check(document));
         diagnostics.AddRange(LinkLimits.Check(document));
@@ -109,12 +110,6 @@ internal static class LayoutLimits
         return root.Descendants().Where(e => (e.Name == A + "graphicData" && !((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
             || e.Name == Mc + "AlternateContent" || (e.Name.Namespace == V && e.Name.LocalName is "shape" or "rect" or "roundrect" or "oval" or "line" && !e.Descendants(V + "imagedata").Any()))
             .Select(e => (e, "a text box, shape or chart"));
-    }
-
-    private static IEnumerable<(XElement, string)> Notes(XElement root)
-    {
-        return root.Descendants().Where(e => e.Name == W + "footnoteReference" || e.Name == W + "endnoteReference")
-            .Select(e => (e, e.Name.LocalName == "footnoteReference" ? "a footnote" : "an endnote"));
     }
 
     private static IEnumerable<(XElement, string)> Sections(XElement root)

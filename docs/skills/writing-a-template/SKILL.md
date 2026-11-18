@@ -252,8 +252,9 @@ character that makes every text message cost more.
 Some sites make PDFs with Heliograph's own converter, which is new. It does not yet lay out
 everything a word processor can. Where it cannot, the workbench says so when you upload, with
 the place and a fix (codes `HG4001` to `HG4014`). The main ones are floating pictures, text boxes, links to a place in the document or in a header,
-small capitals, footnotes, more than one section, and a tab in a centred or right-aligned
-paragraph. Tab stops aligned left, right, centred or on the decimal point, with or without a
+small capitals, endnotes, more than one section, and a tab in a centred or right-aligned
+paragraph. Footnotes in the body of the letter are laid out, numbered 1, 2, 3 at the foot of the
+page; a footnote in a table is not yet. Tab stops aligned left, right, centred or on the decimal point, with or without a
 leader, are laid out, and links in the body to a web page, an email address or a telephone number
 can be clicked. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
 and character spacing are all drawn, and so are borders and shading round paragraphs in the body

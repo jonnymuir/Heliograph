@@ -84,7 +84,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
     {
         foreach (var c in r.Elements())
         {
-            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, links.Files) is { } inline)
+            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, links) is { } inline)
             {
                 inlines.Add(inline);
             }

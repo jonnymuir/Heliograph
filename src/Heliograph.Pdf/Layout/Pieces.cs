@@ -20,4 +20,7 @@ internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKin
     public PictureInline? Picture { get; init; }
 
     public IReadOnlyList<(string Text, RunStyle Style)>? Segments { get; init; }
+
+    /// <summary>For a footnote's mark in the text, the note it refers to.</summary>
+    public string? Note { get; init; }
 }

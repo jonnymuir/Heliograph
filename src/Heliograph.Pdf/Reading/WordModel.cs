@@ -4,7 +4,11 @@ namespace Heliograph.Pdf.Reading;
 // margins, headers and footers. Lengths are in points.
 
 /// <summary>What the part being read links to: its files, such as pictures, by relationship id, and its addresses outside.</summary>
-internal sealed record PartLinks(Func<string, byte[]?> Files, Func<string, string?> Addresses);
+internal sealed record PartLinks(Func<string, byte[]?> Files, Func<string, string?> Addresses)
+{
+    /// <summary>The footnotes' numbers, given in the order they are referred to.</summary>
+    public NoteNumbers Notes { get; init; } = new();
+}
 
 internal abstract record Inline(RunStyle Style);
 
@@ -15,6 +19,9 @@ internal sealed record TabInline(RunStyle Style) : Inline(Style);
 internal sealed record BreakInline(RunStyle Style) : Inline(Style);
 
 internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style);
+
+/// <summary>A reference to a footnote: its mark, the note's number, and the note it refers to.</summary>
+internal sealed record NoteInline(string Mark, string Id, RunStyle Style) : Inline(Style);
 
 /// <summary>
 /// A picture set in the line, on the baseline, at its size in points. Alt is what a screen reader says; null for a
@@ -105,4 +112,14 @@ internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block>
 
 internal sealed record Section(PageGeometry Page, Stories Stories);
 
-internal sealed record WordDocument(string Title, string Language, Section Section, IReadOnlyList<Block> Body);
+internal sealed record WordDocument(string Title, string Language, Section Section, IReadOnlyList<Block> Body)
+{
+    /// <summary>Each footnote referred to, by its id: its paragraphs.</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<Block>> Notes { get; init; } = new Dictionary<string, IReadOnlyList<Block>>();
+
+    /// <summary>
+    /// An empty single-spaced paragraph in the document's default style. LibreOffice leaves one such line between the text and
+    /// a page's footnotes, whatever the separator in the document says, and draws the separator line across it.
+    /// </summary>
+    public Paragraph? NoteSeparator { get; init; }
+}

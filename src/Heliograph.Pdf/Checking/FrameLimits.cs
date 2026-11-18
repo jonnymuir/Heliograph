@@ -27,5 +27,5 @@ internal static class FrameLimits
     }
 
     // Whether an element is in a table cell, a header or a footer, where the converter does not draw a paragraph's frame.
-    private static bool Elsewhere(XElement e) => e.Ancestors(W + "tc").Any() || e.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr");
+    private static bool Elsewhere(XElement e) => e.Ancestors(W + "tc").Any() || e.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr" or "footnotes");
 }

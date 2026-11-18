@@ -17,7 +17,8 @@ internal static class PageLayout
         var first = Area(stories.FirstHeader ?? stories.Header, stories.FirstFooter ?? stories.Footer);
         var pages = new PageSet(g, first, rest, maxPages, cancellation);
         var root = new StructNode("Document", null);
-        new BodyFlow(pages, root).Run(document.Body);
+        new BodyFlow(pages, root, new Footnotes(document, pages)).Run(document.Body);
+        pages.Finish();
         for (var n = 0; n < pages.Pages.Count; n++)
         {
             Decorate(pages.Pages[n], n, pages.Pages.Count, document.Section);

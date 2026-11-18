@@ -33,7 +33,7 @@ public class PdfLimitsTests
     {
         { DiagnosticCodes.PdfCannotDrawPicture, $"<w:p {W}><w:r><w:drawing><wp:inline {Drawing}><a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"/></a:graphic></wp:inline></w:drawing></w:r></w:p>", "picture" },
         { DiagnosticCodes.PdfCannotDrawShape, $"<w:p {W}><w:r><w:drawing><wp:anchor {Drawing}><a:graphic><a:graphicData uri=\"http://schemas.microsoft.com/office/word/2010/wordprocessingShape\"/></a:graphic></wp:anchor></w:drawing></w:r></w:p>", "text box" },
-        { DiagnosticCodes.PdfCannotLayOutNotes, $"<w:p {W}><w:r><w:t>See note</w:t></w:r><w:r><w:footnoteReference w:id=\"1\"/></w:r></w:p>", "footnote" },
+        { DiagnosticCodes.PdfCannotLayOutNotes, $"<w:p {W}><w:r><w:t>See note</w:t></w:r><w:r><w:endnoteReference w:id=\"1\"/></w:r></w:p>", "endnote" },
         { DiagnosticCodes.PdfCannotLayOutSections, $"<w:p {W}><w:pPr><w:sectPr><w:pgSz w:w=\"16838\" w:h=\"11906\"/></w:sectPr></w:pPr><w:r><w:t>Landscape part</w:t></w:r></w:p>", "more than one section" },
         { DiagnosticCodes.PdfCannotLayOutColumns, $"<w:p {W}><w:pPr><w:sectPr><w:cols w:num=\"2\"/></w:sectPr></w:pPr></w:p>", "columns" },
         { DiagnosticCodes.PdfCannotWorkOutField, $"<w:p {W}><w:fldSimple w:instr=\" DATE \\@ &quot;d MMMM yyyy&quot; \"><w:r><w:t>1 June</w:t></w:r></w:fldSimple></w:p>", "DATE field" },
