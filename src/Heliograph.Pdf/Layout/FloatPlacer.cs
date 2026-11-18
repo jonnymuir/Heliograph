@@ -21,7 +21,7 @@ internal static class FloatPlacer
             var y = Aligned(f.Anchor.DownAlign, top, height, picture.Height, f.Anchor.DownOffset, "top", "bottom");
             var figure = node is not null && picture.Alt is { } alt ? node.Add("Figure", alt: alt) : null;
             var op = new ImageOp(x, y, picture.Width, picture.Height, picture.File, figure);
-            if (f.Wrap.Kind != "none")
+            if (f.Wrap.Kind != WrapKind.None)
             {
                 var clear = f.Wrap.Clear;
                 page.Wraps.Add(new Exclusion(x - clear.Left, y - clear.Top, x + picture.Width + clear.Right, y + picture.Height + clear.Bottom, f.Wrap));

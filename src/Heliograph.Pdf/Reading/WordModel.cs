@@ -55,13 +55,27 @@ internal sealed record FloatingPicture(PictureInline Picture, Anchor Anchor, boo
     public TextWrap Wrap { get; init; } = TextWrap.None;
 }
 
-/// <summary>
-/// How text goes round a floating picture: Kind is "none", "square" or "topAndBottom"; Side, for square, is where the
-/// text goes ("bothSides", "left", "right" or "largest"); and the space kept clear round the picture.
-/// </summary>
-internal sealed record TextWrap(string Kind, string Side, Clearance Clear)
+/// <summary>How text goes round a floating picture: not at all, beside its box, or above and below it only.</summary>
+internal enum WrapKind
 {
-    public static readonly TextWrap None = new("none", "bothSides", Clearance.Nothing);
+    None,
+    Square,
+    TopAndBottom,
+}
+
+/// <summary>Which side of a square-wrapped picture text goes: either, the left, the right, or the wider.</summary>
+internal enum WrapSide
+{
+    BothSides,
+    Left,
+    Right,
+    Largest,
+}
+
+/// <summary>How text goes round a floating picture, on which side, and the space kept clear round it.</summary>
+internal sealed record TextWrap(WrapKind Kind, WrapSide Side, Clearance Clear)
+{
+    public static readonly TextWrap None = new(WrapKind.None, WrapSide.BothSides, Clearance.Nothing);
 }
 
 /// <summary>The space kept clear round a floating picture, in points, on each side.</summary>

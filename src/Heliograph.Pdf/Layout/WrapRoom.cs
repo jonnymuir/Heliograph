@@ -26,12 +26,12 @@ internal static class WrapRoom
                 continue;
             }
 
-            if (e.Wrap.Kind == "topAndBottom")
+            if (e.Wrap.Kind == WrapKind.TopAndBottom)
             {
                 return new(left, right, e.Bottom - line.Top);
             }
 
-            (left, right) = Side(e.Wrap.Side, start - left, right - end) == "left" ? (left, Math.Min(right, start)) : (Math.Max(left, end), right);
+            (left, right) = Side(e.Wrap.Side, start - left, right - end) == WrapSide.Left ? (left, Math.Min(right, start)) : (Math.Max(left, end), right);
             if (right - left <= 0)
             {
                 return new(across.Left, across.Right, e.Bottom - line.Top);
@@ -42,9 +42,9 @@ internal static class WrapRoom
     }
 
     // Which side of a picture text goes: the one it says, or the wider (the check refuses text on both sides).
-    private static string Side(string side, double leftRoom, double rightRoom) => side switch
+    private static WrapSide Side(WrapSide side, double leftRoom, double rightRoom) => side switch
     {
-        "left" or "right" => side,
-        _ => leftRoom >= rightRoom ? "left" : "right",
+        WrapSide.Left or WrapSide.Right => side,
+        _ => leftRoom >= rightRoom ? WrapSide.Left : WrapSide.Right,
     };
 }

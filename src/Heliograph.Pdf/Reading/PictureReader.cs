@@ -32,8 +32,14 @@ internal static class PictureReader
     // How text goes round the picture, and the space kept clear round it.
     private static TextWrap Wrap(XElement anchor)
     {
-        var kind = anchor.Element(Wp + "wrapSquare") is not null ? "square" : anchor.Element(Wp + "wrapTopAndBottom") is not null ? "topAndBottom" : "none";
-        var side = (string?)anchor.Element(Wp + "wrapSquare")?.Attribute("wrapText") ?? "bothSides";
+        var kind = anchor.Element(Wp + "wrapSquare") is not null ? WrapKind.Square : anchor.Element(Wp + "wrapTopAndBottom") is not null ? WrapKind.TopAndBottom : WrapKind.None;
+        var side = (string?)anchor.Element(Wp + "wrapSquare")?.Attribute("wrapText") switch
+        {
+            "left" => WrapSide.Left,
+            "right" => WrapSide.Right,
+            "largest" => WrapSide.Largest,
+            _ => WrapSide.BothSides,
+        };
         return new TextWrap(kind, side, new Clearance(Emu(anchor, "distT"), Emu(anchor, "distB"), Emu(anchor, "distL"), Emu(anchor, "distR")));
     }
 
