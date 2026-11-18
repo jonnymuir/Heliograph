@@ -31,6 +31,11 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
             switch (op)
             {
                 case TextOp text:
+                    if (text.Style.Background is not null)
+                    {
+                        Background(pageIndex, text);
+                    }
+
                     Mark(pageIndex, text.Node, "/Artifact <</Type /Pagination>> BDC\n");
                     Text(text);
                     break;
@@ -88,15 +93,43 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
 
     private void Text(TextOp text)
     {
-        var face = FontLibrary.Face(text.Style);
+        var style = text.Style;
+        var face = FontLibrary.Face(style);
         var (name, id, hex) = fonts.Use(face, text.Text);
         _fonts.Add((name, id));
-        var size = text.Style.Size;
-        _content.Append(Invariant($"BT /{name} {N(size)} Tf 1 0 0 1 {N(text.X)} {N(pageHeight - text.Baseline)} Tm <{hex}> Tj ET\n"));
-        if (text.Style.Underline)
+        var (size, width) = (TextLook.Size(style), TextLook.Width(text.Text, style));
+        var baseline = pageHeight - text.Baseline + TextLook.Rise(style);
+        var colour = Rgb(style.Color);
+        _content.Append(Invariant($"BT /{name} {N(size)} Tf {colour} rg {N(style.CharacterSpacing)} Tc 1 0 0 1 {N(text.X)} {N(baseline)} Tm <{hex}> Tj ET\n"));
+        var thickness = style.Size / 20;
+        var lines = new List<double>();
+        if (style.Underline)
         {
-            var (x, y, w) = (text.X, pageHeight - text.Baseline - (size / 8), face.Width(text.Text, size));
-            _content.Append(Invariant($"{N(size / 20)} w {N(x)} {N(y)} m {N(x + w)} {N(y)} l S\n"));
+            lines.Add(pageHeight - text.Baseline - (style.Size / 8));
         }
+
+        // Strikethrough runs through the middle of the lower-case letters; a double one is two lines either side of it.
+        var through = baseline + (size * 0.25);
+        lines.AddRange(style.Strike switch { 1 => [through], 2 => [through + thickness, through - thickness], _ => [] });
+        foreach (var y in lines)
+        {
+            _content.Append(Invariant($"{colour} RG {N(thickness)} w {N(text.X)} {N(y)} m {N(text.X + width)} {N(y)} l S\n"));
+        }
+    }
+
+    // A highlight or shading behind a run of text, as deep as the font reaches; decoration, so an artifact.
+    private void Background(int pageIndex, TextOp text)
+    {
+        var (ascent, descent, _) = FontLibrary.Metrics(text.Style with { VertAlign = "baseline" });
+        var bottom = pageHeight - text.Baseline - descent;
+        Mark(pageIndex, null, "/Artifact BMC\n");
+        _content.Append(Invariant($"q {Rgb(text.Style.Background)} rg {N(text.X)} {N(bottom)} {N(TextLook.Width(text.Text, text.Style))} {N(ascent + descent)} re f Q\n"));
+    }
+
+    // An RGB hex colour as PDF colour components; automatic is black.
+    private static string Rgb(string? hex)
+    {
+        var value = Convert.ToInt32(hex ?? "000000", 16);
+        return Invariant($"{N(((value >> 16) & 0xFF) / 255.0)} {N(((value >> 8) & 0xFF) / 255.0)} {N((value & 0xFF) / 255.0)}");
     }
 }

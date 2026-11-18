@@ -3,8 +3,6 @@ namespace Heliograph.Pdf.Reading;
 // A rendered letter read into what a page needs: paragraphs with their styles resolved, tables, and the section's page,
 // margins, headers and footers. Lengths are in points.
 
-internal sealed record RunStyle(bool Bold, bool Italic, bool Underline, double Size, string Font);
-
 internal abstract record Inline(RunStyle Style);
 
 internal sealed record TextInline(string Text, RunStyle Style) : Inline(Style);

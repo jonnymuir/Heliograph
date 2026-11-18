@@ -112,7 +112,7 @@ it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-
 | `HG4005` | Text set in columns. | Use a single column, or a table. |
 | `HG4006` | A field other than a page number or page count, which would print nothing. | Type the text in, or use a tag from the dictionary. |
 | `HG4007` | A link, which would print but could not be clicked. | Write the address out as plain text. |
-| `HG4008` | Coloured, highlighted, shaded, struck-through, raised or lowered text, capitals set as formatting, spaced-out characters, or a border round a paragraph. It would print as plain text. | Take the formatting off. |
+| `HG4008` | Formatting the converter cannot draw yet: small capitals, patterned shading, shading behind a paragraph or cell, stretched or squeezed characters, text raised or lowered by a set amount, embossed, engraved, outlined or shadowed text, emphasis marks, text fitted to a width, or a border round a paragraph. It would print as plain text. | Take that formatting off, or use the LibreOffice route for this letter. |
 | `HG4009` | Right-to-left text, or text running up or down the page. | Set the text left to right. |
 | `HG4010` | A table with cells merged down a column, or a table inside another. | Give each cell its own row, with no table inside another. |
 | `HG4011` | A tab stop aligned right, centred or on the decimal point, or with a leader, or a tab in a centred or right-aligned paragraph, so text after it would not line up. | Use a left tab stop, or a table with the column aligned as needed. |

@@ -39,6 +39,8 @@ This plan is built to find out early and keep finding out.
 - **Paragraphs:**
   - styles and their inheritance;
   - bold, italic, underline and size;
+  - colour, highlight and shading, single and double strikethrough, superscript and subscript,
+    capitals and character spacing; hidden text is not drawn;
   - left, centred, right and justified text;
   - indents, tab stops, line breaks;
   - the three line-spacing modes, and space before and after.
@@ -99,6 +101,9 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
   Mac, and Word, which measures Calibri by its Windows metrics throughout, may differ from both:
   a Word fixture in Calibri will settle it;
 - a document with no page settings is laid out on US Letter, as Word does;
+- superscript and subscript are drawn at 58% of the size, their top or foot meeting the full-size
+  text's, and a line is as tall as it would be without them;
+- a paragraph kept with the next counts its space after, which comes between them;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
@@ -188,10 +193,10 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 4. Text
 
-- Colour, highlight and shading.
-- Underline styles and strikethrough.
-- Superscript and subscript, small capitals and capitals.
-- Character spacing.
+- Colour, highlight and shading. Done (shading behind a whole paragraph is stage 5).
+- Underline styles and strikethrough. Strikethrough done.
+- Superscript and subscript, small capitals and capitals. Done but small capitals.
+- Character spacing. Done.
 - Kerning, matching what LibreOffice and Word do by default.
 - Non-breaking spaces and hyphens, and soft hyphens.
 - Right, centre and decimal tabs with leaders. Statements line figures up with these.

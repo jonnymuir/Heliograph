@@ -170,7 +170,7 @@ the template is not stopped, because the text may be what they meant.
 | Heliograph's own comments, from "Download with comments" | Taken out before the document is checked | S9 | Works |
 | The starter document's tag sheet left in | Refused, on its own | S5 | Refused |
 | Tracked changes not yet accepted or rejected | Refused | S5 | Refused |
-| Hidden text | Pointed out, as a warning. Sent, still hidden | S3 | Works |
+| Hidden text | Pointed out, as a warning. Sent, still hidden, and not drawn in a PDF from `Heliograph.Pdf` | S3 | Works |
 | A picture or template loaded from outside the file | Refused | S5 | Refused |
 | An embedded file or object | Refused | S5 | Refused |
 

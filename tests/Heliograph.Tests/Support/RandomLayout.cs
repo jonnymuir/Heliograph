@@ -31,6 +31,7 @@ internal sealed class RandomLayout
     private readonly Random _random;
     private readonly Random _lists;
     private readonly Random _pictures;
+    private readonly Random _formatting;
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
@@ -42,6 +43,7 @@ internal sealed class RandomLayout
         // Lists drawn from their own stream, so what else a seed builds stays as it was before lists grew levels.
         _lists = new Random(seed + 10_000);
         _pictures = new Random(seed + 20_000);
+        _formatting = new Random(seed + 40_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -129,6 +131,7 @@ internal sealed class RandomLayout
         {
             var properties = ParagraphProperties();
             var paragraph = Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal));
+            paragraph = RandomFormatting.Into(paragraph, _formatting);
             _body.Append(_pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph);
         }
     }

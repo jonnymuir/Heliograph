@@ -16,5 +16,5 @@ internal static class LabelLayout
 
     /// <summary>The gap after a label followed by a space or by nothing.</summary>
     public static double Gap(LabelPlacement placement, RunStyle style) =>
-        placement.Suffix == "space" ? FontLibrary.Face(style).Width(" ", style.Size) : 0;
+        placement.Suffix == "space" ? TextLook.Width(" ", style) : 0;
 }

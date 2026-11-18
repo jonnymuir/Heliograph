@@ -45,6 +45,7 @@ internal static class FontLibrary
     /// </summary>
     public static (double Ascent, double Descent, double Gap) Metrics(RunStyle style)
     {
+        // Superscript and subscript reach exactly as far as the same text at full size (TextLook), so the size is the run's.
         var face = Face(style);
         var scale = style.Size / face.UnitsPerEm;
         var gap = Math.Max(0, face.LineGap - face.Descender - face.WinDescent);

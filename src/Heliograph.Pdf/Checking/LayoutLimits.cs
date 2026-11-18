@@ -44,7 +44,7 @@ internal static class LayoutLimits
     [
         new(DiagnosticCodes.PdfCannotMakeLink, Links, _ => $"This document has a link. {Route} does not make links yet: the text would print, but could not be clicked.",
             $"Write the address out in full as plain text, {Instead}"),
-        new(DiagnosticCodes.PdfCannotDrawFormatting, Formatting, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
+        new(DiagnosticCodes.PdfCannotDrawFormatting, FormattingLimits.Found, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
             $"Take that formatting off, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",
             $"Set the text left to right, {Instead}"),
@@ -156,24 +156,6 @@ internal static class LayoutLimits
             .Select(t => (t, "in a centred or right-aligned paragraph"));
         return aligned.Concat(inAligned).Where(t => t.Item2.Length > 0);
     }
-
-    private static IEnumerable<(XElement, string)> Formatting(XElement root)
-    {
-        return root.Descendants().Select(e => (e, What: FormattingName(e))).Where(f => f.What is not null)!;
-    }
-
-    private static string? FormattingName(XElement e) => e.Name.LocalName switch
-    {
-        "color" when e.Parent?.Name == W + "rPr" && Val(e) is { } c && c is not ("auto" or "000000") => "coloured text",
-        "highlight" when Val(e) is not ("none" or null) => "highlighted text",
-        "shd" when (string?)e.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") => "shading",
-        "vertAlign" when Val(e) is "superscript" or "subscript" => "superscript or subscript",
-        "strike" or "dstrike" when On(e) => "strikethrough",
-        "caps" or "smallCaps" when On(e) => "capitals set as formatting",
-        "spacing" when e.Parent?.Name == W + "rPr" && Val(e) is { } s && s != "0" => "spaced-out characters",
-        "pBdr" => "a border round a paragraph",
-        _ => null,
-    };
 
     // Different headers on even pages only apply when the document turns them on.
     private static Diagnostic? EvenPages(DocumentToCheck document)

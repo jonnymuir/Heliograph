@@ -84,7 +84,8 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
             return false;
         }
 
-        var total = before + lines.Sum(l => l.Height) + (flow.KeepNext && next is not null ? FirstLineHeight(next) : 0);
+        // Kept with the next, the space after it comes between it and the next one's opening lines, so it counts too.
+        var total = before + lines.Sum(l => l.Height) + (flow.KeepNext && next is not null ? p.Style.Spacing.After + FirstLineHeight(next) : 0);
         return total > pages.Room && total <= pages.BodyBottom - pages.BodyTop;
     }
 

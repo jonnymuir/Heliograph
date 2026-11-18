@@ -58,7 +58,7 @@ internal static class LinePlacer
     {
         if (page.Ops.Count > 0 && page.Ops[^1] is TextOp last && last.Node == op.Node && last.Style == op.Style &&
             Math.Abs(last.Baseline - op.Baseline) < 0.001 &&
-            Math.Abs(last.X + FontLibrary.Face(last.Style).Width(last.Text, last.Style.Size) - op.X) < 0.001)
+            Math.Abs(last.X + TextLook.Width(last.Text, last.Style) - op.X) < 0.001)
         {
             page.Ops[^1] = last with { Text = last.Text + op.Text };
             return;
