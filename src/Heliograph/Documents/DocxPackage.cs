@@ -93,38 +93,6 @@ internal sealed class DocxPackage
     /// <summary>A part's bytes, or null when there is no such part.</summary>
     public byte[]? Bytes(string name) => _entries.FirstOrDefault(entry => entry.Name == name).Bytes;
 
-    /// <summary>
-    /// Where a part's relationship points, by its id: the target part's name, for a target inside the package only.
-    /// </summary>
-    public string? Target(string partName, string relationshipId)
-    {
-        var folder = partName.Contains('/', StringComparison.Ordinal) ? partName[..(partName.LastIndexOf('/') + 1)] : "";
-        var relationship = (Xml($"{folder}_rels/{partName[folder.Length..]}.rels")?.Root?.Elements(Relationships + "Relationship") ?? [])
-            .FirstOrDefault(r => (string?)r.Attribute("Id") == relationshipId
-                && !string.Equals((string?)r.Attribute("TargetMode"), "External", StringComparison.OrdinalIgnoreCase));
-        var target = (string?)relationship?.Attribute("Target");
-        return target is null ? null : target.StartsWith('/') ? target.TrimStart('/') : Normalise(folder + target);
-    }
-
-    // "word/../media/a.png" as "media/a.png".
-    private static string Normalise(string path)
-    {
-        var parts = new List<string>();
-        foreach (var segment in path.Split('/'))
-        {
-            if (segment == ".." && parts.Count > 0)
-            {
-                parts.RemoveAt(parts.Count - 1);
-            }
-            else if (segment is not ("." or ".."))
-            {
-                parts.Add(segment);
-            }
-        }
-
-        return string.Join('/', parts);
-    }
-
     /// <summary>Parses a part as XML with document type definitions prohibited, so no entity is ever resolved.</summary>
     public XDocument? Xml(string name)
     {
