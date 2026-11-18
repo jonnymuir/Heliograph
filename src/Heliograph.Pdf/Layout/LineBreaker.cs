@@ -191,6 +191,12 @@ internal static class LineBreaker
         private void Tab(Piece tab)
         {
             CloseSegment();
+            if (tab.Position is { } position)
+            {
+                Start(Absolute(position), tab.Style);
+                return;
+            }
+
             var stop = TabStops.Next(_x, _style, hanging: false);
             if (TabStops.PastEnd(stop, _line.Limit))
             {
@@ -199,6 +205,14 @@ internal static class LineBreaker
             }
 
             Start(stop, tab.Style);
+        }
+
+        // A position tab's stop: the left, the middle or the right of the margins or of the paragraph's indents.
+        private TabStop Absolute(PositionTab tab)
+        {
+            var (left, right) = tab.RelativeTo == "indent" ? (_style.Indent.Left, _limit) : (0, _limit + _style.Indent.Right);
+            var at = tab.Alignment switch { "center" => (left + right) / 2, "right" => right, _ => left };
+            return new TabStop(at, tab.Alignment, tab.Leader switch { "dot" => "dot", "hyphen" => "hyphen", "underscore" => "underscore", "middleDot" => "middleDot", _ => "none" });
         }
 
         // Text after a left stop starts on it; after a right, centred or decimal stop it is gathered, to line up later.
@@ -293,8 +307,8 @@ internal static class LineBreaker
         {
             switch (inline)
             {
-                case TabInline:
-                    pieces.Add(new Piece("\t", inline.Style, 0, PieceKind.Tab));
+                case TabInline t:
+                    pieces.Add(new Piece("\t", inline.Style, 0, PieceKind.Tab) { Position = t.Position });
                     break;
                 case BreakInline b:
                     pieces.Add(new Piece("\n", inline.Style, 0, PieceKind.Break) { PageBreak = b.Page });

@@ -24,7 +24,34 @@ internal static class FieldLimits
             {
                 yield return (place, $"a {read.Name} field with the switch {unsupported}");
             }
+            else if (read.Name.Length > 0 && Placed(place, read.Name) is { } where)
+            {
+                yield return (place, where);
+            }
         }
+
+        foreach (var number in root.Descendants(W + "pgNum").Where(e => Placed(e, "PAGE") is not null))
+        {
+            yield return (number, Placed(number, "PAGE")!);
+        }
+    }
+
+    // Page numbers are worked out in headers, footers and the body's paragraphs; counts of pages only in headers and footers,
+    // as they are known once the letter is laid out. Elsewhere, in a table or a note, neither is yet.
+    private static string? Placed(XElement place, string name)
+    {
+        var story = place.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr");
+        if (story)
+        {
+            return null;
+        }
+
+        if (place.Ancestors(W + "tbl").Any() || place.Ancestors().Any(a => a.Name.LocalName is "footnotes" or "endnotes"))
+        {
+            return $"a {name} field in a table or a note";
+        }
+
+        return name == "PAGE" ? null : $"a {name} field in the body of the letter";
     }
 
     // Each field's instruction, at the place it starts: a simple field's attribute, or a complex field's instruction text

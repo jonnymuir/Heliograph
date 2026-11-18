@@ -91,6 +91,14 @@ This plan is built to find out early and keep finding out.
   keeps the paragraph mark with it, so what follows starts the next page, as Word and LibreOffice
   lay it out. Until this was built a page break was read as a line break, without a word. A page
   break in a table, header, footer or note is refused.
+- **Beyond text in a run:** a position tab (as Word's own headers and footers use) lining text up
+  on the left, the middle or the right of the margins or the indents, with its leader; a
+  non-breaking hyphen, drawn as a hyphen that no line breaks at; an old-style page number; and a
+  page number in the body, as the page its paragraph starts on. Until these were built each was
+  left out without a word. LibreOffice takes a position tab for an ordinary one and leaves the
+  old page number out, so a Word probe is the judge of those. A symbol from a symbol font, an
+  optional hyphen, a phonetic guide and a date block are refused, and so is a count of pages in
+  the body or a page field in a table or a note.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's

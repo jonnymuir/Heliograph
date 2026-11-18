@@ -36,7 +36,8 @@ internal static partial class PdfComparison
 
     // LibreOffice and Word keep the private code points Symbol and Wingdings put their bullets at; Heliograph writes the
     // ordinary characters for the same shapes, which a screen reader can name. The shape is the same, so both count.
-    private static string Bullets(string text) => text.Replace('', '•').Replace('', '▪');
+    // A non-breaking hyphen is drawn as a hyphen either way; Heliograph keeps it in the text, LibreOffice writes a hyphen.
+    private static string Bullets(string text) => text.Replace('', '•').Replace('', '▪').Replace('‑', '-');
 
     // A line's letters without its spaces: LibreOffice places each letter of spaced-out text on its own, so Poppler reads
     // them as words, where Heliograph draws the word with character spacing. Which words are on which line still counts.

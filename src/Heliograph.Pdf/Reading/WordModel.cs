@@ -17,7 +17,17 @@ internal abstract record Inline(RunStyle Style);
 
 internal sealed record TextInline(string Text, RunStyle Style) : Inline(Style);
 
-internal sealed record TabInline(RunStyle Style) : Inline(Style);
+/// <summary>
+/// A tab: to the next stop; or, for a position tab (ptab, as Word's own headers and footers use), to the left, centre or
+/// right of the margins or the indents, with its leader.
+/// </summary>
+internal sealed record TabInline(RunStyle Style) : Inline(Style)
+{
+    public PositionTab? Position { get; init; }
+}
+
+/// <summary>Where a position tab goes: Alignment "left", "center" or "right" of RelativeTo "margin" or "indent".</summary>
+internal sealed record PositionTab(string Alignment, string RelativeTo, string Leader);
 
 /// <summary>A line break; or, when Page, a page break, which also ends the page (a column break is one in a single column).</summary>
 internal sealed record BreakInline(RunStyle Style) : Inline(Style)
