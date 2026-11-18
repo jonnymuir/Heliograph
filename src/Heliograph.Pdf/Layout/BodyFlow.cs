@@ -10,6 +10,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
 {
     private readonly TableFlow _tables = new(pages);
     private readonly ListNesting _lists = new(root);
+    private ParagraphFrame? _frame;
 
     public void Run(IReadOnlyList<Block> blocks)
     {
@@ -28,6 +29,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
                     break;
                 case Table t:
                     _lists.Clear();
+                    _frame = null;
                     _tables.Run(t, root.Add("Table"));
                     break;
             }
@@ -53,7 +55,19 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
             before = 0;
         }
 
+        var box = ParagraphBox.Of(p, pages, _frame, next);
+        if (box?.JoinedAbove == true)
+        {
+            box.Start();
+        }
+
         pages.Y += before;
+        if (box?.JoinedAbove == false)
+        {
+            box.Start();
+        }
+
+        pages.Y += box?.Above ?? 0;
         FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         var placed = 0;
         while (placed < lines.Count)
@@ -69,11 +83,31 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
             placed += fit;
             if (placed < lines.Count)
             {
+                box?.End(last: false);
                 pages.NewPage();
+                box?.Start();
             }
         }
 
-        pages.Y = Math.Min(pages.Y + s.Spacing.After, pages.BodyBottom);
+        Finish(p, box);
+    }
+
+    // The paragraph's space after, and its box drawn: through that space when the box carries on into the paragraph below.
+    private void Finish(Paragraph p, ParagraphBox? box)
+    {
+        pages.Y += box?.Below ?? 0;
+        if (box is { JoinedBelow: false })
+        {
+            box.End(last: true);
+        }
+
+        pages.Y = Math.Min(pages.Y + p.Style.Spacing.After, pages.BodyBottom);
+        if (box is { JoinedBelow: true })
+        {
+            box.End(last: true);
+        }
+
+        _frame = p.Style.Frame;
     }
 
     // Keep together, or keep with the first line of what follows: move to a new page when that cannot fit here but can there.

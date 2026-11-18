@@ -29,7 +29,8 @@ internal static class FormattingLimits
             "w" or "position" => Scaled(e),
             "em" when Val(e) is not (null or "none") => "emphasis marks",
             "fitText" => "text fitted to a set width",
-            "pBdr" => "a border round a paragraph",
+            "pBdr" when e.Ancestors(W + "tc").Any() || e.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr") => "a border round a paragraph in a table, header or footer",
+            "pBdr" when e.Element(W + "bar") is not null => "a bar beside a paragraph",
             "spacing" when Auto(e, "beforeAutospacing") || Auto(e, "afterAutospacing") => "spacing set to automatic, as in text pasted from a web page",
             _ => null,
         };
@@ -50,7 +51,9 @@ internal static class FormattingLimits
             return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
         }
 
-        return (string?)shd.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") ? "shading behind a paragraph or table" : null;
+        // A paragraph's shading is drawn in the body; in a table, header or footer, or behind a whole table, it is not yet.
+        var inBody = shd.Parent?.Name == W + "pPr" && !shd.Ancestors(W + "tc").Any() && !shd.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr");
+        return inBody || (string?)shd.Attribute(W + "fill") is not { } fill || fill is "auto" or "FFFFFF" or "ffffff" ? null : "shading behind a paragraph in a table, header or footer, or behind a whole table";
     }
 
     // Characters scaled, or raised or lowered by a set amount, in a run.
