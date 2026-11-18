@@ -45,7 +45,7 @@ internal sealed class RandomLayout
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
-        Font = Fonts[_random.Next(Fonts.Length)];
+        (Font, FromTheme) = Looks(Fonts[_random.Next(Fonts.Length)], seed);
         Size = new[] { 20, 22, 24 }[_random.Next(3)];
         TitlePage = _random.Next(3) == 0;
         Width = _random.Next(2) == 0 ? 11906 : 12240;
@@ -70,6 +70,16 @@ internal sealed class RandomLayout
     private int DefaultTab { get; }
 
     private bool LargerSpacing { get; }
+
+    private bool FromTheme { get; }
+
+    // A third of documents are set in Calibri or Cambria, half of those through the theme as Word writes them; drawn from
+    // their own stream so each seed's other choices stay as they were.
+    private static (string Font, bool FromTheme) Looks(string font, int seed)
+    {
+        var looks = new Random(seed + 30_000);
+        return looks.Next(3) == 0 ? (looks.Next(2) == 0 ? "Calibri" : "Cambria", looks.Next(2) == 0) : (font, false);
+    }
     private int ContentWidth => Width - (2 * Margin);
 
     public byte[] Docx()
@@ -88,7 +98,9 @@ internal sealed class RandomLayout
             .Relationship($"{Rel}/footer", "footer1.xml", external: false)
             .Relationship($"{Rel}/header", "header2.xml", external: false)
             .Media("word/media/picture.png", RandomPictures.Png, "image/png")
-            .Relationship($"{Rel}/image", "media/picture.png", external: false);
+            .Relationship($"{Rel}/image", "media/picture.png", external: false)
+            .Part("word/theme/theme1.xml", TestTheme.Xml(Font, Font), "application/vnd.openxmlformats-officedocument.theme+xml")
+            .Relationship($"{Rel}/theme", "theme/theme1.xml", external: false);
         return docx.Build().ToArray();
     }
 
@@ -293,9 +305,13 @@ internal sealed class RandomLayout
 
     private static string Story(string root, string paragraphs) => $"<w:{root} xmlns:w=\"{W}\">{paragraphs}</w:{root}>";
 
+    private string FontsXml => FromTheme
+        ? "<w:rFonts w:asciiTheme=\"minorHAnsi\" w:hAnsiTheme=\"minorHAnsi\"/>"
+        : $"<w:rFonts w:ascii=\"{Font}\" w:hAnsi=\"{Font}\" w:cs=\"{Font}\"/>";
+
     private string StylesXml() => $"""
         <w:styles xmlns:w="{W}">
-          <w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="{Font}" w:hAnsi="{Font}" w:cs="{Font}"/><w:sz w:val="{Size}"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault>
+          <w:docDefaults><w:rPrDefault><w:rPr>{FontsXml}<w:sz w:val="{Size}"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault>
           <w:pPrDefault><w:pPr><w:spacing w:after="160"/></w:pPr></w:pPrDefault></w:docDefaults>
           <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
           <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style>

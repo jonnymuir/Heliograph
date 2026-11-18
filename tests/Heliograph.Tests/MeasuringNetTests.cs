@@ -26,17 +26,19 @@ public class MeasuringNetTests
     // LibreOffice versions differ a little, so each number is the lower of the CI runner's (Ubuntu) and a Mac's. Odd seeds
     // became new-Word-document spacing on 18 November 2026, so seed 21's document changed and its number was set again.
     // Seed 25's is the Mac's: there LibreOffice makes a line with a Symbol bullet a little taller, and on Linux it does not.
-    // Paragraphs gained pictures on 18 November 2026, so seed 12's document changed and its number was set again.
+    // Paragraphs gained pictures on 18 November 2026, so seed 12's document changed and its number was set again. A third
+    // of documents became Calibri or Cambria the same day, so seeds 3, 13, 15 and 30 (and lists seed 1) were set again too.
+    // LibreOffice on Linux sets text in an exact-height Calibri line higher than on a Mac, so those seeds take Linux's.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
-        [1] = 128, [2] = 66, [3] = 59, [4] = 341, [5] = 17, [6] = 87, [8] = 10, [9] = 525, [10] = 24, [11] = 44, [12] = 92, [13] = 235,
-        [14] = 39, [15] = 531, [16] = 48, [18] = 349, [20] = 673, [21] = 45, [22] = 54, [23] = 552, [24] = 28, [25] = 33, [26] = 39,
-        [28] = 27, [29] = 52, [30] = 147,
+        [2] = 66, [3] = 22, [4] = 341, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44, [12] = 92,
+        [13] = 3, [14] = 39, [15] = 91, [16] = 48, [18] = 13, [20] = 673, [21] = 45, [22] = 54, [23] = 552, [24] = 28,
+        [25] = 33, [26] = 17, [28] = 27, [29] = 52, [30] = 61,
     };
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
     {
-        [1] = 151, [2] = 15, [3] = 121, [4] = 59, [5] = 29, [6] = 62, [7] = 78, [8] = 88, [9] = 90, [10] = 130,
+        [1] = 148, [2] = 15, [3] = 24, [4] = 59, [5] = 29, [6] = 62, [7] = 3, [8] = 88, [9] = 90, [10] = 130,
     };
 
     private static readonly FieldDictionary NoFields = new([]);

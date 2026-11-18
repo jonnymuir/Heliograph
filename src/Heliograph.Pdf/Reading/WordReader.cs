@@ -7,6 +7,7 @@ namespace Heliograph.Pdf.Reading;
 internal sealed class WordReader : IDisposable
 {
     private readonly PackageParts _package;
+    private readonly ThemeFonts _theme;
     private readonly ParagraphReader _paragraphs;
     private readonly Dictionary<string, string> _relationships;
     private readonly bool _largerSpacing;
@@ -15,18 +16,23 @@ internal sealed class WordReader : IDisposable
     private WordReader(byte[] docx)
     {
         _package = new PackageParts(docx);
-        Styles = new StyleSheet(_package.Part("word/styles.xml"));
+        var relationships = _package.Part("word/_rels/document.xml.rels")?.Root?.Elements().ToList() ?? [];
+        _relationships = relationships.ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
+        var theme = relationships.FirstOrDefault(e => ((string?)e.Attribute("Type"))?.EndsWith("/theme", StringComparison.Ordinal) == true);
+        _theme = ThemeFonts.Read(theme is null ? null : _package.Part("word/" + (string)theme.Attribute("Target")!));
+        Styles = new StyleSheet(Part("word/styles.xml"));
         // Word's interval between default tab stops is half an inch unless the document sets its own.
         var settings = _package.Part("word/settings.xml")?.Root;
         var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
-        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(_package.Part("word/numbering.xml")), defaultTab, id => _package.Linked(_part, id));
-        _relationships = (_package.Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
-            .ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
+        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab, id => _package.Linked(_part, id));
     }
 
     private StyleSheet Styles { get; }
+
+    // A part with its theme fonts written as the fonts they stand for.
+    private XDocument? Part(string name) => _theme.Resolve(_package.Part(name));
 
     public static WordDocument Read(byte[] docx)
     {
@@ -38,7 +44,7 @@ internal sealed class WordReader : IDisposable
 
     private WordDocument Document()
     {
-        var body = _package.Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
+        var body = Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
         var sect = body.Element(W + "sectPr") ?? new XElement(W + "sectPr");
         var titlePage = On(sect.Element(W + "titlePg"));
         var stories = new Stories(
@@ -84,7 +90,7 @@ internal sealed class WordReader : IDisposable
     // A header's or footer's blocks; its pictures are found through its own relationships.
     private IReadOnlyList<Block>? StoryIn(string name)
     {
-        if (_package.Part(name)?.Root is not { } root)
+        if (Part(name)?.Root is not { } root)
         {
             return null;
         }
@@ -99,9 +105,11 @@ internal sealed class WordReader : IDisposable
     {
         var size = sect.Element(W + "pgSz");
         var margin = sect.Element(W + "pgMar");
+        // A document that leaves its page out is laid out on Word's own default, as Word and LibreOffice do: US Letter with
+        // inch margins and the header and footer half an inch from the edge.
         return new PageGeometry(
-            Twips(size, "w") ?? 595.3, Twips(size, "h") ?? 841.9,
+            Twips(size, "w") ?? 612, Twips(size, "h") ?? 792,
             Twips(margin, "top") ?? 72, Twips(margin, "bottom") ?? 72, Twips(margin, "left") ?? 72, Twips(margin, "right") ?? 72,
-            Twips(margin, "header") ?? 35.4, Twips(margin, "footer") ?? 35.4);
+            Twips(margin, "header") ?? 36, Twips(margin, "footer") ?? 36);
     }
 }

@@ -16,12 +16,13 @@ public interface IDocumentCheck
 /// <summary>A template's parts as the compiler read them: the document, then its headers, footers and notes.</summary>
 public sealed class DocumentToCheck
 {
-    internal DocumentToCheck(IReadOnlyList<DocumentPart> parts, XDocument? settings, XDocument? styles = null, XDocument? numbering = null)
+    internal DocumentToCheck(IReadOnlyList<DocumentPart> parts, XDocument? settings, XDocument? styles = null, XDocument? numbering = null, XDocument? theme = null)
     {
         Parts = parts;
         Settings = settings;
         Styles = styles;
         Numbering = numbering;
+        Theme = theme;
     }
 
     public IReadOnlyList<DocumentPart> Parts { get; }
@@ -34,6 +35,9 @@ public sealed class DocumentToCheck
 
     /// <summary>The document's list definitions (word/numbering.xml), when it has them.</summary>
     public XDocument? Numbering { get; }
+
+    /// <summary>The document's theme (word/theme/theme1.xml, usually), which names the fonts most Word documents use.</summary>
+    public XDocument? Theme { get; }
 }
 
 /// <summary>One part of a template, and how to name a place in it the way the compiler does.</summary>

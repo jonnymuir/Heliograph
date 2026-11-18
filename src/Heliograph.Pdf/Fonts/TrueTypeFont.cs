@@ -25,6 +25,7 @@ internal sealed class TrueTypeFont
         _advances = Advances(Data.U16(hhea + 34));
         var os2 = Data.Offset("OS/2");
         Weight = Data.U16(os2 + 4);
+        (WinAscent, WinDescent) = (Data.U16(os2 + 74), Data.U16(os2 + 76));
         CapHeight = Data.U16(os2) >= 2 ? Data.S16(os2 + 88) : Ascender;
         ItalicAngle = BinaryPrimitives.ReadInt32BigEndian(Data.Bytes.AsSpan(Data.Offset("post") + 4)) / 65536.0;
         PostScriptName = Name(6) ?? "Font";
@@ -38,6 +39,11 @@ internal sealed class TrueTypeFont
     public int Ascender { get; }
     public int Descender { get; }
     public int LineGap { get; }
+
+    /// <summary>How far the font reaches above and below the baseline as Windows measures it (OS/2 usWinAscent, usWinDescent).</summary>
+    public int WinAscent { get; }
+
+    public int WinDescent { get; }
     public int CapHeight { get; }
     public int Weight { get; }
     public double ItalicAngle { get; }

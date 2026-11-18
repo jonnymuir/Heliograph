@@ -39,6 +39,10 @@ jobs:
       # convert with it. The PDF tests also run veraPDF in Docker, which the runner already has.
       - name: Install LibreOffice
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-writer poppler-utils
+      # The PDF tests compare Heliograph's converter with LibreOffice, so LibreOffice is given the very font files
+      # Heliograph.Pdf ships (Liberation, Carlito, Caladea), not whatever versions the runner has or lacks.
+      - name: Give LibreOffice the fonts Heliograph.Pdf ships
+        run: mkdir -p ~/.local/share/fonts && cp src/Heliograph.Pdf/Fonts/BuiltIn/*.ttf ~/.local/share/fonts/ && fc-cache -f
       - name: Test
         env:
           HELIOGRAPH_REQUIRE_EDITOR: "1"

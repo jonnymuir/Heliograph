@@ -33,8 +33,10 @@ public class ThirdPartyTests
         var listed = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "docs", "third-party.md"));
         var package = Projects().Single(p => p.Descendants("PackageId").Any(id => id.Value == "Heliograph.Pdf"));
 
-        listed.Should().Contain("## Fonts that ship").And.Contain("Liberation Sans, Serif and Mono").And.Contain("SIL Open Font License");
-        package.Descendants("None").Select(n => n.Attribute("Include")?.Value).Should().Contain("Fonts/BuiltIn/LICENSE-Liberation.txt");
+        listed.Should().Contain("## Fonts that ship").And.Contain("Liberation Sans, Serif and Mono").And.Contain("Carlito").And.Contain("Caladea")
+            .And.Contain("SIL Open Font License").And.Contain("Apache License 2.0");
+        package.Descendants("None").Select(n => n.Attribute("Include")?.Value).Should()
+            .Contain(["Fonts/BuiltIn/LICENSE-Liberation.txt", "Fonts/BuiltIn/LICENSE-Carlito.txt", "Fonts/BuiltIn/LICENSE-Caladea.txt"]);
     }
 
     private static List<XDocument> Projects() =>
