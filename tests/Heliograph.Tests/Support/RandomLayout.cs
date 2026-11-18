@@ -133,13 +133,19 @@ internal sealed class RandomLayout
         }
         else
         {
-            // A fifth leave out space between paragraphs of the same style, as Word's List Paragraph does.
-            var properties = ParagraphProperties();
-            properties = _spacingRules.Next(5) == 0 ? properties.Replace("<w:jc ", "<w:contextualSpacing/><w:jc ", StringComparison.Ordinal) : properties;
-            var paragraph = Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal));
-            paragraph = RandomFormatting.Into(AlignedTabs(paragraph), _formatting);
-            _body.Append(_pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph);
+            _body.Append(PlainParagraph());
         }
+    }
+
+    // An ordinary paragraph: its spacing, indents, alignment and tabs, formatted runs, sometimes a picture. A fifth leave out
+    // space between paragraphs of the same style, as Word's List Paragraph does.
+    private string PlainParagraph()
+    {
+        var properties = ParagraphProperties();
+        properties = _spacingRules.Next(5) == 0 ? properties.Replace("<w:jc ", "<w:contextualSpacing/><w:jc ", StringComparison.Ordinal) : properties;
+        var aligned = properties.Contains("w:val=\"center\"", StringComparison.Ordinal) || properties.Contains("w:val=\"right\"", StringComparison.Ordinal);
+        var paragraph = RandomFormatting.Into(AlignedTabs(Paragraph(Words(1, 120), properties: properties, tabs: !aligned)), _formatting);
+        return _pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph;
     }
 
     private string ParagraphProperties()
