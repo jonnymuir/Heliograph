@@ -21,12 +21,9 @@ internal static class Segments
         var parts = new List<(string Text, RunStyle Style)>();
         var current = new StringBuilder();
         RunStyle? font = null;
-        var small = style.SmallCaps && !style.Caps ? style with { Size = style.Size * SmallCapitals, SmallCaps = false } : null;
-        foreach (var original in text.EnumerateRunes())
+        foreach (var (rune, runStyle) in Drawn(text, style))
         {
-            var lower = small is not null && Rune.IsLower(original);
-            var rune = lower ? Rune.ToUpperInvariant(original) : original;
-            var covering = FontLibrary.Covering(lower ? small! : style, rune.Value) ?? throw new UndrawableCharacterException();
+            var covering = FontLibrary.Covering(runStyle, rune.Value) ?? throw new UndrawableCharacterException();
             if (font is not null && covering != font)
             {
                 parts.Add((current.ToString(), font));
@@ -46,5 +43,15 @@ internal static class Segments
         return parts is [var only] && only.Style == style
             ? new Piece(text, style, width, kind)
             : new Piece(text, style, width, kind) { Segments = parts };
+    }
+
+    // Each character as it is drawn, in the style it is drawn in: in small capitals, a lowercase letter as a capital, smaller.
+    private static IEnumerable<(Rune Rune, RunStyle Style)> Drawn(string text, RunStyle style)
+    {
+        var small = style.SmallCaps && !style.Caps ? style with { Size = style.Size * SmallCapitals, SmallCaps = false } : null;
+        foreach (var rune in text.EnumerateRunes())
+        {
+            yield return small is not null && Rune.IsLower(rune) ? (Rune.ToUpperInvariant(rune), small) : (rune, style);
+        }
     }
 }
