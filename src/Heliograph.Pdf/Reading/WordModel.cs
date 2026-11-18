@@ -46,8 +46,14 @@ internal sealed record PictureInline(Pictures.PictureFile File, double Width, do
 /// </summary>
 internal sealed record Anchor(string Across, double AcrossOffset, string? AcrossAlign, string Down, double DownOffset, string? DownAlign);
 
-/// <summary>A picture that floats, with no text wrapped round it, in front of the text or behind it; it takes no room in the lines.</summary>
-internal sealed record FloatingPicture(PictureInline Picture, Anchor Anchor, bool Behind) : Inline(Picture.Style);
+/// <summary>
+/// A picture that floats where it is anchored: with no text wrapped round it, in front of the text or behind it, taking no
+/// room in the lines; or with the text wrapped round its box, beside it ("square") or above and below it only.
+/// </summary>
+internal sealed record FloatingPicture(PictureInline Picture, Anchor Anchor, bool Behind) : Inline(Picture.Style)
+{
+    public TextWrap Wrap { get; init; } = TextWrap.None;
+}
 
 /// <summary>Space around and between the lines of a paragraph. Line is in 240ths of a line for "auto", else twips.</summary>
 internal sealed record Spacing(double Before, double After, double Line, string LineRule);

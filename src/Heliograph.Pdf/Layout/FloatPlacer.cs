@@ -21,6 +21,12 @@ internal static class FloatPlacer
             var y = Aligned(f.Anchor.DownAlign, top, height, picture.Height, f.Anchor.DownOffset, "top", "bottom");
             var figure = node is not null && picture.Alt is { } alt ? node.Add("Figure", alt: alt) : null;
             var op = new ImageOp(x, y, picture.Width, picture.Height, picture.File, figure);
+            if (f.Wrap.Kind != WrapKind.None)
+            {
+                var clear = f.Wrap.Clear;
+                page.Wraps.Add(new Exclusion(x - clear.Left, y - clear.Top, x + picture.Width + clear.Right, y + picture.Height + clear.Bottom, f.Wrap));
+            }
+
             if (f.Behind)
             {
                 page.Ops.Insert(0, op);
@@ -33,7 +39,7 @@ internal static class FloatPlacer
     }
 
     // The frame a picture is placed across in: the page, the left or right margin, or the text area.
-    private static (double Left, double Width) Across(string from, PageGeometry g) => from switch
+    public static (double Left, double Width) Across(string from, PageGeometry g) => from switch
     {
         "page" => (0, g.Width),
         "leftMargin" or "insideMargin" => (0, g.Left),
@@ -51,7 +57,7 @@ internal static class FloatPlacer
         _ => (paragraphTop, 0),
     };
 
-    private static double Aligned(string? align, double start, double frame, double size, double offset, string near, string far) =>
+    public static double Aligned(string? align, double start, double frame, double size, double offset, string near, string far) =>
         align switch
         {
             null => start + offset,

@@ -55,6 +55,9 @@ internal sealed class LaidOutPage
 {
     public List<Op> Ops { get; } = [];
 
+    /// <summary>The boxes of the page's floating pictures that text wraps round.</summary>
+    public List<Exclusion> Wraps { get; } = [];
+
     /// <summary>The section the page is in, which gives its size, header and footer.</summary>
     public Section Section { get; init; } = null!;
 

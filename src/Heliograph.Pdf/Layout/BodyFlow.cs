@@ -31,6 +31,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
                 case Table t:
                     _lists.Clear();
                     _frame = null;
+                    Below(t);
                     _tables.Run(t, root.Add("Table"));
                     pages.TextFoot = pages.Y;
                     break;
@@ -60,6 +61,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         var box = ParagraphBox.Of(p, pages, _frame, next);
         Open(box, before);
         FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
+        lines = Wrapped(p, lines);
         var placed = 0;
         while (placed < lines.Count)
         {
@@ -93,6 +95,28 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         }
 
         box.Break();
+    }
+
+    // A table does not wrap round a floating picture: it starts below any it would meet, as LibreOffice lays it out.
+    private void Below(Table t)
+    {
+        var height = t.Rows.Count > 0 ? TableFlow.RowHeight(t, t.Rows[0]) : 0;
+        while (pages.Wraps.FirstOrDefault(e => e.Top < pages.Y + height && e.Bottom > pages.Y) is { } picture)
+        {
+            pages.Y = picture.Bottom;
+        }
+    }
+
+    // The paragraph broken again round the floating pictures on its page that text wraps round, from where it starts.
+    private List<Line> Wrapped(Paragraph p, List<Line> lines)
+    {
+        if (pages.Wraps.Count == 0)
+        {
+            return lines;
+        }
+
+        var g = pages.Geometry;
+        return LineBreaker.Break(p, g.ContentWidth, _ => "", new LineBounds(pages.Y, (top, height) => WrapRoom.Of(pages.Wraps, g.Left, (top, height), (0, g.ContentWidth))));
     }
 
     private void Open(ParagraphBox? box, double before)

@@ -105,6 +105,11 @@ This plan is built to find out early and keep finding out.
     share of the text's height, not the picture's;
   - or floating in front of or behind the text, with no text wrapped round it (a letterhead logo,
     say), anchored to the page, the margins or its paragraph, by an offset or aligned;
+  - or, in the body, with text wrapped round its box: beside it (Square), on the side it says or
+    the wider, or above and below it, with the space it keeps clear; a paragraph on that page is
+    broken line by line, each as wide as the room at its height, and a table starts below any
+    picture it would meet, as LibreOffice lays them out. Wrapped tight to its outline, in a header
+    or footer, or with room for text on both sides, is refused;
   - a described picture is a figure with its description; a decorative one, one with no
     description, or one in a header or footer is passed over by a screen reader.
 
@@ -285,7 +290,7 @@ generated documents through both routes. Add the Word fixtures.
 
 - PNG (transparency kept) and JPEG. Done.
 - Inline pictures first (done), then floating ones: in front of or behind the text (done), then
-  with square or top-and-bottom wrapping.
+  with square or top-and-bottom wrapping (done, in the body, text on one side).
 - Each picture is tagged as a figure with its alternative text. A picture without alternative
   text is a compile warning, which helps every route, not only this one.
 

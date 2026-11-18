@@ -27,8 +27,8 @@ internal static class LayoutLimits
     // Objects and page structure.
     private static Limit[] ThingsOnThePage() =>
     [
-        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} draws pictures in line with the text, or floating in front of or behind it, only, so its PDFs would be missing it.",
-            $"Set the picture in line with text, or in front of or behind it (Wrap Text in Word), {Instead}"),
+        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} does not lay that out yet, so its PDFs would be missing it or set it out wrongly.",
+            $"Set the picture in line with text, in front of or behind it, or wrap text Square or Top and Bottom on one side of it in the body of the letter (Wrap Text in Word), {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
@@ -102,7 +102,7 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Pictures(XElement root)
     {
         var floating = root.Descendants(Wp + "anchor").Where(a => a.Descendants(A + "graphicData").Any(g => ((string?)g.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)))
-            .Select(a => (a, What: a.Element(Wp + "wrapNone") is null ? "a picture with text wrapped round it" : a.Ancestors(W + "tbl").Any() ? "a picture that floats in a table" : null))
+            .Select(a => (a, What: a.Ancestors(W + "tbl").Any() ? "a picture that floats in a table" : WrapLimits.Wrapped(a)))
             .Where(f => f.What is not null);
         return floating.Concat(root.Descendants(V + "imagedata").Select(e => (e, (string?)"an old-style picture")))!;
     }
