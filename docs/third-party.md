@@ -18,6 +18,8 @@ Packages a shipped project references. The core library and the PDF converter re
 | Fonts | Licence | Used by |
 |---|---|---|
 | Liberation Sans, Serif and Mono 2.1.5 ([liberation-fonts](https://github.com/liberationfonts/liberation-fonts), release `liberation-fonts-ttf-2.1.5.tar.gz`, SHA-256 `7191c669…25d0`) | SIL Open Font License 1.1 | `Heliograph.Pdf`, inside the assembly. The OFL allows fonts to be bundled with software, on condition that the licence goes with them (`LICENSE-Liberation.txt` is in the package) and the fonts are not sold on their own. Subsets embedded in a PDF are allowed. The fonts are unmodified. |
+| Carlito 1.103, the look-alike for Calibri (Google's `crosextrafonts-carlito-20130920.tar.gz` from the ChromeOS mirror, SHA-256 `4bd12b6c…af5a`; the same files LibreOffice ships) | SIL Open Font License 1.1 | `Heliograph.Pdf`, inside the assembly, on the same terms as Liberation (`LICENSE-Carlito.txt` is in the package). The fonts are unmodified. |
+| Caladea 1.002, the look-alike for Cambria (Google's `crosextrafonts-20130214.tar.gz` from the ChromeOS mirror, SHA-256 `c48d1c2f…4d09`; the same files LibreOffice ships) | Apache License 2.0 | `Heliograph.Pdf`, inside the assembly. Apache 2.0 allows redistribution with the licence and copyright notice, which `LICENSE-Caladea.txt` in the package carries. The fonts are unmodified. Later releases of Caladea are under the OFL but changed its widths, so they no longer match Cambria. |
 
 ## What is run, and never shipped
 

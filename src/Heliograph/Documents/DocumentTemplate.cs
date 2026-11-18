@@ -110,8 +110,17 @@ public static class DocumentTemplate
         var document = new DocumentToCheck(
             [.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!, id => PackageLinks.Linked(package, part.Name, id)))],
             package.Xml("word/settings.xml"),
-            package.Xml("word/styles.xml"), package.Xml("word/numbering.xml"));
+            package.Xml("word/styles.xml"), package.Xml("word/numbering.xml"), Theme(package, parts[0].Name));
         return [.. checks.SelectMany(check => check.Check(document))];
+    }
+
+    // The theme the main document points to, if any.
+    private static XDocument? Theme(DocxPackage package, string main)
+    {
+        var folder = main.Contains('/', StringComparison.Ordinal) ? main[..(main.LastIndexOf('/') + 1)] : "";
+        var theme = package.RelationshipsIn($"{folder}_rels/{main[folder.Length..]}.rels")
+            .FirstOrDefault(r => !r.External && r.Type.EndsWith("/theme", StringComparison.Ordinal));
+        return theme.Target is null ? null : package.Xml(theme.Target.StartsWith('/') ? theme.Target.TrimStart('/') : folder + theme.Target);
     }
 
     private static Diagnostic Refused(DocxRefusal? refusal) => refusal switch

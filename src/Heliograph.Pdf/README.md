@@ -12,12 +12,16 @@ byte[] file = await pdf.ConvertAsync(render.Docx!);
 - **Accessible:** every letter is tagged for screen readers (headings, paragraphs, lists,
   tables), with its language and title.
 - **Deterministic:** the same letter always gives the same bytes.
-- **Fonts:** the fonts a letter names are drawn in built-in look-alikes with the same widths.
+- **Fonts:** the fonts a letter names, directly or through its theme, are drawn in built-in
+  look-alikes with the same widths, the same files LibreOffice uses:
   - Arial in Liberation Sans;
   - Times New Roman in Liberation Serif;
-  - Courier New in Liberation Mono.
+  - Courier New in Liberation Mono;
+  - Calibri in Carlito;
+  - Cambria in Caladea.
 
-  These fonts are under the SIL Open Font License; see `LICENSE-Liberation.txt` in the package.
+  Liberation and Carlito are under the SIL Open Font License, Caladea under the Apache License
+  2.0; see the `LICENSE-*.txt` files in the package.
 - **Limits:** a letter that runs past 500 pages (`HeliographPdfOptions.MaxPages`) is refused.
 
 It is new. What it lays out so far is listed in

@@ -24,6 +24,8 @@
     <!-- The built-in fonts travel inside the assembly, with their licence beside them in the package. -->
     <EmbeddedResource Include="Fonts/BuiltIn/*.ttf" LogicalName="Heliograph.Pdf.Fonts.%(Filename)%(Extension)" />
     <None Include="Fonts/BuiltIn/LICENSE-Liberation.txt" Pack="true" PackagePath="/" />
+    <None Include="Fonts/BuiltIn/LICENSE-Carlito.txt" Pack="true" PackagePath="/" />
+    <None Include="Fonts/BuiltIn/LICENSE-Caladea.txt" Pack="true" PackagePath="/" />
     <None Include="README.md" Pack="true" PackagePath="/" />
     <None Include="../../LICENSE" Pack="true" PackagePath="/" />
   </ItemGroup>

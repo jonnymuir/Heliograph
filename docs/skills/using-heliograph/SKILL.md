@@ -206,12 +206,16 @@ byte[] pdf = await converter.ConvertAsync(render.Docx!);
 
 `Heliograph.Pdf`:
 
-- **Fonts:** it draws the fonts a letter names in built-in look-alikes with the same widths:
+- **Fonts:** it draws the fonts a letter names, directly or through its theme, in built-in
+  look-alikes with the same widths:
   - Arial in Liberation Sans;
   - Times New Roman in Liberation Serif;
-  - Courier New in Liberation Mono.
+  - Courier New in Liberation Mono;
+  - Calibri in Carlito;
+  - Cambria in Caladea.
 
-  Any other font is drawn in Liberation Sans for now.
+  Any other font, Aptos (Word's default since 2024) included, is drawn in Liberation Sans for now,
+  and is a warning at compile (`HG4013`).
 - **Deterministic:** the same letter always gives the same bytes.
 - **Limits:** a letter past `HeliographPdfOptions.MaxPages` (500) is refused, and a cancelled
   token stops the conversion.

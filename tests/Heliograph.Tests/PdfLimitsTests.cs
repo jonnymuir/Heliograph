@@ -63,13 +63,13 @@ public class PdfLimitsTests
     [Fact]
     public void A_font_without_a_look_alike_is_a_warning_and_the_template_still_compiles()
     {
-        var calibri = $"<w:p {W}><w:r><w:rPr><w:rFonts w:ascii=\"Calibri\" w:hAnsi=\"Calibri\"/></w:rPr><w:t>In Calibri</w:t></w:r></w:p>";
+        var garamond = $"<w:p {W}><w:r><w:rPr><w:rFonts w:ascii=\"Garamond\" w:hAnsi=\"Garamond\"/></w:rPr><w:t>In Garamond</w:t></w:r></w:p>";
 
-        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(calibri).Build(), Dictionary, Checks);
+        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(garamond).Build(), Dictionary, Checks);
 
         compilation.Succeeded.Should().BeTrue();
         var warning = compilation.Diagnostics.Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfFontDrawnInLookAlike).Subject;
-        (warning.Severity, warning.Message.Contains("Calibri", StringComparison.Ordinal)).Should().Be((DiagnosticSeverity.Warning, true));
+        (warning.Severity, warning.Message.Contains("Garamond", StringComparison.Ordinal)).Should().Be((DiagnosticSeverity.Warning, true));
     }
 
     [Fact]

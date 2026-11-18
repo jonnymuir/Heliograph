@@ -52,8 +52,6 @@ internal static class LayoutLimits
             $"Give each cell its own row, with no table inside another, {Instead}"),
         new(DiagnosticCodes.PdfCannotAlignTab, Tabs, what => $"This document has a tab stop {what}. {Route} lines tabs up on the left only, so text after it would not line up.",
             $"Use a left tab stop, or a table with the column aligned as you need, {Instead}"),
-        new(DiagnosticCodes.PdfFontDrawnInLookAlike, Fonts, what => $"This document uses the font {what}, which {Route} does not have. It is drawn in Liberation Sans, so lines may break in different places from your word processor.",
-            "Use Arial, Times New Roman or Courier New, which are drawn in look-alikes with the same widths.", Warning: true),
     ];
 
     public static IReadOnlyList<Diagnostic> Check(DocumentToCheck document)
@@ -78,6 +76,7 @@ internal static class LayoutLimits
 
         diagnostics.AddRange(ListLimits.Check(document));
         diagnostics.AddRange(PictureLimits.Check(document));
+        diagnostics.AddRange(FontLimits.Check(document));
 
         return diagnostics;
     }
@@ -175,13 +174,6 @@ internal static class LayoutLimits
         "pBdr" => "a border round a paragraph",
         _ => null,
     };
-
-    private static IEnumerable<(XElement, string)> Fonts(XElement root)
-    {
-        return root.Descendants(W + "rFonts")
-            .Select(f => (f, Font: (string?)f.Attribute(W + "ascii") ?? (f.Attribute(W + "asciiTheme") is not null ? "set by the document's theme" : null)))
-            .Where(f => f.Font is not null && !FontLibrary.HasLookAlike(f.Font))!;
-    }
 
     // Different headers on even pages only apply when the document turns them on.
     private static Diagnostic? EvenPages(DocumentToCheck document)

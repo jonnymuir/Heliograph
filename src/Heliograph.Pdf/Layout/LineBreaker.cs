@@ -256,7 +256,8 @@ internal static class LineBreaker
         // A picture stands on the baseline, so it reaches as far above it as it is tall.
         // Line spacing over or under single adds or takes away a share of the text's height, not the picture's.
         var metrics = styles.Select(FontLibrary.Metrics).ToList();
-        var (ascent, below) = (metrics.Max(m => m.Ascent), metrics.Max(m => m.Descent) + metrics.Max(m => m.Gap));
+        var (ascent, gap) = (metrics.Max(m => m.Ascent), metrics.Max(m => m.Gap));
+        var below = metrics.Max(m => m.Descent) + gap;
         line.Ascent = Math.Max(ascent, line.Pieces.Select(q => q.Piece.Picture?.Height ?? 0).DefaultIfEmpty(0).Max());
         var natural = line.Ascent + below;
         var spacing = p.Style.Spacing;
@@ -269,10 +270,13 @@ internal static class LineBreaker
 
         line.Hang = spacing.LineRule is "exact" or "atLeast" ? 0 : Math.Max(0, line.Height - natural);
 
-        // A line set to an exact or least height carries the difference above its text, so the text sits at its foot.
-        if (spacing.LineRule is "atLeast" or "exact")
+        // A line set to an exact or least height carries the difference above its text. In an exact line the text stands
+        // on its descent at the line's foot, with no gap under it; in an at-least line it keeps its gap.
+        line.Ascent += spacing.LineRule switch
         {
-            line.Ascent += line.Height - natural;
-        }
+            "exact" => line.Height - natural + gap,
+            "atLeast" => line.Height - natural,
+            _ => 0,
+        };
     }
 }

@@ -94,6 +94,9 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
   effect on the next line;
 - a paragraph kept with the next is kept with all of it when the next keeps its lines together;
 - a paragraph a keep rule moves to a new page starts at its top, without its space before;
+- a font's descent is the one Windows gives, and text in an exact line stands on it with no gap
+  under it (Carlito is where this shows);
+- a document with no page settings is laid out on US Letter, as Word does;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
@@ -166,9 +169,11 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 3. Fonts
 
-- **A font source.** The package carries free look-alike fonts (SIL OFL); a host can add its own
-  files, the real Arial included if it holds a licence.
-- **A mapping table** that Word and LibreOffice already agree on:
+- **A font source.** The package carries free look-alike fonts (SIL OFL and Apache 2.0); a host
+  can add its own files, the real Arial included if it holds a licence. Still to come: the host's
+  own files.
+- **A mapping table** that Word and LibreOffice already agree on (done, with theme fonts resolved
+  and the same files LibreOffice ships):
   - Arial → Liberation Sans;
   - Times New Roman → Liberation Serif;
   - Courier New → Liberation Mono;
