@@ -40,7 +40,7 @@ public class PdfLimitsTests
         { DiagnosticCodes.PdfCannotMakeLink, $"<w:p {W}><w:hyperlink w:anchor=\"top\"><w:r><w:t>Go to the top</w:t></w:r></w:hyperlink></w:p>", "link" },
         { DiagnosticCodes.PdfCannotDrawFormatting, $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small capitals</w:t></w:r></w:p>", "small capitals" },
         { DiagnosticCodes.PdfCannotLayOutDirection, $"<w:p {W}><w:pPr><w:bidi/></w:pPr><w:r><w:t>Right to left</w:t></w:r></w:p>", "right-to-left" },
-        { DiagnosticCodes.PdfCannotLayOutTable, $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"2000\"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:vMerge w:val=\"restart\"/></w:tcPr><w:p><w:r><w:t>Merged</w:t></w:r></w:p></w:tc></w:tr></w:tbl>", "merged down a column" },
+        { DiagnosticCodes.PdfCannotLayOutTable, $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"4000\"/></w:tblGrid><w:tr><w:tc><w:tbl><w:tblGrid><w:gridCol w:w=\"2000\"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>Inner</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p/></w:tc></w:tr></w:tbl>", "inside it" },
         { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:tabs><w:tab w:val=\"bar\" w:pos=\"4320\"/></w:tabs></w:pPr><w:r><w:t>Name</w:t></w:r></w:p>", "bar" },
         { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:jc w:val=\"center\"/></w:pPr><w:r><w:t>Name</w:t><w:tab/><w:t>Date</w:t></w:r></w:p>", "centred or right-aligned paragraph" },
     };

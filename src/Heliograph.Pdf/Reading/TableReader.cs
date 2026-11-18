@@ -55,7 +55,7 @@ internal static class TableReader
         var borders = new CellBorders(
             Side("top", "insideH", edges.Top), Side("left", "insideV", edges.Left), Side("bottom", "insideH", edges.Bottom), Side("right", "insideV", edges.Right));
         var span = (int)Number(Val(tcPr?.Element(W + "gridSpan")) ?? "1");
-        return new Cell(blocks(tc), span, borders) { VAlign = Val(tcPr?.Element(W + "vAlign")) switch { "center" => "center", "bottom" => "bottom", _ => "top" } };
+        return CellProperties.Read(new Cell(blocks(tc), span, borders), tcPr);
     }
 
     // A border's size is in eighths of a point.

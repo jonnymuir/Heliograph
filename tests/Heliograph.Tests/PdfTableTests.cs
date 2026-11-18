@@ -17,14 +17,14 @@ public class PdfTableTests
     private static readonly FieldDictionary NoFields = new([]);
 
     // Word's Table Grid: single borders all round and between, and no space after paragraphs in its cells.
-    private const string TableGrid = "<w:style w:type=\"table\" w:styleId=\"TableGrid\"><w:name w:val=\"Table Grid\"/><w:basedOn w:val=\"TableNormal\"/>"
+    internal const string TableGrid = "<w:style w:type=\"table\" w:styleId=\"TableGrid\"><w:name w:val=\"Table Grid\"/><w:basedOn w:val=\"TableNormal\"/>"
         + "<w:pPr><w:spacing w:after=\"0\" w:line=\"240\" w:lineRule=\"auto\"/></w:pPr><w:tblPr><w:tblBorders>"
         + "<w:top w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/><w:left w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
         + "<w:bottom w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/><w:right w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
         + "<w:insideH w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/><w:insideV w:val=\"single\" w:sz=\"4\" w:space=\"0\" w:color=\"auto\"/>"
         + "</w:tblBorders></w:tblPr></w:style>";
 
-    private const string TableNormal = "<w:style w:type=\"table\" w:default=\"1\" w:styleId=\"TableNormal\"><w:name w:val=\"Normal Table\"/>"
+    internal const string TableNormal = "<w:style w:type=\"table\" w:default=\"1\" w:styleId=\"TableNormal\"><w:name w:val=\"Normal Table\"/>"
         + "<w:tblPr><w:tblInd w:w=\"0\" w:type=\"dxa\"/><w:tblCellMar><w:top w:w=\"0\" w:type=\"dxa\"/><w:left w:w=\"108\" w:type=\"dxa\"/>"
         + "<w:bottom w:w=\"0\" w:type=\"dxa\"/><w:right w:w=\"108\" w:type=\"dxa\"/></w:tblCellMar></w:tblPr></w:style>";
 
@@ -50,6 +50,17 @@ public class PdfTableTests
         actual.Select(l => l.Text).Should().Equal(expected.Select(l => l.Text), kind);
         actual.Zip(expected).Should().OnlyContain(pair => Math.Abs(pair.First.Top - pair.Second.Top) <= 1.5, kind);
         actual.Zip(expected).Should().OnlyContain(pair => Math.Abs(pair.First.Left - pair.Second.Left) <= 1.5, kind);
+    }
+
+    [PdfLinesFact]
+    public async Task A_cells_shading_is_drawn_behind_it()
+    {
+        var page = PdfRender.FirstPage(await new HeliographPdfConverter().ConvertAsync(
+            Rendered(Letter("<w:tblStyle w:val=\"TableGrid\"/>", "", "<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"FFC000\"/>"))));
+        var line = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(
+            Rendered(Letter("<w:tblStyle w:val=\"TableGrid\"/>", "", "<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"FFC000\"/>")))).First(l => l.Text.StartsWith("Membership", StringComparison.Ordinal));
+
+        page.At(line.Left + 150, line.Top + 5).Should().Be((255, 192, 0));
     }
 
     [PdfLinesFact]

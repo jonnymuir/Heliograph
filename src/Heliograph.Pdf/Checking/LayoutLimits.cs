@@ -140,8 +140,7 @@ internal static class LayoutLimits
 
     private static IEnumerable<(XElement, string)> Tables(XElement root)
     {
-        return root.Descendants().Where(e => e.Name == W + "vMerge" || (e.Name == W + "tbl" && e.Ancestors(W + "tbl").Any()))
-            .Select(e => (e, e.Name.LocalName == "vMerge" ? "cells merged down a column" : "another table inside it"));
+        return root.Descendants().Where(e => e.Name == W + "tbl" && e.Ancestors(W + "tbl").Any()).Select(e => (e, "another table inside it"));
     }
 
     private static IEnumerable<(XElement, string)> Tabs(XElement root)

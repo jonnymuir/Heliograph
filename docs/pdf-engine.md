@@ -64,8 +64,11 @@ This plan is built to find out early and keep finding out.
     run settings it gives text in its cells;
   - centred or to the right, rows at least or exactly a set height, and text at the top, middle
     or foot of a cell (at its top in a row broken across pages, as LibreOffice lays it out);
+  - cells merged down a column, the merged cell drawn once down its rows and the last of them
+    growing to fit its text, and cell shading;
   - a row breaks across pages, each cell at its own last line that fits, unless it is marked not
-    to. A row with a set height that breaks across a page can still differ from LibreOffice.
+    to. A row with a set height that breaks across a page can still differ from LibreOffice, and
+    rows joined by a merged cell are kept together on a page where LibreOffice may break them.
 - **Headers and footers:** on every page, with a first page of its own, and page numbers and page
   counts.
 - **Pictures** set in line with the text, in the body, tables, headers and footers:
@@ -234,9 +237,9 @@ generated documents through both routes. Add the Word fixtures.
 
 - Widths taken from contents (Word's autofit), percentage widths, and centred or right-aligned
   tables (done).
-- Vertically merged cells, and vertical alignment in a cell (done). Table styles' own borders,
+- Vertically merged cells (done, kept together on a page), and vertical alignment in a cell (done). Table styles' own borders,
   padding and paragraph settings (done); their formatting of some rows or columns, still refused.
-- Cell shading, and Word's rules for which border wins.
+- Cell shading (done), and Word's rules for which border wins.
 - Rows that split across pages, and nested tables.
 
 ### 7. Pictures

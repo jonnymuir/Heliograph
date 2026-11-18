@@ -44,7 +44,13 @@ internal static class FormattingLimits
             return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
         }
 
-        return (string?)shd.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") ? "shading behind a paragraph or cell" : null;
+        // A cell's shading is drawn; a paragraph's, or a whole table's, is not yet.
+        if (shd.Parent?.Name == W + "tcPr")
+        {
+            return Val(shd) is null or "clear" or "solid" or "nil" ? null : "patterned shading";
+        }
+
+        return (string?)shd.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") ? "shading behind a paragraph or table" : null;
     }
 
     // Characters scaled, or raised or lowered by a set amount, in a run.
