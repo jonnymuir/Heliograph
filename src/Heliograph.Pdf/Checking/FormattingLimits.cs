@@ -30,8 +30,11 @@ internal static class FormattingLimits
             "em" when Val(e) is not (null or "none") => "emphasis marks",
             "fitText" => "text fitted to a set width",
             "pBdr" => "a border round a paragraph",
+            "spacing" when Auto(e, "beforeAutospacing") || Auto(e, "afterAutospacing") => "spacing set to automatic, as in text pasted from a web page",
             _ => null,
         };
+
+    private static bool Auto(XElement spacing, string attribute) => (string?)spacing.Attribute(W + attribute) is "1" or "true" or "on";
 
     // Clear or solid shading behind a run is drawn; patterned shading, or shading behind a paragraph or cell, is not.
     private static string? Shading(XElement shd)

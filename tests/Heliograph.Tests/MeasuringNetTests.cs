@@ -29,7 +29,8 @@ public class MeasuringNetTests
     // Paragraphs gained pictures on 18 November 2026, so seed 12's document changed and its number was set again. A third
     // of documents became Calibri or Cambria the same day, so seeds 3, 13, 15 and 30 (and lists seed 1) were set again too.
     // LibreOffice on Linux sets text in an exact-height Calibri line higher than on a Mac, so those seeds take Linux's.
-    // Runs gained formatting the same day, so seeds 7, 9, 13 and 19 (and lists seed 10) were set again once more.
+    // Runs gained formatting the same day, so seeds 7, 9, 13 and 19 (and lists seed 10) were set again once more; and
+    // paragraphs began leaving out space between paragraphs of one style, so lists seed 4 was set again.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
         [2] = 66, [3] = 22, [4] = 341, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44, [12] = 92,
@@ -39,7 +40,7 @@ public class MeasuringNetTests
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
     {
-        [1] = 148, [2] = 15, [3] = 24, [4] = 59, [5] = 29, [6] = 62, [7] = 3, [8] = 88, [9] = 90, [10] = 122,
+        [1] = 148, [2] = 15, [3] = 24, [4] = 43, [5] = 29, [6] = 62, [7] = 3, [8] = 88, [9] = 90, [10] = 122,
     };
 
     private static readonly FieldDictionary NoFields = new([]);

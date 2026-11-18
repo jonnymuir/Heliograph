@@ -13,6 +13,11 @@ internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent
 
     public double Overlap { get; init; }
 
+    /// <summary>The paragraph's style, and whether it leaves out space between paragraphs of that same style.</summary>
+    public string StyleId { get; init; } = "";
+
+    public bool Contextual { get; init; }
+
     /// <summary>The space before this paragraph when it follows another paragraph.</summary>
     public double SpaceAbove => Spacing.Before - Overlap;
 }
