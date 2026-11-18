@@ -41,14 +41,20 @@ internal sealed class NumberingDefinitions
     public ListPlace? Place(XElement? numPr)
     {
         var numId = Val(numPr?.Element(W + "numId"));
-        if (numId is null or "0" || !_nums.TryGetValue(numId, out var num) || Val(num.Element(W + "abstractNumId")) is not { } abstractId
-            || !_abstracts.ContainsKey(abstractId))
+        if (AbstractOf(numId) is not { } abstractId)
         {
             return null;
         }
 
         var level = int.TryParse(Val(numPr!.Element(W + "ilvl")), CultureInfo.InvariantCulture, out var l) ? l : 0;
-        return Definition(numId, abstractId, level) is { } definition ? new ListPlace(numId, abstractId, level, definition) : null;
+        return Definition(numId!, abstractId, level) is { } definition ? new ListPlace(numId!, abstractId, level, definition) : null;
+    }
+
+    // The shared definition a list points to, when both exist; numId 0 means no list.
+    private string? AbstractOf(string? numId)
+    {
+        var abstractId = numId is null or "0" ? null : Val(_nums.GetValueOrDefault(numId)?.Element(W + "abstractNumId"));
+        return abstractId is not null && _abstracts.ContainsKey(abstractId) ? abstractId : null;
     }
 
     /// <summary>The definition of a level of a list: the list's own override of it, else its shared definition.</summary>

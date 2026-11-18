@@ -25,16 +25,17 @@ public class MeasuringNetTests
     // Seed: the first line, counting from 1, that still differs from LibreOffice. A seed not listed matches throughout.
     // LibreOffice versions differ a little, so each number is the lower of the CI runner's (Ubuntu) and a Mac's. Odd seeds
     // became new-Word-document spacing on 18 November 2026, so seed 21's document changed and its number was set again.
+    // Seed 25's is the Mac's: there LibreOffice makes a line with a Symbol bullet a little taller, and on Linux it does not.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
         [1] = 128, [2] = 54, [3] = 59, [4] = 39, [5] = 17, [6] = 74, [8] = 10, [9] = 46, [10] = 24, [11] = 44, [12] = 161, [13] = 100,
         [14] = 39, [15] = 531, [16] = 48, [17] = 48, [18] = 32, [20] = 544, [21] = 45, [22] = 43, [23] = 552, [24] = 28,
-        [25] = 86, [26] = 39, [28] = 27, [29] = 47, [30] = 145,
+        [25] = 33, [26] = 39, [28] = 27, [29] = 47, [30] = 145,
     };
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
     {
-        [1] = 61, [2] = 41, [3] = 146, [4] = 126, [5] = 38, [7] = 80, [9] = 230,
+        [1] = 151, [2] = 15, [3] = 121, [4] = 59, [5] = 38, [6] = 62, [7] = 78, [8] = 88, [9] = 158, [10] = 130,
     };
 
     private static readonly FieldDictionary NoFields = new([]);
@@ -47,7 +48,7 @@ public class MeasuringNetTests
             var compilation = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed).Docx()), NoFields, [new HeliographPdfConverter()]);
 
             compilation.Diagnostics.Should().BeEmpty($"seed {seed} uses only what the converter claims");
-            var lists = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, mostlyLists: true).Docx()), NoFields, [new HeliographPdfConverter()]);
+            var lists = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, LayoutMix.MostlyLists).Docx()), NoFields, [new HeliographPdfConverter()]);
             lists.Diagnostics.Should().BeEmpty($"seed {seed}, mostly lists, uses only what the converter claims");
         }
     }
@@ -94,7 +95,7 @@ public class MeasuringNetTests
 
     private static async Task<(int Line, string? Difference)> Difference(int seed, bool mostlyLists = false)
     {
-        var compilation = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, mostlyLists).Docx()), NoFields);
+        var compilation = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, mostlyLists ? LayoutMix.MostlyLists : LayoutMix.Everything).Docx()), NoFields);
         var docx = compilation.Document!.Render(JsonDocument.Parse("{}").RootElement, Benchmark.British).Docx!;
         var (theirs, ours) = (await new LibreOfficePdfConverter().ConvertAsync(docx), await new HeliographPdfConverter().ConvertAsync(docx));
         var (expected, actual) = (PdfLines.Read(theirs), PdfLines.Read(ours));

@@ -9,10 +9,7 @@ namespace Heliograph.Pdf.Layout;
 internal sealed class BodyFlow(PageSet pages, StructNode root)
 {
     private readonly TableFlow _tables = new(pages);
-
-    // The lists open at this point, deepest last: each level's list, and the body of its latest item, where a deeper
-    // list goes.
-    private readonly Stack<(int Level, StructNode List, StructNode? Body)> _lists = new();
+    private readonly ListNesting _lists = new(root);
 
     public void Run(IReadOnlyList<Block> blocks)
     {
@@ -23,7 +20,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
             switch (blocks[i])
             {
                 case Paragraph { IsListItem: true } p:
-                    Paragraph(p, ListItem(p.ListLevel), next);
+                    Paragraph(p, _lists.Item(p.ListLevel), next);
                     break;
                 case Paragraph p:
                     _lists.Clear();
@@ -35,28 +32,6 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
                     break;
             }
         }
-    }
-
-    // A list item at its level: in the open list at that level, or a new list inside the body of the item above it.
-    private Owner ListItem(int level)
-    {
-        while (_lists.Count > 0 && _lists.Peek().Level > level)
-        {
-            _lists.Pop();
-        }
-
-        if (_lists.Count == 0 || _lists.Peek().Level < level)
-        {
-            var parent = _lists.Count == 0 ? root : _lists.Peek().Body ?? _lists.Peek().List;
-            _lists.Push((level, parent.Add("L"), null));
-        }
-
-        var (at, list, _) = _lists.Pop();
-        var item = list.Add("LI");
-        var label = item.Add("Lbl");
-        var body = item.Add("LBody");
-        _lists.Push((at, list, body));
-        return new Owner(body, label);
     }
 
     private void Paragraph(Paragraph p, Owner owner, Block? next)

@@ -37,9 +37,7 @@ internal static class LineBreaker
         var builder = new LineBuilder(p.Style, width - p.Style.Indent.Right);
         if (p.Label is { } label)
         {
-            var face = FontLibrary.Face(label.Style);
-            builder.Label(new Piece(label.Text, label.Style, face.Width(label.Text, label.Style.Size), PieceKind.Word, IsLabel: true), p.LabelAlign,
-                p.LabelSuffix switch { "nothing" => 0, "space" => face.Width(" ", label.Style.Size), _ => null });
+            builder.Label(new Piece(label.Text, label.Style, FontLibrary.Face(label.Style).Width(label.Text, label.Style.Size), PieceKind.Word, IsLabel: true), p.Placement);
         }
 
         foreach (var piece in Pieces(p, field))
@@ -74,10 +72,10 @@ internal static class LineBreaker
 
         public List<Line> Lines { get; } = [];
 
-        // A label right-aligned or centred ends, or is centred, where the first line starts. A gap of null is a tab.
-        public void Label(Piece label, string align, double? gap)
+        // A label right-aligned or centred ends, or is centred, where the first line starts; then a tab, a space or nothing.
+        public void Label(Piece label, LabelPlacement placement)
         {
-            var start = align switch
+            var start = placement.Align switch
             {
                 "right" => _x - label.Width,
                 "center" => _x - (label.Width / 2),
@@ -85,7 +83,12 @@ internal static class LineBreaker
             };
             _line.Pieces.Add((start, label));
             var end = start + label.Width;
-            _x = gap is { } g ? end + g : NextTab(end, _style, hanging: true);
+            _x = placement.Suffix switch
+            {
+                "nothing" => end,
+                "space" => end + FontLibrary.Face(label.Style).Width(" ", label.Style.Size),
+                _ => NextTab(end, _style, hanging: true),
+            };
         }
 
         public void Add(Piece piece)

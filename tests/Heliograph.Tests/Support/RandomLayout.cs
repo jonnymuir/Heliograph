@@ -33,10 +33,10 @@ internal sealed class RandomLayout
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
-    /// <summary>A document; with <paramref name="mostlyLists"/>, one where most blocks are lists, every one with levels.</summary>
-    public RandomLayout(int seed, bool mostlyLists = false)
+    /// <summary>A document of every kind of block, or, with <see cref="LayoutMix.MostlyLists"/>, one where most blocks are lists with levels.</summary>
+    public RandomLayout(int seed, LayoutMix mix = LayoutMix.Everything)
     {
-        _mostlyLists = mostlyLists;
+        _mostlyLists = mix == LayoutMix.MostlyLists;
         _random = new Random(seed);
         // Lists drawn from their own stream, so what else a seed builds stays as it was before lists grew levels.
         _lists = new Random(seed + 10_000);
@@ -92,12 +92,8 @@ internal sealed class RandomLayout
 
     private void Block()
     {
-        var kind = _random.Next(100);
-        if (_mostlyLists && kind < 70)
-        {
-            List();
-        }
-        else if (kind < 8)
+        var kind = Kind();
+        if (kind < 8)
         {
             _body.Append(Paragraph(Words(2, 8), style: _random.Next(2) == 0 ? "Heading1" : "Heading2"));
         }
@@ -161,6 +157,13 @@ internal sealed class RandomLayout
 
         p.Append(Invariant($"<w:jc w:val=\"{Alignments[_random.Next(Alignments.Length)]}\"/>"));
         return p.ToString();
+    }
+
+    // What block comes next, out of 100: a document made mostly of lists turns most draws into a list (8 to 15).
+    private int Kind()
+    {
+        var kind = _random.Next(100);
+        return _mostlyLists && kind < 70 ? 8 : kind;
     }
 
     // Half the lists are a plain bullet or number list; the rest use RandomLists' definitions, with items that step
@@ -307,4 +310,11 @@ internal sealed class RandomLayout
         """;
 
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
+}
+
+/// <summary>What a random layout is made of.</summary>
+internal enum LayoutMix
+{
+    Everything,
+    MostlyLists,
 }

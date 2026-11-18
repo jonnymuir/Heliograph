@@ -10,8 +10,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
     {
         var pPr = p.Element(W + "pPr");
         var chain = styles.Chain(Val(pPr?.Element(W + "pStyle")) ?? styles.DefaultParagraph);
-        var numPr = pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null);
-        var place = numbering.Place(numPr);
+        var place = numbering.Place(pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null));
         var level = place?.Definition;
 
         var paragraphLayers = new List<XElement?> { styles.DefaultParagraphProperties };
@@ -23,18 +22,23 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         var runLayers = new List<XElement?> { styles.DefaultRun };
         runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));
 
-        var mark = PropertyReader.Run([.. runLayers, pPr?.Element(W + "rPr")]);
-        var paragraph = new Paragraph(style, Inlines(p, runLayers), place is null ? null : Label(place, [.. runLayers, pPr?.Element(W + "rPr")]), mark);
-        return place is null ? paragraph : paragraph with
-        {
-            ListLevel = place.Level,
-            LabelAlign = Val(place.Definition.Element(W + "lvlJc")) switch { "right" or "end" => "right", "center" => "center", _ => "left" },
-            LabelSuffix = Val(place.Definition.Element(W + "suff")) ?? "tab",
-        };
+        List<XElement?> markLayers = [.. runLayers, pPr?.Element(W + "rPr")];
+        var paragraph = new Paragraph(style, Inlines(p, runLayers), null, PropertyReader.Run(markLayers));
+        return place is null ? paragraph : Listed(paragraph, place, markLayers);
     }
 
+    private Paragraph Listed(Paragraph paragraph, ListPlace place, List<XElement?> markLayers) => paragraph with
+    {
+        Label = Label(place, markLayers),
+        ListLevel = place.Level,
+        Placement = new LabelPlacement(
+            Val(place.Definition.Element(W + "lvlJc")) switch { "right" or "end" => "right", "center" => "center", _ => "left" },
+            Val(place.Definition.Element(W + "suff")) ?? "tab"),
+    };
+
     // A label takes the paragraph mark's formatting, then its level's. A bullet set in Symbol or Wingdings, which are not
-    // built in, is drawn as the same shape from Liberation Sans, and measured as LibreOffice measures it.
+    // built in, is drawn as the same shape in the text's font. (LibreOffice on a Mac makes such a line a little taller and
+    // on Linux does not; a Word fixture will settle which Word does.)
     private TextInline? Label(ListPlace place, List<XElement?> markLayers)
     {
         if (numbering.NextLabel(place) is not { } text)
@@ -49,7 +53,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         }
 
         var (bullet, ownFont) = ListLabels.Bullet(text, style.Font);
-        return new TextInline(bullet, ownFont ? style : style with { Font = "OpenSymbol" });
+        return new TextInline(bullet, ownFont ? style : style with { Font = PropertyReader.Run(markLayers).Font });
     }
 
     private List<Inline> Inlines(XElement p, List<XElement?> runLayers)

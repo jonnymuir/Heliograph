@@ -79,14 +79,16 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - a paragraph kept with the next is kept with its first two lines when widow and orphan control is on;
 - a paragraph that would leave a lone first line at the foot of a page, once its last two lines
   are kept together, moves to the next page whole;
-- a line is as tall as its tallest font reaches above the baseline plus its deepest below, so a
-  Symbol bullet makes its line a little taller, as LibreOffice and Word draw it;
+- a line is as tall as its tallest font reaches above the baseline plus its deepest below, plus
+  the largest gap;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
 
 Ten more seeds are documents made mostly of lists with levels, with a ratchet of their own.
-Three match LibreOffice throughout.
+LibreOffice on a Mac makes a line with a Symbol bullet a little taller than the text alone; on
+Linux it does not. The converter does not, for now, and a Word fixture with bullets will settle
+what Word does.
 
 What the net still shows is mostly in four places: where a word split across lines breaks, a
 few wrap points, some page breaks, and drift from rounding. LibreOffice rounds some line heights

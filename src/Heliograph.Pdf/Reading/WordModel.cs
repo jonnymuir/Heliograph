@@ -51,9 +51,13 @@ internal sealed record Paragraph(ParagraphStyle Style, IReadOnlyList<Inline> Inl
 
     public int ListLevel { get; init; }
 
-    public string LabelAlign { get; init; } = "left";
+    public LabelPlacement Placement { get; init; } = LabelPlacement.Default;
+}
 
-    public string LabelSuffix { get; init; } = "tab";
+/// <summary>Where a list label sits ("left", "right" or "center" of where the first line starts) and what follows it ("tab", "space" or "nothing").</summary>
+internal sealed record LabelPlacement(string Align, string Suffix)
+{
+    public static readonly LabelPlacement Default = new("left", "tab");
 }
 
 internal sealed record Border(double Width);
