@@ -8,6 +8,9 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
 {
     private readonly ListItemReader _items = new(numbering);
 
+    /// <summary>The style of the table being read, whose paragraph and run properties come under the paragraph's own style.</summary>
+    public TableStyle? Table { get; set; }
+
     public Paragraph Read(XElement p)
     {
         var pPr = p.Element(W + "pPr");
@@ -16,11 +19,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         var place = numbering.Place(pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null));
         var level = place?.Definition;
 
-        var paragraphLayers = new List<XElement?> { styles.DefaultParagraphProperties };
-        paragraphLayers.AddRange(chain.Select(s => s.Element(W + "pPr")));
-        paragraphLayers.Add(level?.Element(W + "pPr"));
-        paragraphLayers.Add(pPr);
-        var layers = paragraphLayers.OfType<XElement>().ToList();
+        var layers = ParagraphLayers(chain, level, pPr);
         var style = PropertyReader.Paragraph(layers) with
         {
             DefaultTab = defaultTab,
@@ -28,13 +27,21 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
             Contextual = layers.LastOrDefault(l => l.Element(W + "contextualSpacing") is not null)?.Element(W + "contextualSpacing") is { } c && On(c),
         };
 
-        var runLayers = new List<XElement?> { styles.DefaultRun };
-        runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));
+        var runLayers = RunLayers(chain);
 
         List<XElement?> markLayers = [.. runLayers, pPr?.Element(W + "rPr")];
         var paragraph = new Paragraph(style, Inlines(p, runLayers), null, PropertyReader.Run(markLayers));
         return place is null ? paragraph : _items.Listed(paragraph, place, markLayers);
     }
+
+    // The paragraph properties in force, the most basic first: the document's defaults, the table's style, the paragraph's
+    // style chain, its list level, and what it sets itself.
+    private List<XElement> ParagraphLayers(IReadOnlyList<XElement> chain, XElement? level, XElement? pPr) =>
+        [.. new[] { styles.DefaultParagraphProperties }.Concat(Table?.Paragraph ?? []).Concat(chain.Select(s => s.Element(W + "pPr")))
+            .Append(level?.Element(W + "pPr")).Append(pPr).OfType<XElement>()];
+
+    private List<XElement?> RunLayers(IReadOnlyList<XElement> chain) =>
+        [styles.DefaultRun, .. Table?.Run ?? [], .. chain.Select(s => s.Element(W + "rPr"))];
 
     private List<Inline> Inlines(XElement p, List<XElement?> runLayers)
     {

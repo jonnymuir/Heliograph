@@ -24,6 +24,9 @@ internal sealed class StyleSheet
         }
 
         DefaultParagraph = DefaultParagraphStyle(root);
+        DefaultTable = root.Elements(W + "style")
+            .FirstOrDefault(s => (string?)s.Attribute(W + "type") == "table" && (string?)s.Attribute(W + "default") is "1" or "true")
+            ?.Attribute(W + "styleId")?.Value;
         var defaults = root.Element(W + "docDefaults");
         DefaultRun = defaults?.Element(W + "rPrDefault")?.Element(W + "rPr");
         DefaultParagraphProperties = defaults?.Element(W + "pPrDefault")?.Element(W + "pPr");
@@ -31,6 +34,9 @@ internal sealed class StyleSheet
     }
 
     public string DefaultParagraph { get; } = "Normal";
+
+    /// <summary>The style a table takes when it names none (Word's Table Normal), if the document has one.</summary>
+    public string? DefaultTable { get; }
 
     public XElement? DefaultRun { get; }
 

@@ -58,8 +58,14 @@ This plan is built to find out early and keep finding out.
   - Word's bullets in Symbol, Wingdings and Courier New, drawn as the same shapes;
   - a list inside a list tagged as one, for screen readers.
 - **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
-  on each page. A row breaks across pages, each cell at its own last line that fits, unless it is
-  marked not to.
+  on each page:
+  - through their style (Word's Table Grid, say): borders, padding, indent and alignment, the
+    style's outer borders on the edges and inside borders between cells, and the paragraph and
+    run settings it gives text in its cells;
+  - centred or to the right, rows at least or exactly a set height, and text at the top, middle
+    or foot of a cell (at its top in a row broken across pages, as LibreOffice lays it out);
+  - a row breaks across pages, each cell at its own last line that fits, unless it is marked not
+    to. A row with a set height that breaks across a page can still differ from LibreOffice.
 - **Headers and footers:** on every page, with a first page of its own, and page numbers and page
   counts.
 - **Pictures** set in line with the text, in the body, tables, headers and footers:
@@ -88,6 +94,8 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - a line may break after a hyphen between letters;
 - a word too wide for a line is split where the line is full;
 - an exact or at-least line carries its extra height above its text;
+- a row at least a set height is that height below its top border, and a table's bottom border
+  adds its width after the last row;
 - a tab past the end of a line starts the next line and still takes effect;
 - the default tab interval comes from the document's settings;
 - table rows break across pages;
@@ -222,9 +230,10 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 6. Tables
 
-- Widths taken from contents (Word's autofit), percentage widths and centred or right-aligned
-  tables.
-- Vertically merged cells, and vertical alignment in a cell.
+- Widths taken from contents (Word's autofit), percentage widths, and centred or right-aligned
+  tables (done).
+- Vertically merged cells, and vertical alignment in a cell (done). Table styles' own borders,
+  padding and paragraph settings (done); their formatting of some rows or columns, still refused.
 - Cell shading, and Word's rules for which border wins.
 - Rows that split across pages, and nested tables.
 

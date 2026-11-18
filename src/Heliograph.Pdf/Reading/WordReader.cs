@@ -72,7 +72,7 @@ internal sealed class WordReader : IDisposable
             }
             else if (e.Name == W + "tbl")
             {
-                blocks.Add(TableReader.Read(e, Blocks));
+                blocks.Add(Table(e));
             }
             else if (e.Name == W + "sdt" && e.Element(W + "sdtContent") is { } content)
             {
@@ -81,6 +81,16 @@ internal sealed class WordReader : IDisposable
         }
 
         return blocks;
+    }
+
+    // A table, whose style gives the paragraphs in its cells properties of their own.
+    private Table Table(XElement tbl)
+    {
+        var style = new TableStyle(tbl, Styles);
+        _paragraphs.Table = style;
+        var table = TableReader.Read(tbl, style, Blocks);
+        _paragraphs.Table = null;
+        return table;
     }
 
     private IReadOnlyList<Block>? Story(XElement sect, string kind, string type)

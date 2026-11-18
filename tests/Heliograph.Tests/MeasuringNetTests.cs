@@ -30,12 +30,13 @@ public class MeasuringNetTests
     // of documents became Calibri or Cambria the same day, so seeds 3, 13, 15 and 30 (and lists seed 1) were set again too.
     // LibreOffice on Linux sets text in an exact-height Calibri line higher than on a Mac, so those seeds take Linux's.
     // Runs gained formatting the same day, so seeds 7, 9, 13 and 19 (and lists seed 10) were set again once more; and
-    // paragraphs began leaving out space between paragraphs of one style, so lists seed 4 was set again.
+    // paragraphs began leaving out space between paragraphs of one style, so lists seed 4 was set again. Tables gained
+    // styles, row heights, alignment and text at the middle or foot of a cell, so seeds with tables were set again.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
-        [2] = 66, [3] = 22, [4] = 341, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44, [12] = 92,
-        [13] = 3, [14] = 39, [15] = 91, [16] = 48, [18] = 13, [19] = 633, [20] = 673, [21] = 45, [22] = 54, [23] = 552,
-        [24] = 28, [25] = 33, [26] = 17, [28] = 27, [29] = 52, [30] = 61,
+        [1] = 241, [2] = 66, [3] = 22, [4] = 165, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44,
+        [12] = 92, [13] = 3, [14] = 39, [15] = 56, [16] = 48, [17] = 157, [18] = 13, [19] = 167, [20] = 253, [21] = 45,
+        [22] = 54, [23] = 99, [24] = 28, [25] = 33, [26] = 17, [27] = 189, [28] = 27, [29] = 52, [30] = 61,
     };
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()

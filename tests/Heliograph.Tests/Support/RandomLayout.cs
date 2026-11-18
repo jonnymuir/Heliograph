@@ -34,6 +34,7 @@ internal sealed class RandomLayout
     private readonly Random _formatting;
     private readonly Random _tabs;
     private readonly Random _spacingRules;
+    private readonly Random _tables;
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
@@ -48,6 +49,7 @@ internal sealed class RandomLayout
         _formatting = new Random(seed + 40_000);
         _tabs = new Random(seed + 50_000);
         _spacingRules = new Random(seed + 60_000);
+        _tables = new Random(seed + 70_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -259,7 +261,7 @@ internal sealed class RandomLayout
             table.Append("</w:tr>");
         }
 
-        _body.Append(table).Append("</w:tbl>").Append(Paragraph(""));
+        _body.Append(RandomTables.Into(table.Append("</w:tbl>").ToString(), _tables)).Append(Paragraph(""));
     }
 
     private string Cell(int width, int span, bool borders, bool bold)
@@ -345,6 +347,7 @@ internal sealed class RandomLayout
           <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
           <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="240" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:sz w:val="36"/></w:rPr></w:style>
           <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="100"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="28"/></w:rPr></w:style>
+          {RandomTables.Styles}
         </w:styles>
         """;
 
