@@ -84,28 +84,24 @@ public class PdfFootnoteTests
 
     private static MemoryStream Letter(string kind)
     {
-        var body = new List<string>();
-        var plain = kind switch { "a note pushing its line over" => 25, "notes on two pages" => 40, "a table row pushed over by its note" => 27, _ => 2 };
-        for (var i = 0; i < plain; i++)
-        {
-            body.Add(NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership."));
-        }
-
+        var table = kind.Contains("table", StringComparison.Ordinal);
+        var body = Enumerable.Range(0, Paragraphs(kind)).Select(i => NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership.")).ToList();
         body.Insert(0, NoteLetters.Referring("Your membership renews in April.", 1));
-        if (kind.Contains("table", StringComparison.Ordinal))
+        if (table)
         {
             body.Insert(kind == "a note in a table" ? 1 : body.Count, NoteLetters.FeesTable(2));
         }
 
-        body.Insert(Math.Min(body.Count, kind == "notes on two pages" ? 32 : body.Count), NoteLetters.Referring("The late charge is ten pounds.", kind.Contains("table", StringComparison.Ordinal) ? 3 : 2));
+        body.Insert(kind == "notes on two pages" ? 32 : body.Count, NoteLetters.Referring("The late charge is ten pounds.", table ? 3 : 2));
         if (kind == "a note pushing its line over")
         {
-            body.Add(NoteLetters.Referring("And a third note, at the foot of the page.", 3));
-            body.Add(NoteLetters.Plain("We look forward to seeing you."));
+            body.AddRange([NoteLetters.Referring("And a third note, at the foot of the page.", 3), NoteLetters.Plain("We look forward to seeing you.")]);
         }
 
         return NoteLetters.Letter(body, "Membership runs from April to March.", kind == "a long note" ? Long + " " + Long : Long, "A third note.");
     }
+
+    private static int Paragraphs(string kind) => kind switch { "a note pushing its line over" => 25, "notes on two pages" => 40, "a table row pushed over by its note" => 27, _ => 2 };
 
     private static byte[] Rendered(MemoryStream template)
     {
