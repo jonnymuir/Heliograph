@@ -5,7 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Heliograph</PackageId>
     <Title>Heliograph</Title>
-    <Version>0.1.0-alpha.8</Version>
+    <Version>0.1.0-alpha.9</Version>
     <Authors>Jonny Muir</Authors>
     <Description>Write outgoing correspondence in the word processor you already use, check it against a dictionary of allowed data, and render it for post, PDF, email and text. Rendering only; delivery belongs to the host. Zero framework dependency.</Description>
     <PackageTags>Correspondence;Email;SMS;PDF;Templates</PackageTags>
