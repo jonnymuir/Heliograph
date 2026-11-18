@@ -95,7 +95,9 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - a paragraph kept with the next is kept with all of it when the next keeps its lines together;
 - a paragraph a keep rule moves to a new page starts at its top, without its space before;
 - a font's descent is the one Windows gives, and text in an exact line stands on it with no gap
-  under it (Carlito is where this shows);
+  under it (Carlito is where this shows). LibreOffice on Linux sets that text higher than on a
+  Mac, and Word, which measures Calibri by its Windows metrics throughout, may differ from both:
+  a Word fixture in Calibri will settle it;
 - a document with no page settings is laid out on US Letter, as Word does;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
