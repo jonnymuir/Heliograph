@@ -11,7 +11,8 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         var pPr = p.Element(W + "pPr");
         var chain = styles.Chain(Val(pPr?.Element(W + "pStyle")) ?? styles.DefaultParagraph);
         var numPr = pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null);
-        var level = numbering.Level(numPr);
+        var place = numbering.Place(numPr);
+        var level = place?.Definition;
 
         var paragraphLayers = new List<XElement?> { styles.DefaultParagraphProperties };
         paragraphLayers.AddRange(chain.Select(s => s.Element(W + "pPr")));
@@ -22,15 +23,33 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         var runLayers = new List<XElement?> { styles.DefaultRun };
         runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));
 
-        TextInline? label = null;
-        if (level is not null && numbering.NextLabel(numPr!, level) is { } text)
+        var mark = PropertyReader.Run([.. runLayers, pPr?.Element(W + "rPr")]);
+        var paragraph = new Paragraph(style, Inlines(p, runLayers), place is null ? null : Label(place, [.. runLayers, pPr?.Element(W + "rPr")]), mark);
+        return place is null ? paragraph : paragraph with
         {
-            // A bullet's own font is usually Symbol, which is not built in; the bullet character is drawn in the text font.
-            label = new TextInline(text, PropertyReader.Run([.. runLayers, level.Element(W + "rPr")]) with { Font = "" });
+            ListLevel = place.Level,
+            LabelAlign = Val(place.Definition.Element(W + "lvlJc")) switch { "right" or "end" => "right", "center" => "center", _ => "left" },
+            LabelSuffix = Val(place.Definition.Element(W + "suff")) ?? "tab",
+        };
+    }
+
+    // A label takes the paragraph mark's formatting, then its level's. A bullet set in Symbol or Wingdings, which are not
+    // built in, is drawn as the same shape from Liberation Sans, and measured as LibreOffice measures it.
+    private TextInline? Label(ListPlace place, List<XElement?> markLayers)
+    {
+        if (numbering.NextLabel(place) is not { } text)
+        {
+            return null;
         }
 
-        var mark = PropertyReader.Run([.. runLayers, pPr?.Element(W + "rPr")]);
-        return new Paragraph(style, Inlines(p, runLayers), label, mark);
+        var style = PropertyReader.Run([.. markLayers, place.Definition.Element(W + "rPr")]);
+        if (Val(place.Definition.Element(W + "numFmt")) != "bullet")
+        {
+            return new TextInline(text, style);
+        }
+
+        var (bullet, ownFont) = ListLabels.Bullet(text, style.Font);
+        return new TextInline(bullet, ownFont ? style : style with { Font = "OpenSymbol" });
     }
 
     private List<Inline> Inlines(XElement p, List<XElement?> runLayers)

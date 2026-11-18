@@ -12,8 +12,8 @@ namespace Heliograph.Pdf.Checking;
 /// </summary>
 internal static class LayoutLimits
 {
-    private const string Route = "Heliograph's own PDF converter, which this site uses,";
-    private const string Instead = "or ask whoever runs this site to make this letter's PDFs with LibreOffice until it is supported.";
+    internal const string Route = "Heliograph's own PDF converter, which this site uses,";
+    internal const string Instead = "or ask whoever runs this site to make this letter's PDFs with LibreOffice until it is supported.";
 
     private static readonly XNamespace A = "http://schemas.openxmlformats.org/drawingml/2006/main";
     private static readonly XNamespace V = "urn:schemas-microsoft-com:vml";
@@ -74,6 +74,8 @@ internal static class LayoutLimits
         {
             diagnostics.Add(even);
         }
+
+        diagnostics.AddRange(ListLimits.Check(document));
 
         return diagnostics;
     }

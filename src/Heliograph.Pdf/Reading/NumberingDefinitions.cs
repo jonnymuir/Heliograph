@@ -4,12 +4,20 @@ using static Heliograph.Pdf.Reading.WordXml;
 
 namespace Heliograph.Pdf.Reading;
 
-/// <summary>A document's list definitions, and the running count of each list as paragraphs are read in order.</summary>
+/// <summary>A paragraph's place in a list: the level it is at and that level's definition.</summary>
+internal sealed record ListPlace(string NumId, string AbstractId, int Level, XElement Definition);
+
+/// <summary>
+/// A document's list definitions, and the running count of each list as paragraphs are read in order, as Word counts
+/// them: lists that share a definition count on together unless one sets where it starts (Restart numbering, Set
+/// numbering value); a level starts again after a higher level, unless it says otherwise.
+/// </summary>
 internal sealed class NumberingDefinitions
 {
     private readonly Dictionary<string, XElement> _abstracts = [];
-    private readonly Dictionary<string, string> _numToAbstract = [];
-    private readonly Dictionary<(string Num, int Level), int> _counters = [];
+    private readonly Dictionary<string, XElement> _nums = [];
+    private readonly Dictionary<(string Abstract, int Level), int> _counters = [];
+    private readonly HashSet<string> _started = [];
 
     public NumberingDefinitions(XDocument? numbering)
     {
@@ -25,51 +33,100 @@ internal sealed class NumberingDefinitions
 
         foreach (var n in root.Elements(W + "num"))
         {
-            if (Val(n.Element(W + "abstractNumId")) is { } abstractId)
+            _nums[(string)n.Attribute(W + "numId")!] = n;
+        }
+    }
+
+    /// <summary>Where a paragraph's numbering points, or null when it is not in a list.</summary>
+    public ListPlace? Place(XElement? numPr)
+    {
+        var numId = Val(numPr?.Element(W + "numId"));
+        if (numId is null or "0" || !_nums.TryGetValue(numId, out var num) || Val(num.Element(W + "abstractNumId")) is not { } abstractId
+            || !_abstracts.ContainsKey(abstractId))
+        {
+            return null;
+        }
+
+        var level = int.TryParse(Val(numPr!.Element(W + "ilvl")), CultureInfo.InvariantCulture, out var l) ? l : 0;
+        return Definition(numId, abstractId, level) is { } definition ? new ListPlace(numId, abstractId, level, definition) : null;
+    }
+
+    /// <summary>The definition of a level of a list: the list's own override of it, else its shared definition.</summary>
+    public XElement? Definition(string numId, string abstractId, int level)
+    {
+        var own = _nums[numId].Elements(W + "lvlOverride").FirstOrDefault(o => Level(o) == level)?.Element(W + "lvl");
+        return own ?? _abstracts[abstractId].Elements(W + "lvl").FirstOrDefault(e => Level(e) == level);
+    }
+
+    /// <summary>The next label at this place ("3.", "1.2.", "iv)" or a bullet), counting on; null for none.</summary>
+    public string? NextLabel(ListPlace place)
+    {
+        StartOverrides(place);
+        var key = (place.AbstractId, place.Level);
+        _counters[key] = _counters.TryGetValue(key, out var count) ? count + 1 : Start(place.Definition);
+        RestartDeeper(place);
+
+        var format = Val(place.Definition.Element(W + "numFmt")) ?? "decimal";
+        var text = Val(place.Definition.Element(W + "lvlText")) ?? (format == "bullet" ? "•" : $"%{place.Level + 1}.");
+        if (format == "bullet")
+        {
+            return text;
+        }
+
+        var legal = On(place.Definition.Element(W + "isLgl"));
+        for (var n = 1; n <= 9; n++)
+        {
+            if (text.Contains($"%{n}", StringComparison.Ordinal))
             {
-                _numToAbstract[(string)n.Attribute(W + "numId")!] = abstractId;
+                text = text.Replace($"%{n}", Shown(place, n - 1, legal), StringComparison.Ordinal);
+            }
+        }
+
+        return text.Length == 0 ? null : text;
+    }
+
+    private static int Level(XElement e) => int.TryParse((string?)e.Attribute(W + "ilvl"), CultureInfo.InvariantCulture, out var l) ? l : 0;
+
+    private static int Start(XElement? definition) =>
+        int.TryParse(Val(definition?.Element(W + "start")), CultureInfo.InvariantCulture, out var s) ? s : 1;
+
+    // A level's number as it appears in a label: its count, in its own style, or as a plain number in a legal label.
+    private string Shown(ListPlace place, int level, bool legal)
+    {
+        var definition = Definition(place.NumId, place.AbstractId, level);
+        var count = _counters.TryGetValue((place.AbstractId, level), out var c) ? c : Start(definition);
+        var format = Val(definition?.Element(W + "numFmt")) ?? "decimal";
+        return ListLabels.Number(count, legal && format != "none" ? "decimal" : format);
+    }
+
+    // The first paragraph of a list that sets where a level starts begins that level again there.
+    private void StartOverrides(ListPlace place)
+    {
+        if (!_started.Add(place.NumId))
+        {
+            return;
+        }
+
+        foreach (var o in _nums[place.NumId].Elements(W + "lvlOverride"))
+        {
+            if (int.TryParse(Val(o.Element(W + "startOverride")), CultureInfo.InvariantCulture, out var start))
+            {
+                _counters[(place.AbstractId, Level(o))] = start - 1;
             }
         }
     }
 
-    /// <summary>The level a paragraph's numbering points at, or null when it is not in a list.</summary>
-    public XElement? Level(XElement? numPr)
+    // A deeper level starts again after this one, unless its lvlRestart names a higher level only, or 0 for never.
+    private void RestartDeeper(ListPlace place)
     {
-        var numId = Val(numPr?.Element(W + "numId"));
-        if (numId is null or "0" || !_numToAbstract.TryGetValue(numId, out var abs) || !_abstracts.TryGetValue(abs, out var definition))
+        foreach (var key in _counters.Keys.Where(k => k.Abstract == place.AbstractId && k.Level > place.Level).ToList())
         {
-            return null;
+            var restart = Val(Definition(place.NumId, place.AbstractId, key.Level)?.Element(W + "lvlRestart"));
+            var after = int.TryParse(restart, CultureInfo.InvariantCulture, out var r) ? r : key.Level;
+            if (place.Level < after)
+            {
+                _counters.Remove(key);
+            }
         }
-
-        var level = int.Parse(Val(numPr!.Element(W + "ilvl")) ?? "0", CultureInfo.InvariantCulture);
-        return definition.Elements(W + "lvl").FirstOrDefault(l => (string?)l.Attribute(W + "ilvl") == level.ToString(CultureInfo.InvariantCulture));
-    }
-
-    /// <summary>The next label of a list at this level ("3.", or a bullet), counting on from the last; null for none.</summary>
-    public string? NextLabel(XElement numPr, XElement level)
-    {
-        var numId = Val(numPr.Element(W + "numId"))!;
-        var ilvl = int.Parse((string)level.Attribute(W + "ilvl")!, CultureInfo.InvariantCulture);
-        var format = Val(level.Element(W + "numFmt")) ?? "decimal";
-        if (format == "none")
-        {
-            return null;
-        }
-
-        var start = int.Parse(Val(level.Element(W + "start")) ?? "1", CultureInfo.InvariantCulture);
-        var count = _counters.TryGetValue((numId, ilvl), out var c) ? c + 1 : start;
-        _counters[(numId, ilvl)] = count;
-        foreach (var deeper in _counters.Keys.Where(k => k.Num == numId && k.Level > ilvl).ToList())
-        {
-            _counters.Remove(deeper);
-        }
-
-        if (format == "bullet")
-        {
-            return "•";
-        }
-
-        var text = Val(level.Element(W + "lvlText")) ?? "%1.";
-        return text.Replace($"%{ilvl + 1}", count.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
     }
 }

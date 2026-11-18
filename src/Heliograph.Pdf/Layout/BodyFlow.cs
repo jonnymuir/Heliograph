@@ -10,31 +10,53 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
 {
     private readonly TableFlow _tables = new(pages);
 
+    // The lists open at this point, deepest last: each level's list, and the body of its latest item, where a deeper
+    // list goes.
+    private readonly Stack<(int Level, StructNode List, StructNode? Body)> _lists = new();
+
     public void Run(IReadOnlyList<Block> blocks)
     {
         pages.NewPage();
-        StructNode? list = null;
         for (var i = 0; i < blocks.Count; i++)
         {
             var next = i + 1 < blocks.Count ? blocks[i + 1] : null;
             switch (blocks[i])
             {
                 case Paragraph { IsListItem: true } p:
-                    list ??= root.Add("L");
-                    var item = list.Add("LI");
-                    var label = item.Add("Lbl");
-                    Paragraph(p, new Owner(item.Add("LBody"), label), next);
+                    Paragraph(p, ListItem(p.ListLevel), next);
                     break;
                 case Paragraph p:
-                    list = null;
+                    _lists.Clear();
                     Paragraph(p, new Owner(root.Add(p.Style.OutlineLevel is { } level and < 6 ? $"H{level + 1}" : "P"), null), next);
                     break;
                 case Table t:
-                    list = null;
+                    _lists.Clear();
                     _tables.Run(t, root.Add("Table"));
                     break;
             }
         }
+    }
+
+    // A list item at its level: in the open list at that level, or a new list inside the body of the item above it.
+    private Owner ListItem(int level)
+    {
+        while (_lists.Count > 0 && _lists.Peek().Level > level)
+        {
+            _lists.Pop();
+        }
+
+        if (_lists.Count == 0 || _lists.Peek().Level < level)
+        {
+            var parent = _lists.Count == 0 ? root : _lists.Peek().Body ?? _lists.Peek().List;
+            _lists.Push((level, parent.Add("L"), null));
+        }
+
+        var (at, list, _) = _lists.Pop();
+        var item = list.Add("LI");
+        var label = item.Add("Lbl");
+        var body = item.Add("LBody");
+        _lists.Push((at, list, body));
+        return new Owner(body, label);
     }
 
     private void Paragraph(Paragraph p, Owner owner, Block? next)
@@ -102,13 +124,15 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         var remaining = lines.Count - placed;
         if (fit < remaining && widowControl)
         {
-            if (fit == 1 && placed == 0 && remaining > 1)
-            {
-                fit = 0;
-            }
-            else if (remaining - fit == 1 && fit >= 2)
+            // A lone last line takes one more with it; and if that leaves a lone first line here, the paragraph moves.
+            if (remaining - fit == 1 && fit >= 2)
             {
                 fit--;
+            }
+
+            if (fit == 1 && placed == 0)
+            {
+                fit = 0;
             }
         }
 

@@ -117,3 +117,4 @@ it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-
 | `HG4011` | A tab stop aligned right, centred or on the decimal point, or with a leader, or a tab in a centred or right-aligned paragraph, so text after it would not line up. | Use a left tab stop, or a table with the column aligned as needed. |
 | `HG4012` | Different headers and footers on even pages. | Turn off different odd and even pages. |
 | `HG4013` | A warning, not an error: a font the converter does not have, drawn in Liberation Sans, so lines may break differently. | Use Arial, Times New Roman or Courier New, which have look-alikes with the same widths. |
+| `HG4014` | A list numbered in a style the converter does not write (only numbers, letters and Roman numerals, with or without leading zeros), a picture used as a bullet, or a bullet character it has no shape for. | Use a numbered, lettered or Roman-numeral list, or an ordinary bullet. |

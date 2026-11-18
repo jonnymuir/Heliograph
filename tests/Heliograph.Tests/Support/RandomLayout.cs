@@ -29,11 +29,17 @@ internal sealed class RandomLayout
     private static readonly string[] Sides = ["top", "left", "bottom", "right"];
 
     private readonly Random _random;
+    private readonly Random _lists;
+    private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
-    public RandomLayout(int seed)
+    /// <summary>A document; with <paramref name="mostlyLists"/>, one where most blocks are lists, every one with levels.</summary>
+    public RandomLayout(int seed, bool mostlyLists = false)
     {
+        _mostlyLists = mostlyLists;
         _random = new Random(seed);
+        // Lists drawn from their own stream, so what else a seed builds stays as it was before lists grew levels.
+        _lists = new Random(seed + 10_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -87,7 +93,11 @@ internal sealed class RandomLayout
     private void Block()
     {
         var kind = _random.Next(100);
-        if (kind < 8)
+        if (_mostlyLists && kind < 70)
+        {
+            List();
+        }
+        else if (kind < 8)
         {
             _body.Append(Paragraph(Words(2, 8), style: _random.Next(2) == 0 ? "Heading1" : "Heading2"));
         }
@@ -153,12 +163,22 @@ internal sealed class RandomLayout
         return p.ToString();
     }
 
+    // Half the lists are a plain bullet or number list; the rest use RandomLists' definitions, with items that step
+    // between levels.
     private void List()
     {
         var numId = _random.Next(1, 3);
+        var rich = _mostlyLists || _lists.Next(2) == 0;
+        if (rich)
+        {
+            numId = RandomLists.Pick(_lists);
+        }
+
+        var level = 0;
         for (var i = _random.Next(2, 7); i > 0; i--)
         {
-            _body.Append(Paragraph(Words(2, 40), properties: Invariant($"<w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"{numId}\"/></w:numPr>")));
+            _body.Append(Paragraph(Words(2, 40), properties: Invariant($"<w:numPr><w:ilvl w:val=\"{level}\"/><w:numId w:val=\"{numId}\"/></w:numPr>")));
+            level = rich ? Math.Clamp(level + _lists.Next(-1, 2), 0, 2) : 0;
         }
     }
 
@@ -282,6 +302,7 @@ internal sealed class RandomLayout
           <w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>
           <w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>
           <w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>
+        {RandomLists.Definitions}
         </w:numbering>
         """;
 

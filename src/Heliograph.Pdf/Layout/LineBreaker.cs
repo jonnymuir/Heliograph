@@ -37,7 +37,9 @@ internal static class LineBreaker
         var builder = new LineBuilder(p.Style, width - p.Style.Indent.Right);
         if (p.Label is { } label)
         {
-            builder.Label(new Piece(label.Text, label.Style, FontLibrary.Face(label.Style).Width(label.Text, label.Style.Size), PieceKind.Word, IsLabel: true));
+            var face = FontLibrary.Face(label.Style);
+            builder.Label(new Piece(label.Text, label.Style, face.Width(label.Text, label.Style.Size), PieceKind.Word, IsLabel: true), p.LabelAlign,
+                p.LabelSuffix switch { "nothing" => 0, "space" => face.Width(" ", label.Style.Size), _ => null });
         }
 
         foreach (var piece in Pieces(p, field))
@@ -72,10 +74,18 @@ internal static class LineBreaker
 
         public List<Line> Lines { get; } = [];
 
-        public void Label(Piece label)
+        // A label right-aligned or centred ends, or is centred, where the first line starts. A gap of null is a tab.
+        public void Label(Piece label, string align, double? gap)
         {
-            _line.Pieces.Add((_x, label));
-            _x = NextTab(_x + label.Width, _style, hanging: true);
+            var start = align switch
+            {
+                "right" => _x - label.Width,
+                "center" => _x - (label.Width / 2),
+                _ => _x,
+            };
+            _line.Pieces.Add((start, label));
+            var end = start + label.Width;
+            _x = gap is { } g ? end + g : NextTab(end, _style, hanging: true);
         }
 
         public void Add(Piece piece)
@@ -244,8 +254,10 @@ internal static class LineBreaker
     private static void Measure(Line line, Paragraph p)
     {
         var styles = line.Pieces.Select(q => q.Piece.Style).DefaultIfEmpty(p.MarkStyle).ToList();
-        var natural = styles.Max(st => FontLibrary.Face(st).LineHeight(st.Size));
-        line.Ascent = styles.Max(st => FontLibrary.Face(st).Ascent(st.Size));
+        // The tallest reach above the baseline, the deepest below it, and the largest gap, each from whichever font has it.
+        var metrics = styles.Select(FontLibrary.Metrics).ToList();
+        line.Ascent = metrics.Max(m => m.Ascent);
+        var natural = line.Ascent + metrics.Max(m => m.Descent) + metrics.Max(m => m.Gap);
         var spacing = p.Style.Spacing;
         line.Height = spacing.LineRule switch
         {
