@@ -36,18 +36,18 @@ internal static class WordProbes
 
     private static IEnumerable<(string Name, MemoryStream Template)> Probes()
     {
-        yield return ("probe-bullets", Letter("Arial", lists: true, Body(
+        yield return ("probe-bullets", Letter("Arial", Extras.Lists, Body(
             Item(3, 0, "Entry to every meeting"), Item(3, 1, "Quarterly newsletter"), Item(3, 2, "Insurance at events"), Item(5, 0, "A bullet from Symbol"),
             Item(5, 1, "A bullet from Courier New"), Item(5, 2, "A bullet from Wingdings"), Plain(Words))));
-        yield return ("probe-calibri-exact", Letter("Calibri", lists: false, Body(
+        yield return ("probe-calibri-exact", Letter("Calibri", Extras.None, Body(
             Spaced(Words + " " + Words, "w:line=\"300\" w:lineRule=\"exact\""), Spaced(Words + " " + Words, "w:line=\"320\" w:lineRule=\"atLeast\""), Plain(Words))));
-        yield return ("probe-superscript", Letter("Arial", lists: false, Body(
+        yield return ("probe-superscript", Letter("Arial", Extras.None, Body(
             Plain("A plain line"), Run("All of this line is superscript", "<w:vertAlign w:val=\"superscript\"/>"),
             Run("All of this line is subscript", "<w:vertAlign w:val=\"subscript\"/>"), Plain("Another plain line"), Spaced(Words, "w:line=\"360\" w:lineRule=\"auto\""))));
-        yield return ("probe-tabs", Letter("Arial", lists: false, Body(
+        yield return ("probe-tabs", Letter("Arial", Extras.None, Body(
             Tabbed("<w:tab w:val=\"right\" w:pos=\"9026\"/>", "Dear Ms Example\tFirst\tSecond"), Tabbed("<w:tab w:val=\"right\" w:leader=\"dot\" w:pos=\"9026\"/>", "Membership\t£45.00"),
             Tabbed("<w:tab w:val=\"decimal\" w:pos=\"7200\"/>", "Total\t£1,048.50"), Tabbed("", "e.g. a word just before a default tab\ttelephone: 0300 123 4567 with more words to wrap the line"))));
-        yield return ("probe-contextual", Letter("Arial", lists: false, Body(
+        yield return ("probe-contextual", Letter("Arial", Extras.None, Body(
             Plain(Words), Styled("ListParagraph", "Entry to every meeting"), Styled("ListParagraph", "The quarterly newsletter"),
             Spaced("A paragraph that says to leave out space, after one that does not.", "w:before=\"180\" w:after=\"80\"", contextual: true),
             Spaced("One that does not, after one that does.", "w:before=\"180\" w:after=\"240\""), Plain(Words))));
@@ -56,12 +56,12 @@ internal static class WordProbes
             Spaced("Does not, with 9 before and 6 after.", "w:before=\"180\" w:after=\"120\""), Spaced("Leaves out space, with 4 before.", "w:before=\"80\" w:after=\"0\"", contextual: true),
             Spaced("Leaves out space, with 10 before and 5 after.", "w:before=\"200\" w:after=\"100\"", contextual: true), Spaced("Does not, with 3 before.", "w:before=\"60\" w:after=\"0\""),
             Plain(Words));
-        yield return ("probe-contextual-pairs", Letter("Arial", lists: false, pairs));
-        yield return ("probe-contextual-sum", Letter("Arial", lists: false, pairs, sum: true));
+        yield return ("probe-contextual-pairs", Letter("Arial", Extras.None, pairs));
+        yield return ("probe-contextual-sum", Letter("Arial", Extras.Sum, pairs));
         // Each font set in an exact line, where Word and the converter agree, then in a single line, to show where its gap goes.
-        yield return ("probe-gaps", Letter("Arial", lists: false, Body(new[] { ("Calibri", 22), ("Calibri", 40), ("Arial", 22), ("Times New Roman", 22), ("Cambria", 22) }
+        yield return ("probe-gaps", Letter("Arial", Extras.None, Body(new[] { ("Calibri", 22), ("Calibri", 40), ("Arial", 22), ("Times New Roman", 22), ("Cambria", 22) }
             .SelectMany(f => new[] { InFont(f.Item1, f.Item2, "w:line=\"480\" w:lineRule=\"exact\""), InFont(f.Item1, f.Item2, "w:line=\"240\" w:lineRule=\"auto\"") }).ToArray())));
-        yield return ("probe-tables", Letter("Arial", lists: false, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March.")), tables: true));
+        yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 
     private static byte[] Rendered(MemoryStream template) =>
@@ -103,24 +103,24 @@ internal static class WordProbes
 
     // A letter in one font, through the theme as Word writes it, with Word's List Paragraph and, when asked, the
     // measuring net's lists and Word's Table Grid.
-    private static MemoryStream Letter(string font, bool lists, string body, bool tables = false, bool sum = false)
+    private static MemoryStream Letter(string font, Extras extras, string body)
     {
         var styles = $"<w:styles {W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:asciiTheme=\"minorHAnsi\" w:hAnsiTheme=\"minorHAnsi\"/><w:sz w:val=\"22\"/></w:rPr></w:rPrDefault>"
             + "<w:pPrDefault><w:pPr><w:spacing w:after=\"160\" w:line=\"259\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults>"
             + "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/></w:style>"
             + "<w:style w:type=\"paragraph\" w:styleId=\"ListParagraph\"><w:name w:val=\"List Paragraph\"/><w:basedOn w:val=\"Normal\"/><w:pPr><w:ind w:left=\"720\"/><w:contextualSpacing/></w:pPr></w:style>"
-            + (tables ? RandomTables.Styles : "") + "</w:styles>";
+            + (extras.HasFlag(Extras.Tables) ? RandomTables.Styles : "") + "</w:styles>";
         var docx = new TestDocx()
             .Part("word/styles.xml", styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml").Relationship($"{Rel}/styles", "styles.xml", external: false)
             .Part("word/theme/theme1.xml", TestTheme.Xml(font, font), "application/vnd.openxmlformats-officedocument.theme+xml").Relationship($"{Rel}/theme", "theme/theme1.xml", external: false);
-        if (sum)
+        if (extras.HasFlag(Extras.Sum))
         {
             // As a document from an older Word saves it: the space between paragraphs is the sum of the two, not the larger.
             docx.Part("word/settings.xml", $"<w:settings {W}><w:compat><w:doNotUseHTMLParagraphAutoSpacing/></w:compat></w:settings>", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
                 .Relationship($"{Rel}/settings", "settings.xml", external: false);
         }
 
-        if (lists)
+        if (extras.HasFlag(Extras.Lists))
         {
             docx.Part("word/numbering.xml", $"<w:numbering {W}>{RandomLists.Definitions}{RandomLists.Lists}</w:numbering>", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
                 .Relationship($"{Rel}/numbering", "numbering.xml", external: false);
@@ -128,5 +128,15 @@ internal static class WordProbes
 
         docx.RawParagraph(body);
         return docx.Build();
+    }
+
+    /// <summary>What a probe letter has besides its text: the net's lists, Word's Table Grid, or older Word's spacing.</summary>
+    [Flags]
+    private enum Extras
+    {
+        None = 0,
+        Lists = 1,
+        Tables = 2,
+        Sum = 4,
     }
 }
