@@ -72,23 +72,13 @@ internal static class LineBreaker
 
         public List<Line> Lines { get; } = [];
 
-        // A label right-aligned or centred ends, or is centred, where the first line starts; then a tab, a space or nothing.
+        // A label sits where its placement says, then a tab, a space or nothing comes before the text.
         public void Label(Piece label, LabelPlacement placement)
         {
-            var start = placement.Align switch
-            {
-                "right" => _x - label.Width,
-                "center" => _x - (label.Width / 2),
-                _ => _x,
-            };
+            var start = LabelLayout.Start(placement, _x, label.Width);
             _line.Pieces.Add((start, label));
             var end = start + label.Width;
-            _x = placement.Suffix switch
-            {
-                "nothing" => end,
-                "space" => end + FontLibrary.Face(label.Style).Width(" ", label.Style.Size),
-                _ => NextTab(end, _style, hanging: true),
-            };
+            _x = placement.Suffix == "tab" ? NextTab(end, _style, hanging: true) : end + LabelLayout.Gap(placement, label.Style);
         }
 
         public void Add(Piece piece)

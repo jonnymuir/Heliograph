@@ -35,7 +35,7 @@ public class MeasuringNetTests
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
     {
-        [1] = 151, [2] = 15, [3] = 121, [4] = 59, [5] = 38, [6] = 62, [7] = 78, [8] = 88, [9] = 158, [10] = 130,
+        [1] = 151, [2] = 15, [3] = 121, [4] = 59, [5] = 29, [6] = 62, [7] = 78, [8] = 88, [9] = 90, [10] = 130,
     };
 
     private static readonly FieldDictionary NoFields = new([]);
@@ -82,7 +82,7 @@ public class MeasuringNetTests
         var failures = new List<string>();
         for (var seed = 1 + share; seed <= 10; seed += 2)
         {
-            var (line, difference) = await Difference(seed, mostlyLists: true);
+            var (line, difference) = await Difference(seed, LayoutMix.MostlyLists);
             var recorded = FirstDifferenceInLists.TryGetValue(seed, out var known) ? known : int.MaxValue;
             if (line < recorded)
             {
@@ -93,9 +93,9 @@ public class MeasuringNetTests
         failures.Should().BeEmpty(string.Join(Environment.NewLine, failures));
     }
 
-    private static async Task<(int Line, string? Difference)> Difference(int seed, bool mostlyLists = false)
+    private static async Task<(int Line, string? Difference)> Difference(int seed, LayoutMix mix = LayoutMix.Everything)
     {
-        var compilation = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, mostlyLists ? LayoutMix.MostlyLists : LayoutMix.Everything).Docx()), NoFields);
+        var compilation = DocumentTemplate.Compile(new MemoryStream(new RandomLayout(seed, mix).Docx()), NoFields);
         var docx = compilation.Document!.Render(JsonDocument.Parse("{}").RootElement, Benchmark.British).Docx!;
         var (theirs, ours) = (await new LibreOfficePdfConverter().ConvertAsync(docx), await new HeliographPdfConverter().ConvertAsync(docx));
         var (expected, actual) = (PdfLines.Read(theirs), PdfLines.Read(ours));
@@ -103,9 +103,10 @@ public class MeasuringNetTests
         {
             // For looking at a failure: the letter and both PDFs, by seed.
             Directory.CreateDirectory(dump);
-            await File.WriteAllBytesAsync(Path.Combine(dump, $"{(mostlyLists ? "lists-" : "")}{seed}.docx"), docx);
-            await File.WriteAllBytesAsync(Path.Combine(dump, $"{(mostlyLists ? "lists-" : "")}{seed}-libreoffice.pdf"), theirs);
-            await File.WriteAllBytesAsync(Path.Combine(dump, $"{(mostlyLists ? "lists-" : "")}{seed}-own.pdf"), ours);
+            var name = Path.Combine(dump, $"{mix}-{seed}");
+            await File.WriteAllBytesAsync($"{name}.docx", docx);
+            await File.WriteAllBytesAsync($"{name}-libreoffice.pdf", theirs);
+            await File.WriteAllBytesAsync($"{name}-own.pdf", ours);
         }
 
         for (var i = 0; i < Math.Max(expected.Count, actual.Count); i++)

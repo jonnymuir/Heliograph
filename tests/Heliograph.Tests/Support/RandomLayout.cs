@@ -159,6 +159,9 @@ internal sealed class RandomLayout
         return p.ToString();
     }
 
+    // A list with levels steps up or down a level, or stays, from one item to the next.
+    private int NextLevel(int level, bool rich) => rich ? Math.Clamp(level + _lists.Next(-1, 2), 0, 2) : 0;
+
     // What block comes next, out of 100: a document made mostly of lists turns most draws into a list (8 to 15).
     private int Kind()
     {
@@ -170,18 +173,14 @@ internal sealed class RandomLayout
     // between levels.
     private void List()
     {
-        var numId = _random.Next(1, 3);
+        var plain = _random.Next(1, 3);
         var rich = _mostlyLists || _lists.Next(2) == 0;
-        if (rich)
-        {
-            numId = RandomLists.Pick(_lists);
-        }
-
+        var numId = rich ? RandomLists.Pick(_lists) : plain;
         var level = 0;
         for (var i = _random.Next(2, 7); i > 0; i--)
         {
             _body.Append(Paragraph(Words(2, 40), properties: Invariant($"<w:numPr><w:ilvl w:val=\"{level}\"/><w:numId w:val=\"{numId}\"/></w:numPr>")));
-            level = rich ? Math.Clamp(level + _lists.Next(-1, 2), 0, 2) : 0;
+            level = NextLevel(level, rich);
         }
     }
 
