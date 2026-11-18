@@ -1,4 +1,5 @@
 using Heliograph.Documents;
+using Heliograph.Pdf.Fonts;
 using Heliograph.Pdf.Layout;
 using Heliograph.Pdf.Reading;
 using Heliograph.Pdf.Writing;
@@ -10,6 +11,14 @@ public sealed record HeliographPdfOptions
 {
     /// <summary>The most pages a letter may run to. A letter that runs past it is refused. 500 by default.</summary>
     public int MaxPages { get; init; } = 500;
+
+    /// <summary>
+    /// Fonts of the host's own, as TrueType (.ttf) files, drawn in wherever a letter names their family, before any built-in
+    /// look-alike: a house font, say, or one Word uses that has no free look-alike, such as Aptos. Each file's family and
+    /// whether it is bold or italic are read from the font. A style with no file of its own is drawn in the regular face.
+    /// The host must hold a licence to embed each in a PDF; a font that says it may not be embedded is refused.
+    /// </summary>
+    public IReadOnlyList<byte[]> Fonts { get; init; } = [];
 }
 
 /// <summary>
@@ -24,11 +33,13 @@ public sealed record HeliographPdfOptions
 public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null) : IPdfConverter, IDocumentCheck
 {
     private readonly HeliographPdfOptions _options = options ?? new HeliographPdfOptions();
+    private readonly HostFonts? _fonts = options is { Fonts.Count: > 0 } ? new HostFonts(options.Fonts) : null;
 
     /// <summary>What in a template this converter cannot lay out yet, each with its place and a fix.</summary>
     public IReadOnlyList<Diagnostic> Check(DocumentToCheck document)
     {
         ArgumentNullException.ThrowIfNull(document);
+        using var fonts = FontLibrary.Use(_fonts);
         return Checking.LayoutLimits.Check(document);
     }
 
@@ -36,6 +47,7 @@ public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(docx);
         cancellationToken.ThrowIfCancellationRequested();
+        using var fonts = FontLibrary.Use(_fonts);
         try
         {
             var document = WordReader.Read(docx);
