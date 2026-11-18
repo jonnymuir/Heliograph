@@ -4,12 +4,14 @@ using static Heliograph.Pdf.Reading.WordXml;
 
 namespace Heliograph.Pdf.Reading;
 
-/// <summary>A document's list definitions, and the running count of each list as paragraphs are read in order.</summary>
+/// <summary>A paragraph's place in a list: the level it is at and that level's definition.</summary>
+internal sealed record ListPlace(string NumId, string AbstractId, int Level, XElement Definition);
+
+/// <summary>A document's list definitions: which list and level a paragraph is in, and how each level is defined.</summary>
 internal sealed class NumberingDefinitions
 {
     private readonly Dictionary<string, XElement> _abstracts = [];
-    private readonly Dictionary<string, string> _numToAbstract = [];
-    private readonly Dictionary<(string Num, int Level), int> _counters = [];
+    private readonly Dictionary<string, XElement> _nums = [];
 
     public NumberingDefinitions(XDocument? numbering)
     {
@@ -25,51 +27,42 @@ internal sealed class NumberingDefinitions
 
         foreach (var n in root.Elements(W + "num"))
         {
-            if (Val(n.Element(W + "abstractNumId")) is { } abstractId)
-            {
-                _numToAbstract[(string)n.Attribute(W + "numId")!] = abstractId;
-            }
+            _nums[(string)n.Attribute(W + "numId")!] = n;
         }
     }
 
-    /// <summary>The level a paragraph's numbering points at, or null when it is not in a list.</summary>
-    public XElement? Level(XElement? numPr)
+    /// <summary>Where a paragraph's numbering points, or null when it is not in a list.</summary>
+    public ListPlace? Place(XElement? numPr)
     {
         var numId = Val(numPr?.Element(W + "numId"));
-        if (numId is null or "0" || !_numToAbstract.TryGetValue(numId, out var abs) || !_abstracts.TryGetValue(abs, out var definition))
+        if (AbstractOf(numId) is not { } abstractId)
         {
             return null;
         }
 
-        var level = int.Parse(Val(numPr!.Element(W + "ilvl")) ?? "0", CultureInfo.InvariantCulture);
-        return definition.Elements(W + "lvl").FirstOrDefault(l => (string?)l.Attribute(W + "ilvl") == level.ToString(CultureInfo.InvariantCulture));
+        var level = int.TryParse(Val(numPr!.Element(W + "ilvl")), CultureInfo.InvariantCulture, out var l) ? l : 0;
+        return Definition(numId!, abstractId, level) is { } definition ? new ListPlace(numId!, abstractId, level, definition) : null;
     }
 
-    /// <summary>The next label of a list at this level ("3.", or a bullet), counting on from the last; null for none.</summary>
-    public string? NextLabel(XElement numPr, XElement level)
+    // The shared definition a list points to, when both exist; numId 0 means no list.
+    private string? AbstractOf(string? numId)
     {
-        var numId = Val(numPr.Element(W + "numId"))!;
-        var ilvl = int.Parse((string)level.Attribute(W + "ilvl")!, CultureInfo.InvariantCulture);
-        var format = Val(level.Element(W + "numFmt")) ?? "decimal";
-        if (format == "none")
-        {
-            return null;
-        }
-
-        var start = int.Parse(Val(level.Element(W + "start")) ?? "1", CultureInfo.InvariantCulture);
-        var count = _counters.TryGetValue((numId, ilvl), out var c) ? c + 1 : start;
-        _counters[(numId, ilvl)] = count;
-        foreach (var deeper in _counters.Keys.Where(k => k.Num == numId && k.Level > ilvl).ToList())
-        {
-            _counters.Remove(deeper);
-        }
-
-        if (format == "bullet")
-        {
-            return "•";
-        }
-
-        var text = Val(level.Element(W + "lvlText")) ?? "%1.";
-        return text.Replace($"%{ilvl + 1}", count.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        var abstractId = numId is null or "0" ? null : Val(_nums.GetValueOrDefault(numId)?.Element(W + "abstractNumId"));
+        return abstractId is not null && _abstracts.ContainsKey(abstractId) ? abstractId : null;
     }
+
+    /// <summary>The definition of a level of a list: the list's own override of it, else its shared definition.</summary>
+    public XElement? Definition(string numId, string abstractId, int level)
+    {
+        var own = _nums[numId].Elements(W + "lvlOverride").FirstOrDefault(o => Level(o) == level)?.Element(W + "lvl");
+        return own ?? _abstracts[abstractId].Elements(W + "lvl").FirstOrDefault(e => Level(e) == level);
+    }
+
+    /// <summary>The levels a list sets for itself: Restart numbering and Set numbering value.</summary>
+    public IEnumerable<XElement> Overrides(string numId) => _nums[numId].Elements(W + "lvlOverride");
+
+    public static int Level(XElement e) => int.TryParse((string?)e.Attribute(W + "ilvl"), CultureInfo.InvariantCulture, out var l) ? l : 0;
+
+    public static int Start(XElement? definition) =>
+        int.TryParse(Val(definition?.Element(W + "start")), CultureInfo.InvariantCulture, out var s) ? s : 1;
 }

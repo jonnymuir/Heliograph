@@ -24,6 +24,13 @@ internal static class FontLibrary
         return Loaded.GetOrAdd(name, Load);
     }
 
+    /// <summary>How far a style reaches above and below the baseline, and the gap its font asks for under a line.</summary>
+    public static (double Ascent, double Descent, double Gap) Metrics(RunStyle style)
+    {
+        var face = Face(style);
+        return (face.Ascent(style.Size), -face.Descender * style.Size / face.UnitsPerEm, face.LineGap * style.Size / face.UnitsPerEm);
+    }
+
     /// <summary>Whether a font named in a document has a built-in look-alike, rather than falling back to Liberation Sans.</summary>
     public static bool HasLookAlike(string font) => font.Length == 0 || Known(font) is not null;
 

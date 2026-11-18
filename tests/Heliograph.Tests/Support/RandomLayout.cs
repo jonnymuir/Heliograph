@@ -29,11 +29,17 @@ internal sealed class RandomLayout
     private static readonly string[] Sides = ["top", "left", "bottom", "right"];
 
     private readonly Random _random;
+    private readonly Random _lists;
+    private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
-    public RandomLayout(int seed)
+    /// <summary>A document of every kind of block, or, with <see cref="LayoutMix.MostlyLists"/>, one where most blocks are lists with levels.</summary>
+    public RandomLayout(int seed, LayoutMix mix = LayoutMix.Everything)
     {
+        _mostlyLists = mix == LayoutMix.MostlyLists;
         _random = new Random(seed);
+        // Lists drawn from their own stream, so what else a seed builds stays as it was before lists grew levels.
+        _lists = new Random(seed + 10_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -86,7 +92,7 @@ internal sealed class RandomLayout
 
     private void Block()
     {
-        var kind = _random.Next(100);
+        var kind = Kind();
         if (kind < 8)
         {
             _body.Append(Paragraph(Words(2, 8), style: _random.Next(2) == 0 ? "Heading1" : "Heading2"));
@@ -153,12 +159,28 @@ internal sealed class RandomLayout
         return p.ToString();
     }
 
+    // A list with levels steps up or down a level, or stays, from one item to the next.
+    private int NextLevel(int level, bool rich) => rich ? Math.Clamp(level + _lists.Next(-1, 2), 0, 2) : 0;
+
+    // What block comes next, out of 100: a document made mostly of lists turns most draws into a list (8 to 15).
+    private int Kind()
+    {
+        var kind = _random.Next(100);
+        return _mostlyLists && kind < 70 ? 8 : kind;
+    }
+
+    // Half the lists are a plain bullet or number list; the rest use RandomLists' definitions, with items that step
+    // between levels.
     private void List()
     {
-        var numId = _random.Next(1, 3);
+        var plain = _random.Next(1, 3);
+        var rich = _mostlyLists || _lists.Next(2) == 0;
+        var numId = rich ? RandomLists.Pick(_lists) : plain;
+        var level = 0;
         for (var i = _random.Next(2, 7); i > 0; i--)
         {
-            _body.Append(Paragraph(Words(2, 40), properties: Invariant($"<w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"{numId}\"/></w:numPr>")));
+            _body.Append(Paragraph(Words(2, 40), properties: Invariant($"<w:numPr><w:ilvl w:val=\"{level}\"/><w:numId w:val=\"{numId}\"/></w:numPr>")));
+            level = NextLevel(level, rich);
         }
     }
 
@@ -282,8 +304,16 @@ internal sealed class RandomLayout
           <w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>
           <w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>
           <w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>
+        {RandomLists.Definitions}
         </w:numbering>
         """;
 
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
+}
+
+/// <summary>What a random layout is made of.</summary>
+internal enum LayoutMix
+{
+    Everything,
+    MostlyLists,
 }

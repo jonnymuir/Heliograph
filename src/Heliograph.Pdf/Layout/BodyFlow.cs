@@ -9,28 +9,25 @@ namespace Heliograph.Pdf.Layout;
 internal sealed class BodyFlow(PageSet pages, StructNode root)
 {
     private readonly TableFlow _tables = new(pages);
+    private readonly ListNesting _lists = new(root);
 
     public void Run(IReadOnlyList<Block> blocks)
     {
         pages.NewPage();
-        StructNode? list = null;
         for (var i = 0; i < blocks.Count; i++)
         {
             var next = i + 1 < blocks.Count ? blocks[i + 1] : null;
             switch (blocks[i])
             {
                 case Paragraph { IsListItem: true } p:
-                    list ??= root.Add("L");
-                    var item = list.Add("LI");
-                    var label = item.Add("Lbl");
-                    Paragraph(p, new Owner(item.Add("LBody"), label), next);
+                    Paragraph(p, _lists.Item(p.ListLevel), next);
                     break;
                 case Paragraph p:
-                    list = null;
+                    _lists.Clear();
                     Paragraph(p, new Owner(root.Add(p.Style.OutlineLevel is { } level and < 6 ? $"H{level + 1}" : "P"), null), next);
                     break;
                 case Table t:
-                    list = null;
+                    _lists.Clear();
                     _tables.Run(t, root.Add("Table"));
                     break;
             }
@@ -102,13 +99,15 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         var remaining = lines.Count - placed;
         if (fit < remaining && widowControl)
         {
-            if (fit == 1 && placed == 0 && remaining > 1)
-            {
-                fit = 0;
-            }
-            else if (remaining - fit == 1 && fit >= 2)
+            // A lone last line takes one more with it; and if that leaves a lone first line here, the paragraph moves.
+            if (remaining - fit == 1 && fit >= 2)
             {
                 fit--;
+            }
+
+            if (fit == 1 && placed == 0)
+            {
+                fit = 0;
             }
         }
 

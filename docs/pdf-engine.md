@@ -43,7 +43,14 @@ This plan is built to find out early and keep finding out.
   - indents, tab stops, line breaks;
   - the three line-spacing modes, and space before and after.
 - **Pages:** widow and orphan control, keep with next, keep together, page breaks.
-- **Lists:** bullets and numbers.
+- **Lists:** as Word numbers them:
+  - several levels, each in its own style: numbers, with or without a leading zero, letters and
+    Roman numerals;
+  - labels that show higher levels ("1.2."), legal numbering, restarts and set values, and lists
+    that count on from another with the same definition;
+  - labels aligned left, right or centred, followed by a tab, a space or nothing;
+  - Word's bullets in Symbol, Wingdings and Courier New, drawn as the same shapes;
+  - a list inside a list tagged as one, for screen readers.
 - **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
   on each page. A row breaks across pages, each cell at its own last line that fits, unless it is
   marked not to.
@@ -72,12 +79,24 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - the default tab interval comes from the document's settings;
 - table rows break across pages;
 - a paragraph kept with the next is kept with its first two lines when widow and orphan control is on;
+- a paragraph that would leave a lone first line at the foot of a page, once its last two lines
+  are kept together, moves to the next page whole;
+- a line is as tall as its tallest font reaches above the baseline plus its deepest below, plus
+  the largest gap;
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
 
-What the net still shows is mostly in three places: where a word split across lines breaks, a
-few wrap points, and some page breaks.
+Ten more seeds are documents made mostly of lists with levels, with a ratchet of their own.
+LibreOffice on a Mac makes a line with a Symbol bullet a little taller than the text alone; on
+Linux it does not. The converter does not, for now, and a Word fixture with bullets will settle
+what Word does.
+
+What the net still shows is mostly in four places: where a word split across lines breaks, a
+few wrap points, some page breaks, and drift from rounding. LibreOffice rounds some line heights
+to a twip in a way that differs by font, size and platform (a line of Times New Roman at 10pt is
+11.55pt there, 11.5pt here). Chasing that would mean matching one build of LibreOffice, so it is
+left until Word fixtures show what Word does.
 
 The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
 blank one in Word for the web, and the PDF Word exported from it. A new Word document leaves out
@@ -162,7 +181,8 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 5. Paragraphs and pages
 
-- Numbering in full: several levels, restarts, letters, Roman numerals and legal styles.
+- Numbering: done early (several levels, restarts, letters, Roman numerals, legal styles). Still
+  to come: picture bullets and the rarer number styles ("1st", "one", other scripts).
 - Paragraph borders and shading, and contextual spacing.
 - Every keep and break rule, including space before at the top of a page.
 - Line spacing modes, checked against Word fixtures.

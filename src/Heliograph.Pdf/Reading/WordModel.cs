@@ -41,9 +41,23 @@ internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent
 
 internal abstract record Block;
 
+/// <summary>
+/// A paragraph. A list item has a label, set at its level as the list says: aligned left, right or centred where the
+/// first line starts, then a tab, a space or nothing before the text.
+/// </summary>
 internal sealed record Paragraph(ParagraphStyle Style, IReadOnlyList<Inline> Inlines, TextInline? Label, RunStyle MarkStyle) : Block
 {
     public bool IsListItem => Label is not null;
+
+    public int ListLevel { get; init; }
+
+    public LabelPlacement Placement { get; init; } = LabelPlacement.Default;
+}
+
+/// <summary>Where a list label sits ("left", "right" or "center" of where the first line starts) and what follows it ("tab", "space" or "nothing").</summary>
+internal sealed record LabelPlacement(string Align, string Suffix)
+{
+    public static readonly LabelPlacement Default = new("left", "tab");
 }
 
 internal sealed record Border(double Width);

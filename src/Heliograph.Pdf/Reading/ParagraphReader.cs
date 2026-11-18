@@ -6,12 +6,14 @@ namespace Heliograph.Pdf.Reading;
 /// <summary>Reads a paragraph: its resolved style, its text, tabs, breaks and fields, and its list label.</summary>
 internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab)
 {
+    private readonly ListItemReader _items = new(numbering);
+
     public Paragraph Read(XElement p)
     {
         var pPr = p.Element(W + "pPr");
         var chain = styles.Chain(Val(pPr?.Element(W + "pStyle")) ?? styles.DefaultParagraph);
-        var numPr = pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null);
-        var level = numbering.Level(numPr);
+        var place = numbering.Place(pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null));
+        var level = place?.Definition;
 
         var paragraphLayers = new List<XElement?> { styles.DefaultParagraphProperties };
         paragraphLayers.AddRange(chain.Select(s => s.Element(W + "pPr")));
@@ -22,15 +24,9 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         var runLayers = new List<XElement?> { styles.DefaultRun };
         runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));
 
-        TextInline? label = null;
-        if (level is not null && numbering.NextLabel(numPr!, level) is { } text)
-        {
-            // A bullet's own font is usually Symbol, which is not built in; the bullet character is drawn in the text font.
-            label = new TextInline(text, PropertyReader.Run([.. runLayers, level.Element(W + "rPr")]) with { Font = "" });
-        }
-
-        var mark = PropertyReader.Run([.. runLayers, pPr?.Element(W + "rPr")]);
-        return new Paragraph(style, Inlines(p, runLayers), label, mark);
+        List<XElement?> markLayers = [.. runLayers, pPr?.Element(W + "rPr")];
+        var paragraph = new Paragraph(style, Inlines(p, runLayers), null, PropertyReader.Run(markLayers));
+        return place is null ? paragraph : _items.Listed(paragraph, place, markLayers);
     }
 
     private List<Inline> Inlines(XElement p, List<XElement?> runLayers)
