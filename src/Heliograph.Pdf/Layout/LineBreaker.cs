@@ -16,6 +16,9 @@ internal sealed class Line
     public double Hang { get; set; }
     public bool Last { get; set; }
     public bool EndsWithBreak { get; set; }
+
+    /// <summary>What a block set in a cell like a line draws, a table inside a table, from the line's top left; else null.</summary>
+    public IReadOnlyList<Op>? Block { get; init; }
 }
 
 /// <summary>Where a paragraph starts down its page, and the room a line has across it at a height, beside floating pictures.</summary>

@@ -2,38 +2,57 @@ using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
+/// <summary>Where a row is drawn: on which page, from which left edge, and from how far down.</summary>
+internal readonly record struct Canvas(LaidOutPage Page, double Left, double Top);
+
+/// <summary>Which of a cell's lines to draw, from one index to another, and the row they are drawn in: its height, and how far down the text is moved.</summary>
+internal readonly record struct CellPart(int From, int End, double Height, double Down);
+
 /// <summary>
-/// Draws one cell of a table row at the page's current position: its shading, its lines and its borders. A line's notes go
-/// on the page with it, unless the row is a heading drawn again on a later page.
+/// Draws one cell of a table row: its shading, its lines and its borders. A table inside the cell is one of its lines,
+/// drawn where that line falls. On a page, a line's notes go on the page with it, unless the row is a heading drawn again
+/// on a later page.
 /// </summary>
 internal sealed class CellPainter(PageSet pages, PageNotes notes)
 {
-    // One cell's shading, its lines from one index to another, moved down by an offset, and its borders.
+    /// <summary>One cell's shading, its lines from one index to another, moved down by an offset, and its borders, at the page's current position.</summary>
     public void Draw(RowLayout cells, int c, int from, int end, double height, double down)
     {
-        var cell = cells[c];
-        var (left, offset) = (pages.Geometry.Left + cell.Left, (from < cell.Lines.Count ? cell.Lines[from].Top : 0) - down);
-        if (cells.Source[c].Background is { } shading)
+        Paint(new Canvas(pages.Current, pages.Geometry.Left, pages.Y), cells[c], cells, new CellPart(from, end, height, down));
+        foreach (var (_, line, owner) in cells[c].Lines.Skip(from).Take(end - from).Where(l => l.Owner.Node is not null))
         {
-            pages.Current.Ops.Add(new FillOp(left, pages.Y, cell.Width, height, shading));
+            notes.Place(line, owner.Node);
         }
-
-        for (var k = from; k < end; k++)
-        {
-            var (top, line, owner) = cell.Lines[k];
-            LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
-            if (owner.Node is not null)
-            {
-                notes.Place(line, owner.Node);
-            }
-        }
-
-        Borders(cell.Borders, left, cell.Width, height);
     }
 
-    private void Borders(CellBorders b, double x, double width, double height)
+    /// <summary>One cell drawn on a canvas, its lines from one index to another, in a row this high, moved down this far.</summary>
+    public static void Paint(Canvas at, CellLayout cell, RowLayout cells, CellPart part)
     {
-        var (top, ops) = (pages.Y, pages.Current.Ops);
+        var (left, offset) = (at.Left + cell.Left, (part.From < cell.Lines.Count ? cell.Lines[part.From].Top : 0) - part.Down);
+        if (cell.Background is { } shading)
+        {
+            at.Page.Ops.Add(new FillOp(left, at.Top, cell.Width, part.Height, shading));
+        }
+
+        for (var k = part.From; k < part.End; k++)
+        {
+            var (top, line, owner) = cell.Lines[k];
+            var (x, y) = (at.Left + cell.TextLeft, at.Top + cells.Above + (top - offset));
+            if (line.Block is { } block)
+            {
+                at.Page.Ops.AddRange(block.Select(op => Shift.Moved(op, x, y)));
+                continue;
+            }
+
+            LinePlacer.Place(at.Page, line, x, y, owner);
+        }
+
+        Borders(at, cell.Borders, (left, cell.Width), part.Height);
+    }
+
+    private static void Borders(Canvas at, CellBorders b, (double X, double Width) across, double height)
+    {
+        var (top, ops, (x, width)) = (at.Top, at.Page.Ops, across);
         if (b.Top is { } t)
         {
             ops.Add(new LineOp(x, top, x + width, top, t.Width));

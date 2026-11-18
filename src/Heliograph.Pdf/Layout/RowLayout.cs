@@ -72,22 +72,8 @@ internal sealed class RowLayout
     private static CellLayout Cell(Table t, Cell cell, double x, double width, StructNode? cellNode)
     {
         var text = width - t.Margins.Left - t.Margins.Right - (((cell.Borders.Left?.Width ?? 0) + (cell.Borders.Right?.Width ?? 0)) / 2);
-        var lines = new List<(double, Line, Owner)>();
-        var y = 0.0;
-        foreach (var p in cell.Blocks.OfType<Paragraph>())
-        {
-            y += p.Style.SpaceAbove;
-            var owner = cellNode is null ? Owner.Artifact : new Owner(cellNode.Add("P"), null);
-            foreach (var line in LineBreaker.Break(p, text, _ => ""))
-            {
-                lines.Add((y, line, owner));
-                y += line.Height;
-            }
-
-            y += p.Style.Spacing.After;
-        }
-
-        return new CellLayout(x, width, x + t.Margins.Left, cell.Borders, lines, y) { VAlign = cell.VAlign };
+        var (lines, height) = CellLines.Of(cell.Blocks, text, cellNode);
+        return new CellLayout(x, width, x + t.Margins.Left, cell.Borders, lines, height) { VAlign = cell.VAlign, Background = cell.Background };
     }
 
     /// <summary>The height the row needs from these lines on, up to these lines (or to the end).</summary>

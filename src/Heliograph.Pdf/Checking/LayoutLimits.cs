@@ -49,7 +49,7 @@ internal static class LayoutLimits
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",
             $"Set the text left to right, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutTable, Tables, what => $"This document has a table with {what}. {Route} does not lay those out yet.",
-            $"Give each cell its own row, with no table inside another, {Instead}"),
+            $"Give each cell of the inner table its own row, or take the inner table out of the cell, {Instead}"),
         new(DiagnosticCodes.PdfCannotAlignTab, Tabs, what => $"This document has a tab stop {what}. {Route} lines tabs up on the left only, so text after it would not line up.",
             $"Use a left tab stop, or a table with the column aligned as you need, {Instead}"),
     ];
@@ -126,9 +126,10 @@ internal static class LayoutLimits
             .Select(e => (e, e.Name.LocalName == "textDirection" ? "text that runs up or down the page" : "right-to-left text"));
     }
 
+    // A table inside another is laid out as one block in its cell, so cells merged down its columns are not yet.
     private static IEnumerable<(XElement, string)> Tables(XElement root)
     {
-        return root.Descendants().Where(e => e.Name == W + "tbl" && e.Ancestors(W + "tbl").Any()).Select(e => (e, "another table inside it"));
+        return root.Descendants(W + "vMerge").Where(e => e.Ancestors(W + "tbl").Skip(1).Any()).Select(e => (e, "a table inside it whose cells are merged down a column"));
     }
 
     private static IEnumerable<(XElement, string)> Tabs(XElement root)

@@ -62,7 +62,8 @@ This plan is built to find out early and keep finding out.
   - Word's bullets in Symbol, Wingdings and Courier New, drawn as the same shapes;
   - a list inside a list tagged as one, for screen readers.
 - **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
-  on each page:
+  on each page, and a table inside a table's cell, laid out across the cell's text as one block
+  that keeps together (its cells merged down a column, or footnotes in it, are refused):
   - through their style (Word's Table Grid, say): borders, padding, indent and alignment, the
     style's outer borders on the edges and inside borders between cells, and the paragraph and
     run settings it gives text in its cells;
@@ -284,7 +285,8 @@ generated documents through both routes. Add the Word fixtures.
 - Vertically merged cells (done, kept together on a page), and vertical alignment in a cell (done). Table styles' own borders,
   padding and paragraph settings (done); their formatting of some rows or columns, still refused.
 - Cell shading (done), and Word's rules for which border wins.
-- Rows that split across pages, and nested tables.
+- Rows that split across pages, and nested tables (both done; a table inside another is laid out
+  as one block in its cell, which does not break across pages).
 
 ### 7. Pictures
 
