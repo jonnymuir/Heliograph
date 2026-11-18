@@ -28,6 +28,7 @@ public class PdfTextTests
         { "superscript", "<w:vertAlign w:val=\"superscript\"/>" },
         { "subscript", "<w:vertAlign w:val=\"subscript\"/>" },
         { "capitals", "<w:caps/>" },
+        { "small capitals", "<w:smallCaps/>" },
         { "expanded", "<w:spacing w:val=\"40\"/>" },
         { "condensed", "<w:spacing w:val=\"-10\"/>" },
     };

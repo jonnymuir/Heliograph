@@ -40,7 +40,9 @@ This plan is built to find out early and keep finding out.
   - styles and their inheritance;
   - bold, italic, underline and size;
   - colour, highlight and shading, single and double strikethrough, superscript and subscript,
-    capitals and character spacing; hidden text is not drawn;
+    capitals, small capitals (lowercase letters as capitals at four fifths of the size, as
+    LibreOffice draws them; a Word probe will say whether Word's are the same) and character
+    spacing; hidden text is not drawn;
   - left, centred, right and justified text;
   - indents and line breaks;
   - tab stops aligned left, right, centred or on the decimal point, with leaders of dots,
@@ -248,7 +250,7 @@ generated documents through both routes. Add the Word fixtures.
 
 - Colour, highlight and shading. Done (shading behind a whole paragraph is stage 5).
 - Underline styles and strikethrough. Strikethrough done.
-- Superscript and subscript, small capitals and capitals. Done but small capitals.
+- Superscript and subscript, small capitals and capitals. Done.
 - Character spacing. Done.
 - Kerning, matching what LibreOffice and Word do by default.
 - Non-breaking spaces and hyphens, and soft hyphens.

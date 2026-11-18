@@ -23,6 +23,10 @@ internal static class RandomFormatting
         "<w:spacing w:val=\"-8\"/>",
     ];
 
+    // Half the runs set in capitals are set in small capitals instead, chosen by the run's length so the rest of the random
+    // stream, and every other document, stays as it was.
+    private static string Choice(int pick, string run) => Choices[pick] == "<w:caps/>" && run.Length % 2 == 0 ? "<w:smallCaps/>" : Choices[pick];
+
     /// <summary>The paragraph with about one run in six formatted.</summary>
     public static string Into(string paragraph, Random random)
     {
@@ -31,7 +35,7 @@ internal static class RandomFormatting
         result.Append(parts[0]);
         foreach (var part in parts.Skip(1))
         {
-            result.Append(random.Next(6) == 0 ? $"<w:r><w:rPr>{Choices[random.Next(Choices.Length)]}</w:rPr><w:t" : "<w:r><w:t").Append(part);
+            result.Append(random.Next(6) == 0 ? $"<w:r><w:rPr>{Choice(random.Next(Choices.Length), part)}</w:rPr><w:t" : "<w:r><w:t").Append(part);
         }
 
         return result.ToString();

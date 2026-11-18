@@ -35,6 +35,7 @@ internal static class RunFormatting
         {
             VertAlign = Val(x.Element(W + "vertAlign")) ?? style.VertAlign,
             Caps = x.Element(W + "caps") is { } caps ? On(caps) : style.Caps,
+            SmallCaps = x.Element(W + "smallCaps") is { } smallCaps ? On(smallCaps) : style.SmallCaps,
             Hidden = x.Element(W + "vanish") is { } vanish ? On(vanish) : style.Hidden,
             CharacterSpacing = Twips(x.Element(W + "spacing"), "val") ?? style.CharacterSpacing,
         };

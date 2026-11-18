@@ -12,7 +12,6 @@ internal static class FormattingLimits
     // Formatting that is either on or off.
     private static readonly Dictionary<string, string> Switches = new(StringComparer.Ordinal)
     {
-        ["smallCaps"] = "small capitals",
         ["emboss"] = "embossed, engraved, outlined or shadowed text",
         ["imprint"] = "embossed, engraved, outlined or shadowed text",
         ["outline"] = "embossed, engraved, outlined or shadowed text",

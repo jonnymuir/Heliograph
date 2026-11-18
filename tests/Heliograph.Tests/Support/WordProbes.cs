@@ -48,6 +48,7 @@ internal static class WordProbes
             Item(5, 1, "A bullet from Courier New"), Item(5, 2, "A bullet from Wingdings"), Plain(Words))));
         yield return ("probe-calibri-exact", Letter("Calibri", Extras.None, Body(
             Spaced(Words + " " + Words, "w:line=\"300\" w:lineRule=\"exact\""), Spaced(Words + " " + Words, "w:line=\"320\" w:lineRule=\"atLeast\""), Plain(Words))));
+        yield return ("probe-small-caps", Letter("Arial", Extras.None, Body(Run(Words + " " + Words, "<w:smallCaps/>"), Run("Smith and Partners, Solicitors", "<w:smallCaps/><w:sz w:val=\"32\"/>"), Plain(Words))));
         yield return ("probe-superscript", Letter("Arial", Extras.None, Body(
             Plain("A plain line"), Run("All of this line is superscript", "<w:vertAlign w:val=\"superscript\"/>"),
             Run("All of this line is subscript", "<w:vertAlign w:val=\"subscript\"/>"), Plain("Another plain line"), Spaced(Words, "w:line=\"360\" w:lineRule=\"auto\""))));
