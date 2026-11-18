@@ -44,11 +44,13 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
 
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
         // Space before is kept at the top of a page too, as LibreOffice lays out a Word document, less any part shared with
-        // the space after the paragraph above, wherever that paragraph ended.
+        // the space after the paragraph above, wherever that paragraph ended; but a paragraph a keep rule moves to a new
+        // page starts at its top.
         var before = s.SpaceAbove;
         if (MustMove(p, lines, before, next))
         {
             pages.NewPage();
+            before = 0;
         }
 
         pages.Y += before;
@@ -121,11 +123,12 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         _ => 0,
     };
 
-    // What must open a paragraph where it starts: its first line, or its first two when it has more than one and widow
-    // and orphan control keeps a lone first line off the foot of a page.
+    // What must open a paragraph where it starts: all of it when it keeps its lines together, else its first line, or its
+    // first two when it has more than one and widow and orphan control keeps a lone first line off the foot of a page.
     private double OpeningLines(Paragraph p)
     {
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
-        return lines.Take(p.Style.Flow.WidowControl && lines.Count > 1 ? 2 : 1).Sum(l => l.Height);
+        var opening = p.Style.Flow.KeepLines ? lines.Count : p.Style.Flow.WidowControl && lines.Count > 1 ? 2 : 1;
+        return lines.Take(opening).Sum(l => l.Height);
     }
 }

@@ -3,17 +3,6 @@ using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
-internal enum PieceKind
-{
-    Word,
-    Space,
-    Tab,
-    Break,
-}
-
-/// <summary>A word, a run of spaces, a tab or a line break, measured in its style.</summary>
-internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKind Kind, bool IsLabel = false);
-
 /// <summary>One line of a paragraph: its pieces at their offsets from the text area's left edge, and its height.</summary>
 internal sealed class Line
 {
@@ -62,6 +51,8 @@ internal static class LineBreaker
         private readonly double _limit;
         private Line _line;
         private double _x;
+        private bool _tabbed;
+        private bool _afterTab;
 
         public LineBuilder(ParagraphStyle style, double limit)
         {
@@ -83,6 +74,8 @@ internal static class LineBreaker
 
         public void Add(Piece piece)
         {
+            var tabbed = _tabbed;
+            _tabbed = piece.Kind == PieceKind.Tab;
             switch (piece.Kind)
             {
                 case PieceKind.Break:
@@ -101,6 +94,7 @@ internal static class LineBreaker
                     _x = stop;
                     break;
                 case PieceKind.Word when _x + piece.Width > _line.Limit + 0.01:
+                    _afterTab = tabbed;
                     Wrap(piece);
                     break;
                 default:
@@ -109,12 +103,20 @@ internal static class LineBreaker
             }
         }
 
-        // A word that does not fit starts the next line. A word too wide for any line is split where the line is full.
+        // A word that does not fit starts the next line, and a tab just before it goes with it and takes effect there. A
+        // word too wide for any line is split where the line is full; a picture never is, and goes on a line of its own.
         private void Wrap(Piece piece)
         {
             if (_line.Pieces.Any(q => q.Piece.Kind == PieceKind.Word && !q.Piece.IsLabel))
             {
                 Next();
+                _x = _afterTab ? NextTab(_x, _style, hanging: false) : _x;
+            }
+
+            if (piece.Picture is not null)
+            {
+                Put(piece);
+                return;
             }
 
             var face = FontLibrary.Face(piece.Style);
@@ -180,6 +182,9 @@ internal static class LineBreaker
                     break;
                 case FieldInline f:
                     Words(field(f.Field), f.Style, pieces);
+                    break;
+                case PictureInline picture:
+                    pieces.Add(new Piece("", picture.Style, picture.Width, PieceKind.Word) { Picture = picture });
                     break;
             }
         }
@@ -248,15 +253,18 @@ internal static class LineBreaker
     {
         var styles = line.Pieces.Select(q => q.Piece.Style).DefaultIfEmpty(p.MarkStyle).ToList();
         // The tallest reach above the baseline, the deepest below it, and the largest gap, each from whichever font has it.
+        // A picture stands on the baseline, so it reaches as far above it as it is tall.
+        // Line spacing over or under single adds or takes away a share of the text's height, not the picture's.
         var metrics = styles.Select(FontLibrary.Metrics).ToList();
-        line.Ascent = metrics.Max(m => m.Ascent);
-        var natural = line.Ascent + metrics.Max(m => m.Descent) + metrics.Max(m => m.Gap);
+        var (ascent, below) = (metrics.Max(m => m.Ascent), metrics.Max(m => m.Descent) + metrics.Max(m => m.Gap));
+        line.Ascent = Math.Max(ascent, line.Pieces.Select(q => q.Piece.Picture?.Height ?? 0).DefaultIfEmpty(0).Max());
+        var natural = line.Ascent + below;
         var spacing = p.Style.Spacing;
         line.Height = spacing.LineRule switch
         {
             "exact" => spacing.Line / 20,
             "atLeast" => Math.Max(spacing.Line / 20, natural),
-            _ => natural * spacing.Line / 240,
+            _ => natural + ((ascent + below) * ((spacing.Line / 240) - 1)),
         };
 
         line.Hang = spacing.LineRule is "exact" or "atLeast" ? 0 : Math.Max(0, line.Height - natural);

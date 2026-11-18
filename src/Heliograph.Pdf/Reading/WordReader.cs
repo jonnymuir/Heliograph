@@ -1,5 +1,3 @@
-using System.IO.Compression;
-using System.Xml;
 using System.Xml.Linq;
 using static Heliograph.Pdf.Reading.WordXml;
 
@@ -8,23 +6,23 @@ namespace Heliograph.Pdf.Reading;
 /// <summary>Reads a rendered .docx into a <see cref="WordDocument"/>.</summary>
 internal sealed class WordReader : IDisposable
 {
-    private static readonly XmlReaderSettings Safe = new() { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
-    private readonly ZipArchive _zip;
+    private readonly PackageParts _package;
     private readonly ParagraphReader _paragraphs;
     private readonly Dictionary<string, string> _relationships;
     private readonly bool _largerSpacing;
+    private string _part = "word/document.xml";
 
     private WordReader(byte[] docx)
     {
-        _zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
-        Styles = new StyleSheet(Part("word/styles.xml"));
+        _package = new PackageParts(docx);
+        Styles = new StyleSheet(_package.Part("word/styles.xml"));
         // Word's interval between default tab stops is half an inch unless the document sets its own.
-        var settings = Part("word/settings.xml")?.Root;
+        var settings = _package.Part("word/settings.xml")?.Root;
         var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
-        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab);
-        _relationships = (Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
+        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(_package.Part("word/numbering.xml")), defaultTab, id => _package.Linked(_part, id));
+        _relationships = (_package.Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
             .ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
     }
 
@@ -36,17 +34,17 @@ internal sealed class WordReader : IDisposable
         return reader.Document();
     }
 
-    public void Dispose() => _zip.Dispose();
+    public void Dispose() => _package.Dispose();
 
     private WordDocument Document()
     {
-        var body = Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
+        var body = _package.Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
         var sect = body.Element(W + "sectPr") ?? new XElement(W + "sectPr");
         var titlePage = On(sect.Element(W + "titlePg"));
         var stories = new Stories(
             Story(sect, "header", "default") ?? [], Story(sect, "footer", "default") ?? [],
             titlePage ? Story(sect, "header", "first") ?? [] : null, titlePage ? Story(sect, "footer", "first") ?? [] : null);
-        var title = Part("docProps/core.xml")?.Root?.Element(Dc + "title")?.Value ?? "";
+        var title = _package.Part("docProps/core.xml")?.Root?.Element(Dc + "title")?.Value ?? "";
         return new WordDocument(title, Styles.Language, new Section(Geometry(sect), stories), Blocks(body));
     }
 
@@ -79,24 +77,22 @@ internal sealed class WordReader : IDisposable
     private IReadOnlyList<Block>? Story(XElement sect, string kind, string type)
     {
         var reference = sect.Elements(W + kind + "Reference").FirstOrDefault(e => (string?)e.Attribute(W + "type") == type);
-        if (reference is null || !_relationships.TryGetValue((string)reference.Attribute(R + "id")!, out var target))
-        {
-            return null;
-        }
-
-        return Part("word/" + target)?.Root is { } root ? Blocks(root) : null;
+        var target = reference is null ? null : _relationships.GetValueOrDefault((string)reference.Attribute(R + "id")!);
+        return target is null ? null : StoryIn("word/" + target);
     }
 
-    private XDocument? Part(string name)
+    // A header's or footer's blocks; its pictures are found through its own relationships.
+    private IReadOnlyList<Block>? StoryIn(string name)
     {
-        if (_zip.GetEntry(name) is not { } entry)
+        if (_package.Part(name)?.Root is not { } root)
         {
             return null;
         }
 
-        using var stream = entry.Open();
-        using var reader = XmlReader.Create(stream, Safe);
-        return XDocument.Load(reader);
+        _part = name;
+        var blocks = Blocks(root);
+        _part = "word/document.xml";
+        return blocks;
     }
 
     private static PageGeometry Geometry(XElement sect)

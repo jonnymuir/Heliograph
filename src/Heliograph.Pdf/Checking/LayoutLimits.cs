@@ -17,6 +17,7 @@ internal static class LayoutLimits
 
     private static readonly XNamespace A = "http://schemas.openxmlformats.org/drawingml/2006/main";
     private static readonly XNamespace V = "urn:schemas-microsoft-com:vml";
+    private static readonly XNamespace Wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
     private static readonly XNamespace Mc = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
     private static readonly Limit[] Limits = [.. ThingsOnThePage(), .. ThingsInTheText()];
@@ -24,8 +25,8 @@ internal static class LayoutLimits
     // Objects and page structure.
     private static Limit[] ThingsOnThePage() =>
     [
-        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, _ => $"This document has a picture. {Route} does not draw pictures yet, so its PDFs would be missing it.",
-            $"Take the picture out, {Instead}"),
+        new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} draws pictures set in line with the text only, so its PDFs would be missing it.",
+            $"Set the picture in line with text (Wrap Text > In Line with Text in Word), {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, Notes, what => $"This document has {what}. {Route} does not lay out footnotes or endnotes yet.",
@@ -76,14 +77,18 @@ internal static class LayoutLimits
         }
 
         diagnostics.AddRange(ListLimits.Check(document));
+        diagnostics.AddRange(PictureLimits.Check(document));
 
         return diagnostics;
     }
 
+    // A picture in line with the text is drawn (PictureLimits checks its file); one that floats, or an old-style VML
+    // picture, is not yet.
     private static IEnumerable<(XElement, string)> Pictures(XElement root)
     {
-        return root.Descendants().Where(e => (e.Name == A + "graphicData" && ((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
-            || e.Name == V + "imagedata").Select(e => (e, "a picture"));
+        return root.Descendants().Where(e => (e.Name == A + "graphicData" && ((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal)
+                && e.Ancestors(Wp + "anchor").Any())
+            || e.Name == V + "imagedata").Select(e => (e, "a picture that floats, with text around it or over it"));
     }
 
     private static IEnumerable<(XElement, string)> Shapes(XElement root)

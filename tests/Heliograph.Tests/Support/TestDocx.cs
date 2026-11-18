@@ -13,6 +13,7 @@ internal sealed class TestDocx
 
     private readonly List<string> _paragraphs = [];
     private readonly List<(string Name, string Content)> _extraParts = [];
+    private readonly List<(string Name, byte[] Bytes)> _binaryParts = [];
     private readonly List<string> _contentTypes = [];
     private readonly List<string> _documentRelationships = [];
     private string? _header;
@@ -78,6 +79,14 @@ internal sealed class TestDocx
             _contentTypes.Add($"<Override PartName=\"/{name}\" ContentType=\"{contentType}\"/>");
         }
 
+        return this;
+    }
+
+    /// <summary>Adds a file such as a picture, with its content type.</summary>
+    public TestDocx Media(string name, byte[] bytes, string contentType)
+    {
+        _binaryParts.Add((name, bytes));
+        _contentTypes.Add($"<Override PartName=\"/{name}\" ContentType=\"{contentType}\"/>");
         return this;
     }
 
@@ -175,6 +184,12 @@ internal sealed class TestDocx
             foreach (var (name, content) in _extraParts)
             {
                 Add(zip, name, content);
+            }
+
+            foreach (var (name, bytes) in _binaryParts)
+            {
+                using var entry = zip.CreateEntry(name).Open();
+                entry.Write(bytes);
             }
         }
 

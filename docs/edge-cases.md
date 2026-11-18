@@ -179,6 +179,7 @@ the template is not stopped, because the text may be what they meant.
 | Case | What happens | Strategy | Status |
 |---|---|---|---|
 | The document has no title in its properties | Pointed out, as a warning. The PDF is still made, and fails PDF/UA until a title is set | S3 | Works |
+| A picture with no alternative text, not marked as decorative | Warned (`HG1022`); a screen reader skips it in the PDF | S3 | Works |
 | A file that is not a Word document is handed to the converter | Refused, without quoting it | | Refused |
 | LibreOffice is missing, will not start, or takes too long | The conversion fails with the reason. LibreOffice is stopped | | Works |
 

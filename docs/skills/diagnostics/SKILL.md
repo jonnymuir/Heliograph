@@ -59,6 +59,7 @@ the line.
 | `HG1017` | Warning. A text message template has a character outside the basic set for text messages, such as a curly quote. Every message from it will hold 70 characters, not 160, so most will be charged as more than one. Reported once, at the first such character. | Replace it with a plain character unless you need it. |
 | `HG1020` | Warning. The document has no title in its properties. A PDF made from it will not meet the standard for accessible PDF, because a screen reader announces the title first. | Set a title that says what the letter is: **File > Properties > Description** in LibreOffice, **File > Info** in Word. |
 | `HG1021` | The tag sheet from the starter document is still in the document. Its tags would be filled in and sent to every recipient. Reported on its own, because the sheet would set off many other diagnostics. | Delete the page that starts "Heliograph tag sheet", and everything after it. |
+| `HG1022` | Warning. A picture has no alternative text, so a screen reader skips it in an accessible PDF. Reported once in each part. | Describe the picture: right-click it, then **Edit Alt Text** in Word or **Properties > Options > Alternative (Text only)** in LibreOffice. If it is only decoration, mark it as decorative in Word. |
 | `HG1010` | Warning. The document has hidden text, which is sent to every recipient inside the file. Reported once for each part. | Delete it if recipients should not have it. |
 
 ## Data that is wrong for one recipient (HG2)
@@ -104,7 +105,7 @@ it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-
 
 | Code | Meaning | What to do |
 |---|---|---|
-| `HG4001` | A picture. | Take it out, or use the LibreOffice route for this letter. |
+| `HG4001` | A picture the converter cannot draw yet: one that floats, with text around it or over it, an old-style picture, or a file that is not a PNG or JPEG, is damaged, or has more than 25 million pixels. | Set the picture in line with text, or save it as a PNG or JPEG and insert it again, or use the LibreOffice route for this letter. |
 | `HG4002` | A text box, shape or chart. | Put the text in an ordinary paragraph or table. |
 | `HG4003` | A footnote or endnote. | Put the note's text in the body of the letter. |
 | `HG4004` | More than one section, so pages after the break would take the first section's page and margins. | Keep one page size and set of margins for the whole letter. |

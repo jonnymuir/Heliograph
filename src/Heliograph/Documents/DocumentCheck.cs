@@ -41,12 +41,14 @@ public sealed class DocumentPart
 {
     private const int ExcerptLength = 80;
     private readonly List<XElement> _paragraphs;
+    private readonly Func<string, byte[]?> _linked;
 
-    internal DocumentPart(string label, XDocument xml)
+    internal DocumentPart(string label, XDocument xml, Func<string, byte[]?>? linked = null)
     {
         Label = label;
         Xml = xml;
         _paragraphs = [.. xml.Descendants(WordXml.Word + "p")];
+        _linked = linked ?? (_ => null);
     }
 
     /// <summary>"document", "header", "footer", "footnotes" or "endnotes".</summary>
@@ -54,6 +56,12 @@ public sealed class DocumentPart
 
     /// <summary>The part's XML, a copy the check may read but whose changes go nowhere.</summary>
     public XDocument Xml { get; }
+
+    /// <summary>
+    /// The bytes of what this part links to by a relationship id, such as a picture's file (<c>r:embed</c>): a copy,
+    /// for a target inside the document only; null when there is none.
+    /// </summary>
+    public byte[]? Linked(string relationshipId) => _linked(relationshipId) is { } bytes ? (byte[])bytes.Clone() : null;
 
     /// <summary>
     /// The place of an element: this part, the number of the paragraph that holds it (or, for something outside a

@@ -12,11 +12,14 @@ internal sealed class StructNode(string type, StructNode? parent)
     public StructNode? Parent { get; } = parent;
     public List<object> Kids { get; } = [];
     public string? Scope { get; init; }
+
+    /// <summary>What a figure shows, for a screen reader.</summary>
+    public string? Alt { get; init; }
     public int ColumnSpan { get; init; } = 1;
 
-    public StructNode Add(string type, string? scope = null, int columnSpan = 1)
+    public StructNode Add(string type, string? scope = null, int columnSpan = 1, string? alt = null)
     {
-        var child = new StructNode(type, this) { Scope = scope, ColumnSpan = columnSpan };
+        var child = new StructNode(type, this) { Scope = scope, ColumnSpan = columnSpan, Alt = alt };
         Kids.Add(child);
         return child;
     }
@@ -29,6 +32,9 @@ internal abstract record Op;
 
 /// <summary>Text at a baseline. With no node it is an artifact: a header, a footer or a repeated table heading.</summary>
 internal sealed record TextOp(double X, double Baseline, string Text, RunStyle Style, StructNode? Node) : Op;
+
+/// <summary>A picture at its top-left corner and size. With no node it is an artifact: decorative, undescribed, or in a header.</summary>
+internal sealed record ImageOp(double X, double Top, double Width, double Height, Pictures.PictureFile File, StructNode? Node) : Op;
 
 /// <summary>A ruled line, such as a table border; always an artifact. Y runs down the page.</summary>
 internal sealed record LineOp(double X1, double Y1, double X2, double Y2, double Width) : Op;

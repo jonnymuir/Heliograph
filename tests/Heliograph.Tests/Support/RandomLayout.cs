@@ -30,6 +30,7 @@ internal sealed class RandomLayout
 
     private readonly Random _random;
     private readonly Random _lists;
+    private readonly Random _pictures;
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
@@ -40,6 +41,7 @@ internal sealed class RandomLayout
         _random = new Random(seed);
         // Lists drawn from their own stream, so what else a seed builds stays as it was before lists grew levels.
         _lists = new Random(seed + 10_000);
+        _pictures = new Random(seed + 20_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -84,7 +86,9 @@ internal sealed class RandomLayout
             .Relationship($"{Rel}/settings", "settings.xml", external: false)
             .Relationship($"{Rel}/header", "header1.xml", external: false)
             .Relationship($"{Rel}/footer", "footer1.xml", external: false)
-            .Relationship($"{Rel}/header", "header2.xml", external: false);
+            .Relationship($"{Rel}/header", "header2.xml", external: false)
+            .Media("word/media/picture.png", RandomPictures.Png, "image/png")
+            .Relationship($"{Rel}/image", "media/picture.png", external: false);
         return docx.Build().ToArray();
     }
 
@@ -112,7 +116,8 @@ internal sealed class RandomLayout
         else
         {
             var properties = ParagraphProperties();
-            _body.Append(Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal)));
+            var paragraph = Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal));
+            _body.Append(_pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph);
         }
     }
 

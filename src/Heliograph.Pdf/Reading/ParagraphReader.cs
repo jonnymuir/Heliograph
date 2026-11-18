@@ -4,7 +4,7 @@ using static Heliograph.Pdf.Reading.WordXml;
 namespace Heliograph.Pdf.Reading;
 
 /// <summary>Reads a paragraph: its resolved style, its text, tabs, breaks and fields, and its list label.</summary>
-internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab)
+internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab, Func<string, byte[]?> linked)
 {
     private readonly ListItemReader _items = new(numbering);
 
@@ -61,26 +61,13 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         return PropertyReader.Run(layers);
     }
 
-    private static void Run(XElement r, RunStyle style, FieldState field, List<Inline> inlines)
+    private void Run(XElement r, RunStyle style, FieldState field, List<Inline> inlines)
     {
         foreach (var c in r.Elements())
         {
-            if (field.Consume(c, style, inlines))
+            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, linked) is { } inline)
             {
-                continue;
-            }
-
-            if (c.Name == W + "t")
-            {
-                inlines.Add(new TextInline(c.Value, style));
-            }
-            else if (c.Name == W + "tab")
-            {
-                inlines.Add(new TabInline(style));
-            }
-            else if (c.Name == W + "br" || c.Name == W + "cr")
-            {
-                inlines.Add(new BreakInline(style));
+                inlines.Add(inline);
             }
         }
     }

@@ -90,6 +90,9 @@ internal sealed class DocxPackage
 
     public bool Has(string name) => _entries.Any(entry => entry.Name == name);
 
+    /// <summary>A part's bytes, or null when there is no such part.</summary>
+    public byte[]? Bytes(string name) => _entries.FirstOrDefault(entry => entry.Name == name).Bytes;
+
     /// <summary>Parses a part as XML with document type definitions prohibited, so no entity is ever resolved.</summary>
     public XDocument? Xml(string name)
     {
