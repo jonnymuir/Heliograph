@@ -35,7 +35,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     public double Y { get; set; }
 
     /// <summary>The boxes of this page's floating pictures that text wraps round.</summary>
-    public List<Exclusion> Wraps { get; } = [];
+    public List<Exclusion> Wraps => Current.Wraps;
 
     /// <summary>The foot of the text laid out last: its last line's, less any line spacing over single, or a table's.</summary>
     public double TextFoot { get; set; }
@@ -84,7 +84,6 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         _sectionStarts = false;
         Y = TextFoot = BodyTop;
         Reserved = 0;
-        Wraps.Clear();
         HasContent = false;
     }
 }

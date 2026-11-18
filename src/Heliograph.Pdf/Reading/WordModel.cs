@@ -57,11 +57,17 @@ internal sealed record FloatingPicture(PictureInline Picture, Anchor Anchor, boo
 
 /// <summary>
 /// How text goes round a floating picture: Kind is "none", "square" or "topAndBottom"; Side, for square, is where the
-/// text goes ("bothSides", "left", "right" or "largest"); and the space kept clear round the picture, in points.
+/// text goes ("bothSides", "left", "right" or "largest"); and the space kept clear round the picture.
 /// </summary>
-internal sealed record TextWrap(string Kind, string Side, double Top, double Bottom, double Left, double Right)
+internal sealed record TextWrap(string Kind, string Side, Clearance Clear)
 {
-    public static readonly TextWrap None = new("none", "bothSides", 0, 0, 0, 0);
+    public static readonly TextWrap None = new("none", "bothSides", Clearance.Nothing);
+}
+
+/// <summary>The space kept clear round a floating picture, in points, on each side.</summary>
+internal sealed record Clearance(double Top, double Bottom, double Left, double Right)
+{
+    public static readonly Clearance Nothing = new(0, 0, 0, 0);
 }
 
 /// <summary>Space around and between the lines of a paragraph. Line is in 240ths of a line for "auto", else twips.</summary>

@@ -10,7 +10,7 @@ namespace Heliograph.Pdf.Layout;
 /// </summary>
 internal static class FloatPlacer
 {
-    public static void Place(LaidOutPage page, Paragraph p, PageGeometry g, double paragraphTop, StructNode? node, List<Exclusion>? wraps = null)
+    public static void Place(LaidOutPage page, Paragraph p, PageGeometry g, double paragraphTop, StructNode? node)
     {
         foreach (var f in p.Inlines.OfType<FloatingPicture>())
         {
@@ -23,7 +23,8 @@ internal static class FloatPlacer
             var op = new ImageOp(x, y, picture.Width, picture.Height, picture.File, figure);
             if (f.Wrap.Kind != "none")
             {
-                wraps?.Add(new Exclusion(x - f.Wrap.Left, y - f.Wrap.Top, x + picture.Width + f.Wrap.Right, y + picture.Height + f.Wrap.Bottom, f.Wrap));
+                var clear = f.Wrap.Clear;
+                page.Wraps.Add(new Exclusion(x - clear.Left, y - clear.Top, x + picture.Width + clear.Right, y + picture.Height + clear.Bottom, f.Wrap));
             }
 
             if (f.Behind)

@@ -60,7 +60,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
 
         var box = ParagraphBox.Of(p, pages, _frame, next);
         Open(box, before);
-        FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node, pages.Wraps);
+        FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         lines = Wrapped(p, lines);
         var placed = 0;
         while (placed < lines.Count)

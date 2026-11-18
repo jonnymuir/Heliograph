@@ -34,7 +34,7 @@ internal static class PictureReader
     {
         var kind = anchor.Element(Wp + "wrapSquare") is not null ? "square" : anchor.Element(Wp + "wrapTopAndBottom") is not null ? "topAndBottom" : "none";
         var side = (string?)anchor.Element(Wp + "wrapSquare")?.Attribute("wrapText") ?? "bothSides";
-        return new TextWrap(kind, side, Emu(anchor, "distT"), Emu(anchor, "distB"), Emu(anchor, "distL"), Emu(anchor, "distR"));
+        return new TextWrap(kind, side, new Clearance(Emu(anchor, "distT"), Emu(anchor, "distB"), Emu(anchor, "distL"), Emu(anchor, "distR")));
     }
 
     private static Anchor Position(XElement anchor)

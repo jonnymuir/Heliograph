@@ -13,11 +13,10 @@ internal sealed record PageGeometry(double Width, double Height, double Top, dou
     /// </summary>
     public static PageGeometry Of(XElement sect)
     {
-        var size = sect.Element(W + "pgSz");
-        var margin = sect.Element(W + "pgMar");
+        var (size, margin) = (sect.Element(W + "pgSz"), sect.Element(W + "pgMar"));
+        double Or(XElement? e, string name, double otherwise) => Twips(e, name) ?? otherwise;
         return new PageGeometry(
-            Twips(size, "w") ?? 612, Twips(size, "h") ?? 792,
-            Twips(margin, "top") ?? 72, Twips(margin, "bottom") ?? 72, Twips(margin, "left") ?? 72, Twips(margin, "right") ?? 72,
-            Twips(margin, "header") ?? 36, Twips(margin, "footer") ?? 36);
+            Or(size, "w", 612), Or(size, "h", 792), Or(margin, "top", 72), Or(margin, "bottom", 72), Or(margin, "left", 72), Or(margin, "right", 72),
+            Or(margin, "header", 36), Or(margin, "footer", 36));
     }
 }
