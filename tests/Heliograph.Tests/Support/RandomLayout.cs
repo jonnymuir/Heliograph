@@ -71,7 +71,8 @@ internal sealed class RandomLayout
         _body.Append(SectionXml());
     }
 
-    private string Font { get; }
+    /// <summary>The font the document is set in.</summary>
+    public string Font { get; }
     private int Size { get; }
     private bool TitlePage { get; }
     private int Width { get; }

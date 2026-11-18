@@ -15,12 +15,10 @@ public class WordConformityTests
     // Fixture: the first line, counting from 1, that still differs from Word. One not listed matches throughout.
     // Each fixture's first line, counting from 1, that still differs from Word; a fixture not listed matches throughout.
     // new-document is set in Aptos, Word's font since 2024, which has no free look-alike, so its lines break differently.
-    // probe-calibri-exact and probe-gaps show where Word puts a font's line gap and the text in an exact or at-least line,
-    // which the converter takes from LibreOffice still. The net's documents differ by a word kept on a line (twip rounding).
+    // The net's documents differ by a word kept on a line, as against LibreOffice (twip rounding).
     private static readonly Dictionary<string, int> FirstDifference = new(StringComparer.Ordinal)
     {
-        ["new-document"] = 1, ["net-1"] = 168, ["net-2"] = 2, ["net-3"] = 1, ["net-4"] = 44, ["net-lists-1"] = 60,
-        ["probe-calibri-exact"] = 4, ["probe-gaps"] = 1,
+        ["new-document"] = 1, ["net-1"] = 168, ["net-2"] = 2, ["net-3"] = 22, ["net-4"] = 44, ["net-lists-1"] = 60,
     };
 
     public static TheoryData<string> Fixtures()

@@ -122,10 +122,10 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
   effect on the next line;
 - a paragraph kept with the next is kept with all of it when the next keeps its lines together;
 - a paragraph a keep rule moves to a new page starts at its top, without its space before;
-- a font's descent is the one Windows gives, and text in an exact line stands on it with no gap
-  under it (Carlito is where this shows). LibreOffice on Linux sets that text higher than on a
-  Mac, and Word, which measures Calibri by its Windows metrics throughout, may differ from both:
-  a Word fixture in Calibri will settle it;
+- a font's descent is the one Windows gives, and its line gap goes above the text, as Word puts
+  it (LibreOffice puts it below); in an at-least line the extra goes above too, and in an exact
+  line the baseline is four fifths of the way down, as both place it. Word fixtures in Calibri,
+  whose gap is large, settled this;
 - a document with no page settings is laid out on US Letter, as Word does;
 - superscript and subscript are drawn at 58% of the size, their top or foot meeting the full-size
   text's, and a line is as tall as it would be without them;
@@ -152,7 +152,9 @@ left until Word fixtures show what Word does.
 Where Word and LibreOffice lay a document out differently, the converter follows Word, the maintainer's
 decision, and the net's recorded numbers for the seeds affected are set again. So far: space between paragraphs of
 one style (each paragraph that says so drops only its own space, and with the larger spacing the overlap is worked
-out from the space after as it was).
+out from the space after as it was); and where text sits in a line (a font's line gap above the text, not below, and
+in an at-least line the extra above too). In an exact line both put the baseline four fifths of the way down. The net
+compares a Calibri document with LibreOffice allowing for Calibri's gap, the one gap large enough to tell.
 
 Word fixtures are made by `tools/Heliograph.WordFixtures` (see its README), and compared by
 `WordConformityTests`. The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
