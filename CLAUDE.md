@@ -40,6 +40,7 @@ Follow them; this file adds only what is specific to this repo.
 | `src/Heliograph.Api` | The authoring operations as REST endpoints (`MapCorrespondenceAuthoringApi()`), and `AddHeliographInFolder()`, the smallest whole setup. What the workbench talks to. |
 | `src/Heliograph.Workbench` + `src/Heliograph.Workbench.Client` | The author's screen, a Lit web component (TypeScript, Vite) built into the package's `wwwroot` and served by `MapHeliographWorkbench()`. The client is built before `dotnet build`; `wwwroot` is not committed. |
 | `src/Heliograph.Mcp` | The authoring operations as MCP tools over HTTP, three prompts, and every guide in `docs/skills` as a resource. One `MapCorrespondenceAuthoringMcp()` call, closed unless the caller is signed in. With `Heliograph.Api` and `Heliograph.Workbench`, the only projects that reference ASP.NET Core. |
+| `src/Heliograph.Pdf` | Heliograph's own route to PDF behind `IPdfConverter`, the default in the reference app: reads the rendered `.docx`, lays it out and writes a tagged PDF/UA file in .NET alone, with free fonts built in. It is also an `IDocumentCheck`, so what it cannot lay out yet is refused at compile. See [docs/pdf-engine.md](docs/pdf-engine.md). |
 | `src/Heliograph.Pdf.LibreOffice` | One route to PDF behind `IPdfConverter`: runs a local LibreOffice with no window and asks for PDF/UA. References the core only. |
 | `reference/` | Never ships. `Heliograph.ReferenceApp` hosts every package with the benchmark letters seeded, `Heliograph.AppHost` starts it under Aspire, as Wayfinder's does. VS Code's Run and Debug has both. See [docs/skills/reference-app](docs/skills/reference-app/SKILL.md). |
 | `tests/Heliograph.Api.Tests` | The REST API through a test host: the same journey as the MCP tests. |
@@ -131,8 +132,8 @@ decide day-to-day code.
 - **Rendering never sends.** No network calls, no provider SDKs, no queues. If a feature needs to
   talk to the outside world, it belongs in the host.
 - **Rendering is deterministic.** The same template and data produce the same output. No clock,
-  randomness, culture or network read inside a render; the caller passes them in. A converted PDF
-  is the one exception.
+  randomness, culture or network read inside a render; the caller passes them in. A PDF from
+  `Heliograph.Pdf` is the same bytes every time; one from LibreOffice is the one exception.
 - **Merged data is escaped for the target format by default.** Correspondence carries data from
   outside (names, addresses, free text), so document fields, HTML in email and markup in messaging
   formats are injection seams. Raw output is an explicit, named opt-in with a test.
