@@ -5,7 +5,11 @@ using System.Xml.Linq;
 namespace Heliograph.Tests.Support;
 
 /// <summary>A line of text as a PDF reader finds it: its page, where it sits, and its words.</summary>
-internal sealed record PdfLine(int Page, double Top, double Left, string Text);
+internal sealed record PdfLine(int Page, double Top, double Left, string Text)
+{
+    /// <summary>How tall its tallest word is, as the PDF reader measures it from the font.</summary>
+    public double Height { get; init; }
+}
 
 /// <summary>
 /// Reads where every line of a PDF sits, using Poppler's pdftotext, a separate program run only by the tests. It shares
@@ -60,8 +64,9 @@ internal static class PdfLines
         foreach (var p in XDocument.Parse(xhtml).Descendants(x + "page"))
         {
             page++;
-            var words = p.Descendants(x + "word").Select(w => (Top: Number(w, "yMin"), Left: Number(w, "xMin"), Text: w.Value)).OrderBy(w => w.Top).ThenBy(w => w.Left).ToList();
-            var group = new List<(double Top, double Left, string Text)>();
+            var words = p.Descendants(x + "word").Select(w => (Top: Number(w, "yMin"), Left: Number(w, "xMin"), Text: w.Value, Height: Number(w, "yMax") - Number(w, "yMin")))
+                .OrderBy(w => w.Top).ThenBy(w => w.Left).ToList();
+            var group = new List<(double Top, double Left, string Text, double Height)>();
             foreach (var word in words)
             {
                 if (group.Count > 0 && Math.Abs(word.Top - group[0].Top) > 4)
@@ -82,8 +87,8 @@ internal static class PdfLines
         return lines;
     }
 
-    private static PdfLine Line(int page, List<(double Top, double Left, string Text)> words) =>
-        new(page, words.Min(w => w.Top), words.Min(w => w.Left), string.Join(' ', words.OrderBy(w => w.Left).Select(w => w.Text)));
+    private static PdfLine Line(int page, List<(double Top, double Left, string Text, double Height)> words) =>
+        new(page, words.Min(w => w.Top), words.Min(w => w.Left), string.Join(' ', words.OrderBy(w => w.Left).Select(w => w.Text))) { Height = words.Max(w => w.Height) };
 
     private static double Number(XElement e, string name) => double.Parse((string)e.Attribute(name)!, CultureInfo.InvariantCulture);
 }

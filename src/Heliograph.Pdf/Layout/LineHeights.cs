@@ -21,14 +21,15 @@ internal static class LineHeights
         spacing.LineRule is "exact" or "atLeast" ? 0 : Math.Max(0, height - natural);
 
     /// <summary>
-    /// How much further down the text sits in a line of exact or least height, the difference being above it. In an
-    /// exact line the text stands on its descent at the line's foot, with no gap under it; in an at-least line it keeps
-    /// its gap.
+    /// How much further down the text sits than its ascent, as Word lays it out. A font's line gap goes above the text, not
+    /// below it as LibreOffice puts it. In an at-least line the extra height goes above as well, so the text stands on its
+    /// descent at the line's foot. In an exact line the baseline is four fifths of the way down, as both Word and LibreOffice
+    /// place it, whatever the font. Line spacing over single adds its extra below.
     /// </summary>
-    public static double Lift(Spacing spacing, double height, double natural, double gap) => spacing.LineRule switch
+    public static double Lift(Spacing spacing, double height, double natural, double gap, double ascent) => spacing.LineRule switch
     {
-        "exact" => height - natural + gap,
-        "atLeast" => height - natural,
-        _ => 0,
+        "exact" => (height * 0.8) - ascent,
+        "atLeast" => height - natural + gap,
+        _ => gap,
     };
 }

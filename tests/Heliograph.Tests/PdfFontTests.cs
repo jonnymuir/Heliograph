@@ -30,8 +30,8 @@ public class PdfFontTests
         var expected = PdfLines.Read(await new LibreOfficePdfConverter().ConvertAsync(docx));
         var actual = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(docx));
 
-        actual.Select(l => l.Text).Should().Equal(expected.Select(l => l.Text));
-        actual.Zip(expected).Should().OnlyContain(pair => Math.Abs(pair.First.Top - pair.Second.Top) <= 1.5);
+        // LibreOffice puts Calibri's line gap below its text, where Word, which the converter follows, puts it above.
+        PdfComparison.FirstDifference(expected, actual, "LibreOffice", font == "Calibri" ? PdfComparison.CalibriGap : 0).Difference.Should().BeNull();
     }
 
     [Theory]

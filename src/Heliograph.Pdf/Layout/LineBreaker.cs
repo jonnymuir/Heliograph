@@ -321,6 +321,6 @@ internal static class LineBreaker
         var natural = line.Ascent + below;
         line.Height = LineHeights.Height(p.Style.Spacing, natural, ascent + below);
         line.Hang = LineHeights.Hang(p.Style.Spacing, line.Height, natural);
-        line.Ascent += LineHeights.Lift(p.Style.Spacing, line.Height, natural, gap);
+        line.Ascent += LineHeights.Lift(p.Style.Spacing, line.Height, natural, gap, line.Ascent);
     }
 }
