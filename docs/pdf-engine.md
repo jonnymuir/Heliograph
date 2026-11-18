@@ -28,8 +28,9 @@ This plan is built to find out early and keep finding out.
   No PDF is ever quietly wrong. This is the rule that already governs tag placement.
 - **It is deterministic.** The same letter gives the same bytes, which removes the one exception
   to "rendering is deterministic".
-- **Heliograph.Umbraco takes it as it takes every engine package.** It becomes the default there
-  and in both reference apps after stage 2, the measuring net, with LibreOffice one line away.
+- **Heliograph.Umbraco takes it as it takes every engine package.** It is the default there and
+  in the reference app, with LibreOffice one line away. The maintainer chose to switch during
+  alpha rather than wait for stage 2 to finish.
 
 ## Where it is
 
@@ -61,7 +62,8 @@ LibreOffice lays them out to within a point and a half on every line.
 
 What it does not lay out yet is refused when a template is compiled (`HG4001` to `HG4013`; see
 the [diagnostics guide](skills/diagnostics/SKILL.md)). The converter is an `IDocumentCheck`, and
-registering it as the host's `IPdfConverter` is enough. Stage 1 is done.
+registering it as the host's `IPdfConverter` is enough. Stage 1 is done, and it is the reference
+app's converter (stage 9, brought forward).
 
 Stage 2, the measuring net, is under way. `RandomLayout` builds documents from everything the
 converter claims, and `MeasuringNetTests` compares each one with LibreOffice line for line. The
@@ -208,7 +210,7 @@ generated documents through both routes. Add the Word fixtures.
 - Footnotes and endnotes, tagged as notes.
 - Columns.
 
-### 9. Switch over (after stage 2, as decided)
+### 9. Switch over (done early: the maintainer chose to switch while still in alpha)
 
 - Make it the default in both reference apps and in Heliograph.Umbraco, with LibreOffice still
   one line away. Stages 3 to 8 then follow as normal releases.
