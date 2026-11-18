@@ -8,7 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Heliograph.Api/Heliograph.Api.csproj" />
     <ProjectReference Include="../../src/Heliograph.Mcp/Heliograph.Mcp.csproj" />
-    <ProjectReference Include="../../src/Heliograph.Pdf.LibreOffice/Heliograph.Pdf.LibreOffice.csproj" />
+    <ProjectReference Include="../../src/Heliograph.Pdf/Heliograph.Pdf.csproj" />
     <ProjectReference Include="../../src/Heliograph.Workbench/Heliograph.Workbench.csproj" />
     <ProjectReference Include="../Heliograph.ServiceDefaults/Heliograph.ServiceDefaults.csproj" />
   </ItemGroup>

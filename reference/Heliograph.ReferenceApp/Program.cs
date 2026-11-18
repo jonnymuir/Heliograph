@@ -1,7 +1,7 @@
 using Heliograph.Api;
 using Heliograph.Documents;
 using Heliograph.Mcp;
-using Heliograph.Pdf.LibreOffice;
+using Heliograph.Pdf;
 using Heliograph.ReferenceApp;
 using Heliograph.Workbench;
 
@@ -11,7 +11,7 @@ builder.AddServiceDefaults(); // demo: Aspire's telemetry and health checks
 
 var data = builder.Configuration["Heliograph:Folder"] ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data");
 builder.Services.AddHeliographInFolder(data);                              // where correspondence and dictionaries live
-builder.Services.AddSingleton<IPdfConverter, LibreOfficePdfConverter>();  // optional: a route to PDF
+builder.Services.AddSingleton<IPdfConverter, HeliographPdfConverter>();   // optional: a route to PDF, or LibreOfficePdfConverter
 builder.Services.AddCorrespondenceAuthoringMcp();                         // optional: agents, over MCP
 
 var app = builder.Build();

@@ -89,12 +89,12 @@ This is the reference app's `Program.cs` without its demo lines:
 using Heliograph.Api;
 using Heliograph.Documents;
 using Heliograph.Mcp;
-using Heliograph.Pdf.LibreOffice;
+using Heliograph.Pdf;
 using Heliograph.Workbench;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHeliographInFolder("App_Data");                        // where correspondence and dictionaries live
-builder.Services.AddSingleton<IPdfConverter, LibreOfficePdfConverter>();  // optional: a route to PDF
+builder.Services.AddSingleton<IPdfConverter, HeliographPdfConverter>();   // optional: a route to PDF, or LibreOfficePdfConverter
 builder.Services.AddCorrespondenceAuthoringMcp();                         // optional: agents
 
 var app = builder.Build();
@@ -106,7 +106,9 @@ app.Run();
 ```
 
 Add the packages `Heliograph.Api`, `Heliograph.Workbench`, and the optional `Heliograph.Mcp` and
-`Heliograph.Pdf.LibreOffice`. Register your own sign-in and an `Authors` policy; every endpoint
+`Heliograph.Pdf`. Heliograph's own converter needs nothing installed and refuses at compile what it
+cannot lay out yet; for a template that needs more, register `LibreOfficePdfConverter` from
+`Heliograph.Pdf.LibreOffice` instead. Register your own sign-in and an `Authors` policy; every endpoint
 is closed until you do. Put dictionaries in `App_Data/dictionaries/<name>.json`, with sample
 recipients in `App_Data/dictionaries/<name>.samples/<sample>.json`.
 

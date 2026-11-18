@@ -94,8 +94,8 @@ Wayfinder blueprint's fields), the dictionary is generated from that source, not
 - **Heliograph renders and never sends.** No provider is called and nothing leaves the process
   except through a seam the host supplies.
 - **Rendering is deterministic** for the document, the email and the text: same template, same
-  data, same output. A converted PDF is the exception, because converters stamp dates and
-  identifiers into the file.
+  data, same output. A PDF from Heliograph's own converter is too; one from LibreOffice is the
+  exception, because it stamps a date and an identifier into the file.
 
 ## Formats
 
