@@ -149,6 +149,11 @@ to a twip in a way that differs by font, size and platform (a line of Times New 
 11.55pt there, 11.5pt here). Chasing that would mean matching one build of LibreOffice, so it is
 left until Word fixtures show what Word does.
 
+Where Word and LibreOffice lay a document out differently, the converter follows Word, the maintainer's
+decision, and the net's recorded numbers for the seeds affected are set again. So far: space between paragraphs of
+one style (each paragraph that says so drops only its own space, and with the larger spacing the overlap is worked
+out from the space after as it was).
+
 Word fixtures are made by `tools/Heliograph.WordFixtures` (see its README), and compared by
 `WordConformityTests`. The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
 blank one in Word for the web, and the PDF Word exported from it. A new Word document leaves out
