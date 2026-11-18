@@ -26,10 +26,10 @@ internal static class LineHeights
     /// descent at the line's foot. In an exact line the baseline is four fifths of the way down, as both Word and LibreOffice
     /// place it, whatever the font. Line spacing over single adds its extra below.
     /// </summary>
-    public static double Lift(Spacing spacing, double height, double natural, double gap, double ascent) => spacing.LineRule switch
+    public static double Lift(Spacing spacing, Line line, double natural, double gap) => spacing.LineRule switch
     {
-        "exact" => (height * 0.8) - ascent,
-        "atLeast" => height - natural + gap,
+        "exact" => (line.Height * 0.8) - line.Ascent,
+        "atLeast" => line.Height - natural + gap,
         _ => gap,
     };
 }
