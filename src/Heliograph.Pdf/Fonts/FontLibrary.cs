@@ -13,6 +13,18 @@ internal static class FontLibrary
 {
     private static readonly ConcurrentDictionary<string, TrueTypeFont> Loaded = new(StringComparer.Ordinal);
 
+    // Each font a document may name, in capitals, and the built-in family that draws it. Symbol is only ever a bullet's
+    // font; the bullet is drawn in the text's font.
+    private static readonly Dictionary<string, string> LookAlikes = new(StringComparer.Ordinal)
+    {
+        ["ARIAL"] = "LiberationSans", ["HELVETICA"] = "LiberationSans", ["LIBERATION SANS"] = "LiberationSans", ["ARIMO"] = "LiberationSans",
+        ["TIMES NEW ROMAN"] = "LiberationSerif", ["TIMES"] = "LiberationSerif", ["LIBERATION SERIF"] = "LiberationSerif", ["TINOS"] = "LiberationSerif",
+        ["COURIER NEW"] = "LiberationMono", ["COURIER"] = "LiberationMono", ["LIBERATION MONO"] = "LiberationMono", ["COUSINE"] = "LiberationMono",
+        ["CALIBRI"] = "Carlito", ["CARLITO"] = "Carlito",
+        ["CAMBRIA"] = "Caladea", ["CALADEA"] = "Caladea",
+        ["SYMBOL"] = "LiberationSans",
+    };
+
     public static TrueTypeFont Face(RunStyle style)
     {
         var name = $"{Family(style.Font)}-{(style.Bold, style.Italic) switch
@@ -44,17 +56,7 @@ internal static class FontLibrary
 
     private static string Family(string font) => Known(font) ?? "LiberationSans";
 
-    private static string? Known(string font) => font.ToUpperInvariant() switch
-    {
-        "ARIAL" or "HELVETICA" or "LIBERATION SANS" or "ARIMO" => "LiberationSans",
-        "TIMES NEW ROMAN" or "TIMES" or "LIBERATION SERIF" or "TINOS" => "LiberationSerif",
-        "COURIER NEW" or "COURIER" or "LIBERATION MONO" or "COUSINE" => "LiberationMono",
-        "CALIBRI" or "CARLITO" => "Carlito",
-        "CAMBRIA" or "CALADEA" => "Caladea",
-        // Symbol is only ever a bullet's font; the bullet is drawn in the text's font.
-        "SYMBOL" => "LiberationSans",
-        _ => null,
-    };
+    private static string? Known(string font) => LookAlikes.GetValueOrDefault(font.ToUpperInvariant());
 
     private static TrueTypeFont Load(string name)
     {

@@ -45,16 +45,7 @@ internal sealed class RandomLayout
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
-        Font = Fonts[_random.Next(Fonts.Length)];
-        // A third of documents are set in Calibri or Cambria, half of those through the theme as Word writes them; drawn
-        // from their own stream so each seed's other choices stay as they were.
-        var looks = new Random(seed + 30_000);
-        if (looks.Next(3) == 0)
-        {
-            Font = looks.Next(2) == 0 ? "Calibri" : "Cambria";
-            FromTheme = looks.Next(2) == 0;
-        }
-
+        (Font, FromTheme) = Looks(Fonts[_random.Next(Fonts.Length)], seed);
         Size = new[] { 20, 22, 24 }[_random.Next(3)];
         TitlePage = _random.Next(3) == 0;
         Width = _random.Next(2) == 0 ? 11906 : 12240;
@@ -81,6 +72,14 @@ internal sealed class RandomLayout
     private bool LargerSpacing { get; }
 
     private bool FromTheme { get; }
+
+    // A third of documents are set in Calibri or Cambria, half of those through the theme as Word writes them; drawn from
+    // their own stream so each seed's other choices stay as they were.
+    private static (string Font, bool FromTheme) Looks(string font, int seed)
+    {
+        var looks = new Random(seed + 30_000);
+        return looks.Next(3) == 0 ? (looks.Next(2) == 0 ? "Calibri" : "Cambria", looks.Next(2) == 0) : (font, false);
+    }
     private int ContentWidth => Width - (2 * Margin);
 
     public byte[] Docx()

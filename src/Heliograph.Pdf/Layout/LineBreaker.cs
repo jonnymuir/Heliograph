@@ -260,23 +260,8 @@ internal static class LineBreaker
         var below = metrics.Max(m => m.Descent) + gap;
         line.Ascent = Math.Max(ascent, line.Pieces.Select(q => q.Piece.Picture?.Height ?? 0).DefaultIfEmpty(0).Max());
         var natural = line.Ascent + below;
-        var spacing = p.Style.Spacing;
-        line.Height = spacing.LineRule switch
-        {
-            "exact" => spacing.Line / 20,
-            "atLeast" => Math.Max(spacing.Line / 20, natural),
-            _ => natural + ((ascent + below) * ((spacing.Line / 240) - 1)),
-        };
-
-        line.Hang = spacing.LineRule is "exact" or "atLeast" ? 0 : Math.Max(0, line.Height - natural);
-
-        // A line set to an exact or least height carries the difference above its text. In an exact line the text stands
-        // on its descent at the line's foot, with no gap under it; in an at-least line it keeps its gap.
-        line.Ascent += spacing.LineRule switch
-        {
-            "exact" => line.Height - natural + gap,
-            "atLeast" => line.Height - natural,
-            _ => 0,
-        };
+        line.Height = LineHeights.Height(p.Style.Spacing, natural, ascent + below);
+        line.Hang = LineHeights.Hang(p.Style.Spacing, line.Height, natural);
+        line.Ascent += LineHeights.Lift(p.Style.Spacing, line.Height, natural, gap);
     }
 }
