@@ -18,6 +18,7 @@ internal static class SectionLimits
     {
         "type" when Val(e) is not (null or "nextPage") => Val(e) == "continuous" ? "a section break that does not start a new page" : "a section break that starts on an odd or even page",
         "pgBorders" => "a border round the page",
+        "pgMar" when (double?)e.Attribute(W + "gutter") > 0 => "a gutter beside the margin",
         "lnNumType" => "line numbers in the margin",
         "vAlign" when Val(e) is not (null or "top") => "text set in the middle or spread down the page",
         "pgNumType" when (string?)e.Attribute(W + "fmt") is { } fmt && !Numbered(fmt) => "page numbers in a format of their own",

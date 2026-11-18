@@ -20,6 +20,8 @@ internal static class LayoutLimits
     private static readonly XNamespace Wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
     private static readonly XNamespace Mc = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
+    private static readonly string[] FacingPages = ["mirrorMargins", "bookFoldPrinting", "bookFoldRevPrinting", "printTwoOnOne"];
+
     private static readonly Limit[] Limits = [.. ThingsOnThePage(), .. ThingsInTheText()];
 
     // Objects and page structure.
@@ -148,12 +150,13 @@ internal static class LayoutLimits
         return aligned.Concat(inAligned).Where(t => t.Item2.Length > 0);
     }
 
-    // Different headers on even pages only apply when the document turns them on.
+    // Margins mirrored on facing pages, or pages printed as a booklet, set even pages out differently from odd ones.
     private static Diagnostic? EvenPages(DocumentToCheck document)
     {
-        var on = document.Settings?.Root?.Element(W + "evenAndOddHeaders") is { } setting && On(setting);
+        var settings = document.Settings?.Root;
+        var on = FacingPages.Any(name => settings?.Element(W + name) is { } setting && On(setting));
         return !on ? null : new Diagnostic(DiagnosticCodes.PdfCannotLayOutEvenPages,
-            $"This document has different headers and footers on even pages. {Route} uses the same header and footer on every page after the first.",
-            $"Turn off different odd and even pages in the header and footer settings, {Instead}");
+            $"This document mirrors its margins on facing pages, or prints as a booklet. {Route} sets every page out with the same margins.",
+            $"Set the margins to Normal, not Mirrored, in the page setup, {Instead}");
     }
 }

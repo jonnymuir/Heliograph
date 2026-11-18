@@ -12,6 +12,7 @@ internal sealed class WordReader : IDisposable
     private readonly Dictionary<string, string> _relationships;
     private readonly Dictionary<string, string> _relationshipTypes;
     private readonly bool _largerSpacing;
+    private readonly bool _evenPages;
     private readonly NoteNumbers _notes = new();
     private string _part = "word/document.xml";
 
@@ -29,6 +30,7 @@ internal sealed class WordReader : IDisposable
         var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
+        _evenPages = On(settings?.Element(W + "evenAndOddHeaders"));
         _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab,
             new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)) { Notes = _notes });
     }
@@ -90,16 +92,20 @@ internal sealed class WordReader : IDisposable
     private Stories StoriesOf(XElement sect, Stories? before)
     {
         var titlePage = On(sect.Element(W + "titlePg"));
-        var header = Story(sect, "header", "default") ?? before?.Header ?? [];
-        var footer = Story(sect, "footer", "default") ?? before?.Footer ?? [];
-        var firstHeader = Story(sect, "header", "first") ?? before?.InheritedFirstHeader ?? [];
-        var firstFooter = Story(sect, "footer", "first") ?? before?.InheritedFirstFooter ?? [];
-        return new Stories(header, footer, titlePage ? firstHeader : null, titlePage ? firstFooter : null)
+        var firstHeader = Carried(sect, "header", "first", before?.InheritedFirstHeader);
+        var firstFooter = Carried(sect, "footer", "first", before?.InheritedFirstFooter);
+        return new Stories(Carried(sect, "header", "default", before?.Header), Carried(sect, "footer", "default", before?.Footer),
+            titlePage ? firstHeader : null, titlePage ? firstFooter : null)
         {
             InheritedFirstHeader = firstHeader,
             InheritedFirstFooter = firstFooter,
+            EvenHeader = _evenPages ? Carried(sect, "header", "even", before?.EvenHeader) : null,
+            EvenFooter = _evenPages ? Carried(sect, "footer", "even", before?.EvenFooter) : null,
         };
     }
+
+    // A header or footer the section sets, else the one it carries on from the section before.
+    private IReadOnlyList<Block> Carried(XElement sect, string kind, string type, IReadOnlyList<Block>? before) => Story(sect, kind, type) ?? before ?? [];
 
     private static PageNumbers Numbers(XElement sect)
     {

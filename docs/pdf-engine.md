@@ -75,9 +75,11 @@ This plan is built to find out early and keep finding out.
   counts.
 - **Sections** that start a new page, each with its own page size, orientation and margins, its
   headers and footers (each one it does not set carried on from the section before, as Word does),
-  a first page of its own, and page numbers restarted where it says, in figures, letters or Roman
-  numerals. A section break that does not start a new page or starts on an odd or even page, a
-  border round the page, line numbers, and text set in the middle of the page are refused.
+  a first page of its own, different headers and footers on even pages (even and odd by the page's
+  number, as Word and LibreOffice both count), and page numbers restarted where it says, in
+  figures, letters or Roman numerals. A section break that does not start a new page or starts
+  on an odd or even page, a border round the page, line numbers, text set in the middle of the
+  page, a gutter, and margins mirrored on facing pages are refused.
 - **Footnotes** referred to from the body: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's
@@ -279,7 +281,7 @@ generated documents through both routes. Add the Word fixtures.
 
 - Several sections with their own page size, orientation and margins (done, each starting a new
   page).
-- Even-page headers.
+- Even-page headers (done).
 - Page-number formats (done), and section page counts.
 - Footnotes, tagged as notes (done, in the body); endnotes.
 - Columns.

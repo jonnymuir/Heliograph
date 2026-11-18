@@ -14,7 +14,6 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
 {
     private readonly List<LaidOutPage> _pages = [];
     private Section _section = null!;
-    private (TextArea First, TextArea Others) _areas;
     private bool _sectionStarts;
     private int _number;
     private double _areaBottom;
@@ -38,7 +37,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     public double Room => BodyBottom - Y;
 
     /// <summary>Starts a section on a new page, numbered from where the section says or on from the page before.</summary>
-    public void StartSection(Section section, TextArea first, TextArea rest)
+    public void StartSection(Section section)
     {
         // The page before is finished, footnotes and all, on its own section's page.
         if (_pages.Count > 0)
@@ -46,7 +45,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
             Finish();
         }
 
-        (_section, _areas, _sectionStarts) = (section, (first, rest), true);
+        (_section, _sectionStarts) = (section, true);
         Open();
     }
 
@@ -74,7 +73,8 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         _number = _sectionStarts && _section.Numbers.Start is { } start ? start : _number + 1;
         Current = new LaidOutPage { Section = _section, Number = _number, FirstInSection = _sectionStarts };
         _pages.Add(Current);
-        (BodyTop, _areaBottom) = _sectionStarts ? (_areas.First.Top, _areas.First.Bottom) : (_areas.Others.Top, _areas.Others.Bottom);
+        var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), Geometry);
+        (BodyTop, _areaBottom) = (area.Top, area.Bottom);
         _sectionStarts = false;
         Y = BodyTop;
         Reserved = 0;

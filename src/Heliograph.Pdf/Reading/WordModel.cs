@@ -114,6 +114,11 @@ internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block>
     public IReadOnlyList<Block> InheritedFirstHeader { get; init; } = [];
 
     public IReadOnlyList<Block> InheritedFirstFooter { get; init; } = [];
+
+    /// <summary>The header and footer on even pages, when the document has different ones there; else null.</summary>
+    public IReadOnlyList<Block>? EvenHeader { get; init; }
+
+    public IReadOnlyList<Block>? EvenFooter { get; init; }
 }
 
 /// <summary>How a section numbers its pages: from where (or on from the section before when null), and in what format.</summary>

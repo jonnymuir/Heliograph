@@ -44,6 +44,39 @@ public partial class PdfSectionTests
         Enumerable.Range(1, 4).Select(Footer).Should().Equal("Page 1", "Page i", "Page ii", "Page 3");
     }
 
+    [ComparedPdfFact]
+    public async Task Even_pages_headers_are_laid_out_as_LibreOffice_lays_them_out()
+    {
+        var docx = Rendered(EvenPagesLetter());
+        var (theirs, ours) = (await new LibreOfficePdfConverter().ConvertAsync(docx), await new HeliographPdfConverter().ConvertAsync(docx));
+
+        PdfComparison.FirstDifference(PdfLines.Read(theirs), PdfLines.Read(ours), "LibreOffice").Difference.Should().BeNull();
+    }
+
+    [PdfLinesFact]
+    public async Task An_even_numbered_page_has_the_even_pages_header()
+    {
+        var lines = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(Rendered(EvenPagesLetter())));
+        var pages = lines.Max(l => l.Page);
+
+        var headers = Enumerable.Range(1, pages).Select(p => lines.First(l => l.Page == p).Text).ToList();
+        var second = lines.First(l => l.Text.StartsWith("Second part", StringComparison.Ordinal)).Page;
+
+        headers.Take(3).Should().Equal("Odd pages", "Even pages", "Odd pages");
+        // The second section numbers its pages from 1 again, so its first page is odd, whichever page of the letter it is.
+        headers[second - 1].Should().Be("Odd pages");
+    }
+
+    [Fact]
+    public void Margins_mirrored_on_facing_pages_are_refused_at_compile()
+    {
+        var docx = new TestDocx().Part("word/settings.xml", $"<w:settings {W}><w:mirrorMargins/></w:settings>", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
+            .Relationship($"{R}/settings", "settings.xml", external: false).Paragraph("Dear Ms Example").Build();
+
+        DocumentTemplate.Compile(docx, NoFields, [new HeliographPdfConverter()]).Diagnostics
+            .Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotLayOutEvenPages).Which.Message.Should().Contain("mirrors its margins");
+    }
+
     [VeraPdfTheory]
     [InlineData(true)]
     public async Task A_letter_in_sections_is_still_an_accessible_PDF(bool _) =>
@@ -56,6 +89,7 @@ public partial class PdfSectionTests
     [InlineData("<w:lnNumType w:countBy=\"1\"/>", "line numbers")]
     [InlineData("<w:vAlign w:val=\"center\"/>", "middle")]
     [InlineData("<w:pgNumType w:fmt=\"chicago\"/>", "format of their own")]
+    [InlineData("<w:pgMar w:top=\"1440\" w:right=\"1440\" w:bottom=\"1440\" w:left=\"1440\" w:gutter=\"720\"/>", "gutter")]
     public void A_page_setting_it_cannot_lay_out_is_refused_at_compile(string setting, string named)
     {
         var docx = new TestDocx().RawParagraph($"<w:p {W}><w:pPr><w:sectPr>{setting}</w:sectPr></w:pPr><w:r><w:t>First part</w:t></w:r></w:p>").Paragraph("Second part").Build();
@@ -68,10 +102,7 @@ public partial class PdfSectionTests
     // again in Roman numerals; an appendix with a header of its own whose numbers go on in figures.
     private static MemoryStream Letter()
     {
-        var styles = $"<w:styles {W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\"/><w:sz w:val=\"22\"/></w:rPr></w:rPrDefault>"
-            + "<w:pPrDefault><w:pPr><w:spacing w:after=\"160\" w:line=\"259\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>";
-        var docx = new TestDocx()
-            .Part("word/styles.xml", styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml").Relationship($"{R}/styles", "styles.xml", external: false)
+        var docx = Styled()
             .Part("word/header1.xml", Story("hdr", "<w:r><w:t>Membership renewal</w:t></w:r>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml").Relationship($"{R}/header", "header1.xml", external: false)
             .Part("word/header2.xml", Story("hdr", "<w:r><w:t>Appendix: the fees</w:t></w:r>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml").Relationship($"{R}/header", "header2.xml", external: false)
             .Part("word/footer1.xml", Story("ftr", "<w:r><w:t xml:space=\"preserve\">Page </w:t></w:r><w:fldSimple w:instr=\" PAGE \"><w:r><w:t>1</w:t></w:r></w:fldSimple>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml")
@@ -89,6 +120,20 @@ public partial class PdfSectionTests
         return docx.Build();
     }
 
+    // Different headers on odd and even pages over three pages, then a second section numbered from 1 again.
+    private static MemoryStream EvenPagesLetter()
+    {
+        var docx = Styled()
+            .Part("word/settings.xml", $"<w:settings {W}><w:evenAndOddHeaders/></w:settings>", "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml")
+            .Relationship($"{R}/settings", "settings.xml", external: false)
+            .Part("word/header1.xml", Story("hdr", "<w:r><w:t>Odd pages</w:t></w:r>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml").Relationship($"{R}/header", "header1.xml", external: false)
+            .Part("word/header2.xml", Story("hdr", "<w:r><w:t>Even pages</w:t></w:r><w:r><w:br/><w:t>with a second line</w:t></w:r>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml").Relationship($"{R}/header", "header2.xml", external: false);
+        Part(docx, 80, "<w:headerReference w:type=\"default\" r:id=\"rIdX2\"/><w:headerReference w:type=\"even\" r:id=\"rIdX3\"/>");
+        docx.RawParagraph($"<w:p {W}><w:r><w:t>Second part, which numbers its pages from 1 again.</w:t></w:r></w:p>");
+        docx.RawParagraph($"<w:sectPr {W}><w:pgNumType w:start=\"1\"/></w:sectPr>");
+        return docx.Build();
+    }
+
     // Paragraphs, the last ending a section with these settings.
     private static void Part(TestDocx docx, int paragraphs, string settings)
     {
@@ -98,6 +143,14 @@ public partial class PdfSectionTests
         }
 
         docx.RawParagraph($"<w:p {W} xmlns:r=\"{R}\"><w:pPr><w:sectPr>{settings}</w:sectPr></w:pPr><w:r><w:t>{Words}</w:t></w:r></w:p>");
+    }
+
+    // A letter in Arial, as the converter and LibreOffice each lay out an unstyled one in a default of their own.
+    private static TestDocx Styled()
+    {
+        var styles = $"<w:styles {W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\"/><w:sz w:val=\"22\"/></w:rPr></w:rPrDefault>"
+            + "<w:pPrDefault><w:pPr><w:spacing w:after=\"160\" w:line=\"259\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>";
+        return new TestDocx().Part("word/styles.xml", styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml").Relationship($"{R}/styles", "styles.xml", external: false);
     }
 
     private static string Story(string root, string runs) => $"<w:{root} {W}><w:p>{runs}</w:p></w:{root}>";
