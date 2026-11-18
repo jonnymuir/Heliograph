@@ -22,6 +22,9 @@ internal sealed class Line
     public string Align { get; init; } = "left";
     public double Height { get; set; }
     public double Ascent { get; set; }
+
+    /// <summary>Space under the text from line spacing over single, which may hang below the foot of a page.</summary>
+    public double Hang { get; set; }
     public bool Last { get; set; }
     public bool EndsWithBreak { get; set; }
 }
@@ -250,6 +253,8 @@ internal static class LineBreaker
             "atLeast" => Math.Max(spacing.Line / 20, natural),
             _ => natural * spacing.Line / 240,
         };
+
+        line.Hang = spacing.LineRule is "exact" or "atLeast" ? 0 : Math.Max(0, line.Height - natural);
 
         // A line set to an exact or least height carries the difference above its text, so the text sits at its foot.
         if (spacing.LineRule is "atLeast" or "exact")

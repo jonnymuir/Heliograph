@@ -46,8 +46,9 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
         }
 
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
-        // Space before is kept at the top of a page too, as LibreOffice lays out a Word document.
-        var before = s.Spacing.Before;
+        // Space before is kept at the top of a page too, as LibreOffice lays out a Word document, less any part shared with
+        // the space after the paragraph above, wherever that paragraph ended.
+        var before = s.SpaceAbove;
         if (MustMove(p, lines, before, next))
         {
             pages.NewPage();
@@ -93,7 +94,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
     {
         var fit = 0;
         var y = pages.Y;
-        while (placed + fit < lines.Count && y + lines[placed + fit].Height <= pages.BodyBottom + 0.01)
+        while (placed + fit < lines.Count && y + lines[placed + fit].Height - lines[placed + fit].Hang <= pages.BodyBottom + 0.01)
         {
             y += lines[placed + fit++].Height;
         }
@@ -116,8 +117,16 @@ internal sealed class BodyFlow(PageSet pages, StructNode root)
 
     private double FirstLineHeight(Block block) => block switch
     {
-        Paragraph p => p.Style.Spacing.Before + (LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "").FirstOrDefault()?.Height ?? 0),
+        Paragraph p => p.Style.SpaceAbove + OpeningLines(p),
         Table { Rows.Count: > 0 } t => TableFlow.RowHeight(t, t.Rows[0]),
         _ => 0,
     };
+
+    // What must open a paragraph where it starts: its first line, or its first two when it has more than one and widow
+    // and orphan control keeps a lone first line off the foot of a page.
+    private double OpeningLines(Paragraph p)
+    {
+        var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
+        return lines.Take(p.Style.Flow.WidowControl && lines.Count > 1 ? 2 : 1).Sum(l => l.Height);
+    }
 }

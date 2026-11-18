@@ -12,13 +12,17 @@ internal sealed class WordReader : IDisposable
     private readonly ZipArchive _zip;
     private readonly ParagraphReader _paragraphs;
     private readonly Dictionary<string, string> _relationships;
+    private readonly bool _largerSpacing;
 
     private WordReader(byte[] docx)
     {
         _zip = new ZipArchive(new MemoryStream(docx), ZipArchiveMode.Read);
         Styles = new StyleSheet(Part("word/styles.xml"));
         // Word's interval between default tab stops is half an inch unless the document sets its own.
-        var defaultTab = Twips(Part("word/settings.xml")?.Root?.Element(W + "defaultTabStop"), "val") ?? 36;
+        var settings = Part("word/settings.xml")?.Root;
+        var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
+        // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
+        _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
         _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab);
         _relationships = (Part("word/_rels/document.xml.rels")?.Root?.Elements() ?? [])
             .ToDictionary(e => (string)e.Attribute("Id")!, e => (string)e.Attribute("Target")!);
@@ -53,7 +57,7 @@ internal sealed class WordReader : IDisposable
         {
             if (e.Name == W + "p")
             {
-                blocks.Add(_paragraphs.Read(e));
+                blocks.Add(Spaced(_paragraphs.Read(e), blocks.LastOrDefault()));
             }
             else if (e.Name == W + "tbl")
             {
@@ -67,6 +71,10 @@ internal sealed class WordReader : IDisposable
 
         return blocks;
     }
+
+    private Paragraph Spaced(Paragraph p, Block? above) => _largerSpacing && above is Paragraph prev
+        ? p with { Style = p.Style with { Overlap = Math.Min(p.Style.Spacing.Before, prev.Style.Spacing.After) } }
+        : p;
 
     private IReadOnlyList<Block>? Story(XElement sect, string kind, string type)
     {

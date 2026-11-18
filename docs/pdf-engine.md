@@ -68,17 +68,21 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - an exact or at-least line carries its extra height above its text;
 - a tab past the end of a line starts the next line and still takes effect;
 - the default tab interval comes from the document's settings;
-- table rows break across pages.
+- table rows break across pages;
+- a paragraph kept with the next is kept with its first two lines when widow and orphan control is on;
+- the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).
 
 What the net still shows is mostly in three places: where a word split across lines breaks, a
 few wrap points, and some page breaks.
 
-Open question: a document whose settings lack `doNotUseHTMLParagraphAutoSpacing` (LibreOffice
-and the benchmark letters write it) is laid out by LibreOffice with the larger of two paragraphs'
-spacing between them, not the sum. A brand-new Word 365 document may lack it. A fixture saved
-from a blank Word document will show what Word does, and the converter will follow Word.
+The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
+blank one in Word for the web, and the PDF Word exported from it. A new Word document leaves out
+`doNotUseHTMLParagraphAutoSpacing`, which LibreOffice and the benchmark letters write. Without it,
+Word puts the larger of a paragraph's space after and the next one's space before between them,
+not their sum, and so does LibreOffice. The converter follows, and half the net's seeds are now
+saved that way.
 
 ## How we will know it is right
 
