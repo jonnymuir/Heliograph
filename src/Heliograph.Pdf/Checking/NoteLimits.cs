@@ -23,6 +23,7 @@ internal static class NoteLimits
     {
         _ when e.Name.Namespace != W && e.Name != Wp + "anchor" => null,
         "footnoteReference" or "endnoteReference" when On(e.Attribute(W + "customMarkFollows")) => "a note with a mark of its own",
+        "footnoteReference" when e.Ancestors(W + "tbl").Skip(1).Any() => "a footnote in a table inside a table",
         "footnotePr" or "endnotePr" when e.Parent?.Name == W + "sectPr" => NoteSettings.InSection(e),
         "tbl" when InNote(e) => "a table in a note",
         "anchor" when InNote(e) => "a picture that floats in a note",

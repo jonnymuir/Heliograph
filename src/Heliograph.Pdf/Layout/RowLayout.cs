@@ -74,8 +74,21 @@ internal sealed class RowLayout
         var text = width - t.Margins.Left - t.Margins.Right - (((cell.Borders.Left?.Width ?? 0) + (cell.Borders.Right?.Width ?? 0)) / 2);
         var lines = new List<(double, Line, Owner)>();
         var y = 0.0;
-        foreach (var p in cell.Blocks.OfType<Paragraph>())
+        foreach (var block in cell.Blocks)
         {
+            if (block is Table inner)
+            {
+                var nested = NestedTable.Lay(inner, text, cellNode?.Add("Table"));
+                lines.Add((y, nested, Owner.Artifact));
+                y += nested.Height;
+                continue;
+            }
+
+            if (block is not Paragraph p)
+            {
+                continue;
+            }
+
             y += p.Style.SpaceAbove;
             var owner = cellNode is null ? Owner.Artifact : new Owner(cellNode.Add("P"), null);
             foreach (var line in LineBreaker.Break(p, text, _ => ""))

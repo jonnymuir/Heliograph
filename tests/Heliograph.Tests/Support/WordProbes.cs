@@ -69,6 +69,8 @@ internal static class WordProbes
         // Each font set in an exact line, where Word and the converter agree, then in a single line, to show where its gap goes.
         yield return ("probe-gaps", Letter("Arial", Extras.None, Body(new[] { ("Calibri", 22), ("Calibri", 40), ("Arial", 22), ("Times New Roman", 22), ("Cambria", 22) }
             .SelectMany(f => new[] { InFont(f.Item1, f.Item2, "w:line=\"480\" w:lineRule=\"exact\""), InFont(f.Item1, f.Item2, "w:line=\"240\" w:lineRule=\"auto\"") }).ToArray())));
+        yield return ("probe-nested-table", PdfNestedTableTests.Letter(around: true));
+        yield return ("probe-nested-table-alone", PdfNestedTableTests.Letter(around: false));
         yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 
