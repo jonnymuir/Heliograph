@@ -42,8 +42,6 @@ internal static class LayoutLimits
     // How text is set.
     private static Limit[] ThingsInTheText() =>
     [
-        new(DiagnosticCodes.PdfCannotMakeLink, Links, _ => $"This document has a link. {Route} does not make links yet: the text would print, but could not be clicked.",
-            $"Write the address out in full as plain text, {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawFormatting, FormattingLimits.Found, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
             $"Take that formatting off, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",
@@ -76,6 +74,7 @@ internal static class LayoutLimits
 
         diagnostics.AddRange(ListLimits.Check(document));
         diagnostics.AddRange(PictureLimits.Check(document));
+        diagnostics.AddRange(LinkLimits.Check(document));
         diagnostics.AddRange(FontLimits.Check(document));
 
         return diagnostics;
@@ -118,11 +117,6 @@ internal static class LayoutLimits
         return root.Descendants().Where(e => e.Name == W + "instrText" || e.Name == W + "fldSimple")
             .Select(e => (e, Name: (e.Name == W + "fldSimple" ? (string?)e.Attribute(W + "instr") ?? "" : e.Value).Trim().Split(' ', 2)[0].ToUpperInvariant()))
             .Where(f => f.Name.Length > 0 && f.Name is not ("PAGE" or "NUMPAGES"));
-    }
-
-    private static IEnumerable<(XElement, string)> Links(XElement root)
-    {
-        return root.Descendants(W + "hyperlink").Select(e => (e, "a link"));
     }
 
     private static IEnumerable<(XElement, string)> Direction(XElement root)

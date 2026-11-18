@@ -9,7 +9,8 @@ namespace Heliograph.Pdf.Writing;
 /// </summary>
 internal static class StructureWriter
 {
-    public static void Write(PdfObjects objects, int structRoot, StructNode root, IReadOnlyList<int> pageIds, IReadOnlyList<List<StructNode>> marked)
+    public static void Write(PdfObjects objects, int structRoot, StructNode root, IReadOnlyList<int> pageIds, IReadOnlyList<List<StructNode>> marked,
+        IReadOnlyList<(int Key, StructNode Node)> annotations)
     {
         Prune(root);
         var ids = new Dictionary<StructNode, int>();
@@ -19,8 +20,11 @@ internal static class StructureWriter
             objects.Set(id, Element(node, ids, pageIds, structRoot));
         }
 
-        var nums = string.Join(" ", marked.Select((list, n) => Invariant($"{n} [{string.Join(" ", list.Select(node => Invariant($"{ids[node]} 0 R")))}]")));
-        objects.Set(structRoot, Invariant($"<</Type /StructTreeRoot /K [{ids[root]} 0 R] /ParentTree <</Nums [{nums}]>> /ParentTreeNextKey {pageIds.Count}>>"));
+        // Each page's marked content, then each link annotation, keyed as the pages and annotations say.
+        var nums = string.Join(" ", marked.Select((list, n) => Invariant($"{n} [{string.Join(" ", list.Select(node => Invariant($"{ids[node]} 0 R")))}]"))
+            .Concat(annotations.Select(a => Invariant($"{a.Key} {ids[a.Node]} 0 R"))));
+        var next = pageIds.Count + annotations.Count;
+        objects.Set(structRoot, Invariant($"<</Type /StructTreeRoot /K [{ids[root]} 0 R] /ParentTree <</Nums [{nums}]>> /ParentTreeNextKey {next}>>"));
     }
 
     private static void Assign(StructNode node, Dictionary<StructNode, int> ids, PdfObjects objects)
@@ -38,6 +42,7 @@ internal static class StructureWriter
         {
             StructNode child => Invariant($"{ids[child]} 0 R"),
             MarkedRef m => Invariant($"<</Type /MCR /Pg {pageIds[m.Page]} 0 R /MCID {m.Mcid}>>"),
+            AnnotationRef a => Invariant($"<</Type /OBJR /Pg {pageIds[a.Page]} 0 R /Obj {a.Id} 0 R>>"),
             _ => "",
         }));
         var parent = node.Parent is { } p ? ids[p] : structRoot;

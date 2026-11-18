@@ -16,6 +16,16 @@ internal static class PackageLinks
         return target is null ? null : package.Bytes(target.StartsWith('/') ? target.TrimStart('/') : Normalise(folder + target));
     }
 
+    /// <summary>Where a part's relationship to something outside the file points, such as a link's address; null for none.</summary>
+    public static string? External(DocxPackage package, string partName, string relationshipId)
+    {
+        var folder = partName.Contains('/', StringComparison.Ordinal) ? partName[..(partName.LastIndexOf('/') + 1)] : "";
+        var relationship = (package.Xml($"{folder}_rels/{partName[folder.Length..]}.rels")?.Root?.Elements(Relationships + "Relationship") ?? [])
+            .FirstOrDefault(r => (string?)r.Attribute("Id") == relationshipId
+                && string.Equals((string?)r.Attribute("TargetMode"), "External", StringComparison.OrdinalIgnoreCase));
+        return (string?)relationship?.Attribute("Target");
+    }
+
     // "word/../media/a.png" as "media/a.png".
     private static string Normalise(string path)
     {

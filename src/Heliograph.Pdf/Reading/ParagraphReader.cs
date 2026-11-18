@@ -4,7 +4,7 @@ using static Heliograph.Pdf.Reading.WordXml;
 namespace Heliograph.Pdf.Reading;
 
 /// <summary>Reads a paragraph: its resolved style, its text, tabs, breaks and fields, and its list label.</summary>
-internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab, Func<string, byte[]?> linked)
+internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions numbering, double defaultTab, PartLinks links)
 {
     private readonly ListItemReader _items = new(numbering);
 
@@ -58,14 +58,18 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         }
 
         layers.Add(rPr);
-        return PropertyReader.Run(layers);
+        return PropertyReader.Run(layers) with { Link = Link(r) };
     }
+
+    // A run in a link takes the link's address, when it is one a PDF may go to; the check has refused any other.
+    private string? Link(XElement r) =>
+        (string?)r.Ancestors(W + "hyperlink").FirstOrDefault()?.Attribute(R + "id") is { } id ? LinkAddress.Safe(links.Addresses(id)) : null;
 
     private void Run(XElement r, RunStyle style, FieldState field, List<Inline> inlines)
     {
         foreach (var c in r.Elements())
         {
-            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, linked) is { } inline)
+            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, links.Files) is { } inline)
             {
                 inlines.Add(inline);
             }

@@ -180,6 +180,7 @@ the template is not stopped, because the text may be what they meant.
 |---|---|---|---|
 | The document has no title in its properties | Pointed out, as a warning. The PDF is still made, and fails PDF/UA until a title is set | S3 | Works |
 | A picture with no alternative text, not marked as decorative | Warned (`HG1022`); a screen reader skips it in the PDF | S3 | Works |
+| A link to an address that is not a web page, email address or telephone number (a script or a local file, say), for `Heliograph.Pdf` | Refused (`HG4007`), so a PDF never carries it | S4 | Refused |
 | A file that is not a Word document is handed to the converter | Refused, without quoting it | | Refused |
 | LibreOffice is missing, will not start, or takes too long | The conversion fails with the reason. LibreOffice is stopped | | Works |
 

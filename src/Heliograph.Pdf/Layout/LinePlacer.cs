@@ -21,10 +21,12 @@ internal static class LinePlacer
         var extra = gaps > 0 ? (line.Limit - end) / gaps : 0;
         var baseline = top + line.Ascent;
         var added = 0.0;
+        var links = new LinkSpans(page, top, top + line.Height);
         for (var i = 0; i <= lastWord; i++)
         {
             var (x, piece) = line.Pieces[i];
-            Draw(page, piece, (left + x + shift + added, baseline), owner);
+            var at = (left + x + shift + added, baseline);
+            Draw(page, piece, at, owner with { Node = links.NodeFor(piece, at.Item1, owner.Node) });
 
             // A space is real text, so copying and screen readers keep words apart. Justified lines widen the gap after it.
             if (piece.Kind == PieceKind.Space)
@@ -32,6 +34,8 @@ internal static class LinePlacer
                 added += extra;
             }
         }
+
+        links.End();
     }
 
     private static void Draw(LaidOutPage page, Piece piece, (double X, double Baseline) at, Owner owner)

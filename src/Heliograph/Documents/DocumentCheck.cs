@@ -46,13 +46,15 @@ public sealed class DocumentPart
     private const int ExcerptLength = 80;
     private readonly List<XElement> _paragraphs;
     private readonly Func<string, byte[]?> _linked;
+    private readonly Func<string, string?> _external;
 
-    internal DocumentPart(string label, XDocument xml, Func<string, byte[]?>? linked = null)
+    internal DocumentPart(string label, XDocument xml, Func<string, byte[]?>? linked = null, Func<string, string?>? external = null)
     {
         Label = label;
         Xml = xml;
         _paragraphs = [.. xml.Descendants(WordXml.Word + "p")];
         _linked = linked ?? (_ => null);
+        _external = external ?? (_ => null);
     }
 
     /// <summary>"document", "header", "footer", "footnotes" or "endnotes".</summary>
@@ -66,6 +68,9 @@ public sealed class DocumentPart
     /// for a target inside the document only; null when there is none.
     /// </summary>
     public byte[]? Linked(string relationshipId) => _linked(relationshipId) is { } bytes ? (byte[])bytes.Clone() : null;
+
+    /// <summary>Where this part points outside the document by a relationship id, such as a link's address; null for none.</summary>
+    public string? External(string relationshipId) => _external(relationshipId);
 
     /// <summary>
     /// The place of an element: this part, the number of the paragraph that holds it (or, for something outside a

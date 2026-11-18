@@ -3,6 +3,9 @@ namespace Heliograph.Pdf.Reading;
 // A rendered letter read into what a page needs: paragraphs with their styles resolved, tables, and the section's page,
 // margins, headers and footers. Lengths are in points.
 
+/// <summary>What the part being read links to: its files, such as pictures, by relationship id, and its addresses outside.</summary>
+internal sealed record PartLinks(Func<string, byte[]?> Files, Func<string, string?> Addresses);
+
 internal abstract record Inline(RunStyle Style);
 
 internal sealed record TextInline(string Text, RunStyle Style) : Inline(Style);

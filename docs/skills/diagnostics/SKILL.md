@@ -111,7 +111,7 @@ it. The list shrinks as the converter grows; see [docs/pdf-engine.md](../../pdf-
 | `HG4004` | More than one section, so pages after the break would take the first section's page and margins. | Keep one page size and set of margins for the whole letter. |
 | `HG4005` | Text set in columns. | Use a single column, or a table. |
 | `HG4006` | A field other than a page number or page count, which would print nothing. | Type the text in, or use a tag from the dictionary. |
-| `HG4007` | A link, which would print but could not be clicked. | Write the address out as plain text. |
+| `HG4007` | A link the converter cannot make: one in a header or footer, one to a place in the document, or one to an address that is not a web page, email address or telephone number. Links in the body to those are made. | Write the address out as plain text, or link to a web page, email address or telephone number. |
 | `HG4008` | Formatting the converter cannot draw yet: small capitals, patterned shading, shading behind a paragraph or cell, stretched or squeezed characters, text raised or lowered by a set amount, embossed, engraved, outlined or shadowed text, emphasis marks, text fitted to a width, or a border round a paragraph. It would print as plain text. | Take that formatting off, or use the LibreOffice route for this letter. |
 | `HG4009` | Right-to-left text, or text running up or down the page. | Set the text left to right. |
 | `HG4010` | A table with cells merged down a column, or a table inside another. | Give each cell its own row, with no table inside another. |

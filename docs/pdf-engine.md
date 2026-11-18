@@ -45,6 +45,8 @@ This plan is built to find out early and keep finding out.
   - indents and line breaks;
   - tab stops aligned left, right, centred or on the decimal point, with leaders of dots,
     hyphens or a line;
+  - links in the body to web pages, email addresses and telephone numbers, clickable and tagged
+    as links (a link that wraps onto a second line is two links, each to the same address);
   - the three line-spacing modes, and space before and after.
 - **Pages:** widow and orphan control, keep with next, keep together, page breaks.
 - **Lists:** as Word numbers them:
@@ -203,7 +205,8 @@ generated documents through both routes. Add the Word fixtures.
 - Non-breaking spaces and hyphens, and soft hyphens.
 - Right, centre and decimal tabs with leaders. Statements line figures up with these. Done (a
   bar tab, and tabs in a centred or right-aligned paragraph, are still refused).
-- Hyperlinks, as link annotations tagged as links.
+- Hyperlinks, as link annotations tagged as links. Done for links in the body to web pages, email
+  and telephone; links to a place in the document, and in headers and footers, are still refused.
 
 ### 5. Paragraphs and pages
 

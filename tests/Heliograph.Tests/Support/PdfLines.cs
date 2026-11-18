@@ -123,6 +123,19 @@ internal sealed class PdfLinesTheoryAttribute : TheoryAttribute
     }
 }
 
+/// <summary>A test that needs LibreOffice, and Poppler's pdftotext to read where lines sit.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+internal sealed class ComparedPdfFactAttribute : FactAttribute
+{
+    public ComparedPdfFactAttribute()
+    {
+        if ((LibreOffice.Executable is null || PdfLines.Executable is null) && !LibreOffice.Required)
+        {
+            Skip = "This needs LibreOffice, and Poppler's pdftotext to read where lines sit.";
+        }
+    }
+}
+
 /// <summary>A test that needs only the PDF validator, which runs in Docker.</summary>
 [AttributeUsage(AttributeTargets.Method)]
 internal sealed class VeraPdfTheoryAttribute : TheoryAttribute

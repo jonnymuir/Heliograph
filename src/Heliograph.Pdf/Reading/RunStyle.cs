@@ -19,4 +19,7 @@ internal sealed record RunStyle(bool Bold, bool Italic, bool Underline, double S
     public double CharacterSpacing { get; init; }
 
     public bool Hidden { get; init; }
+
+    /// <summary>The address the run links to, when it is in a link.</summary>
+    public string? Link { get; init; }
 }
