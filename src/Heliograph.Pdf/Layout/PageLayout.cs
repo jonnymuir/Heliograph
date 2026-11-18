@@ -34,14 +34,7 @@ internal static class PageLayout
     {
         var g = page.Section.Page;
         var (header, footer) = PageStories.For(page.Section, page.FirstInSection, page.Number);
-        // A page number in its switch's format or else its section's; a count of pages in its switch's format or else figures.
-        string Field(FieldInline f) => f.Field switch
-        {
-            "PAGE" => ListLabels.Number(page.Number, f.Format ?? page.Section.Numbers.Format),
-            "NUMPAGES" => ListLabels.Number(all.Count, f.Format ?? "decimal"),
-            "SECTIONPAGES" => ListLabels.Number(all.Count(p => p.Section == page.Section), f.Format ?? "decimal"),
-            _ => "",
-        };
+        string Field(FieldInline f) => Value(f, page, all);
 
         var y = g.HeaderDistance;
         foreach (var p in header.OfType<Paragraph>())
@@ -55,6 +48,15 @@ internal static class PageLayout
             y = Story(page, p, y, g, Field);
         }
     }
+
+    // A page number in its switch's format or else its section's; a count of pages in its switch's format or else figures.
+    private static string Value(FieldInline f, LaidOutPage page, IReadOnlyList<LaidOutPage> all) => f.Field switch
+    {
+        "PAGE" => ListLabels.Number(page.Number, f.Format ?? page.Section.Numbers.Format),
+        "NUMPAGES" => ListLabels.Number(all.Count, f.Format ?? "decimal"),
+        "SECTIONPAGES" => ListLabels.Number(all.Count(p => p.Section == page.Section), f.Format ?? "decimal"),
+        _ => "",
+    };
 
     private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<FieldInline, string> field)
     {
