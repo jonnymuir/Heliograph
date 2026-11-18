@@ -84,10 +84,6 @@ internal sealed record Table(IReadOnlyList<double> Grid, IReadOnlyList<Row> Rows
     public string Align { get; init; } = "left";
 }
 
-internal sealed record PageGeometry(double Width, double Height, double Top, double Bottom, double Left, double Right, double HeaderDistance, double FooterDistance)
-{
-    public double ContentWidth => Width - Left - Right;
-}
 
 /// <summary>The headers and footers of a section: the usual ones, and the first page's when it has its own.</summary>
 internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block> Footer, IReadOnlyList<Block>? FirstHeader, IReadOnlyList<Block>? FirstFooter);

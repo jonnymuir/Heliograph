@@ -2,12 +2,6 @@ using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
-/// <summary>One cell of a row, broken into lines, each with its top measured from the top of the cell's text.</summary>
-internal sealed record CellLayout(double Left, double Width, double TextLeft, CellBorders Borders, List<(double Top, Line Line, Owner Owner)> Lines, double Height)
-{
-    public string VAlign { get; init; } = "top";
-}
-
 /// <summary>
 /// A row's cells laid out as lines, so the row can be measured whole or from where a page broke it, and cut where a page
 /// ends. Above is the space over each cell's text: the padding and the top border.
