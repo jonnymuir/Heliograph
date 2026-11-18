@@ -3,7 +3,7 @@ namespace Heliograph.WordFixtures;
 /// <summary>The app registration the tool signs in through: a public client, so its ID is not a secret.</summary>
 internal static class Settings
 {
-    public const string ClientId = "";
+    public const string ClientId = "e75e4db6-32a9-4608-84a6-502fd9aad290";
 }
 
 /// <summary>Finds the repository's root from wherever the tool runs.</summary>

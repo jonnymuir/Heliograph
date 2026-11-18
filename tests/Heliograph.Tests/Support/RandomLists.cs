@@ -23,7 +23,10 @@ internal static class RandomLists
         [Level("upperLetter", "%1)", suffix: "space"), Level("decimalZero", "%2", suffix: "nothing"), Level("lowerLetter", "%3.")],
     ];
 
-    /// <summary>The abstractNum and num elements, numbered from 3 after RandomLayout's own two.</summary>
+    /// <summary>
+    /// The abstractNum elements, numbered from 2 after RandomLayout's own two. Every abstractNum must come before every num,
+    /// as the format says: Word for the web, given them mixed, uses the last definition for every list.
+    /// </summary>
     public static string Definitions
     {
         get
@@ -33,6 +36,20 @@ internal static class RandomLists
             {
                 var levels = string.Concat(Levels[a].Select((level, l) => level.Replace("{ilvl}", Number(l), StringComparison.Ordinal).Replace("{left}", Number(720 * (l + 1)), StringComparison.Ordinal)));
                 xml.Append(CultureInfo.InvariantCulture, $"<w:abstractNum w:abstractNumId=\"{a + 2}\">{levels}</w:abstractNum>");
+            }
+
+            return xml.ToString();
+        }
+    }
+
+    /// <summary>The num elements, numbered from 3 after RandomLayout's own two, each using its definition.</summary>
+    public static string Lists
+    {
+        get
+        {
+            var xml = new StringBuilder();
+            for (var a = 0; a < Levels.Length; a++)
+            {
                 xml.Append(CultureInfo.InvariantCulture, $"<w:num w:numId=\"{a + 3}\"><w:abstractNumId w:val=\"{a + 2}\"/></w:num>");
             }
 
