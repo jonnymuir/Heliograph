@@ -6,4 +6,7 @@ namespace Heliograph.Pdf.Layout;
 internal sealed record CellLayout(double Left, double Width, double TextLeft, CellBorders Borders, List<(double Top, Line Line, Owner Owner)> Lines, double Height)
 {
     public string VAlign { get; init; } = "top";
+
+    /// <summary>The cell's shading, as RGB hex, or null for none.</summary>
+    public string? Background { get; init; }
 }

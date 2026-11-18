@@ -19,7 +19,7 @@ internal static class NestedTable
             var height = last.Need(new int[last.Count]);
             for (var c = 0; c < last.Count; c++)
             {
-                CellPainter.Paint(new Canvas(canvas, 0, y), last, c, (0, last[c].Lines.Count), (height, last.Offset(c, height)));
+                CellPainter.Paint(new Canvas(canvas, 0, y), last[c], last, new CellPart(0, last[c].Lines.Count, height, last.Offset(c, height)));
             }
 
             y += height;
