@@ -22,7 +22,7 @@ internal sealed class Line
 internal static class LineBreaker
 {
 
-    public static List<Line> Break(Paragraph p, double width, Func<string, string> field)
+    public static List<Line> Break(Paragraph p, double width, Func<FieldInline, string> field)
     {
         var builder = new LineBuilder(p.Style, width - p.Style.Indent.Right);
         if (p.Label is { } label)
@@ -236,7 +236,7 @@ internal static class LineBreaker
         }
     }
 
-    private static List<Piece> Pieces(Paragraph p, Func<string, string> field)
+    private static List<Piece> Pieces(Paragraph p, Func<FieldInline, string> field)
     {
         var pieces = new List<Piece>();
         foreach (var inline in p.Inlines)
@@ -253,7 +253,7 @@ internal static class LineBreaker
                     Words(t.Text, t.Style, pieces);
                     break;
                 case FieldInline f:
-                    Words(field(f.Field), f.Style, pieces);
+                    Words(field(f), f.Style, pieces);
                     break;
                 case NoteInline n:
                     pieces.Add(n.End ? Segments.Piece(n.Mark, n.Style, PieceKind.Word) with { Endnote = n.Id } : Segments.Piece(n.Mark, n.Style, PieceKind.Word) with { Note = n.Id });

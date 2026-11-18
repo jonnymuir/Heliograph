@@ -37,7 +37,7 @@ internal static class LayoutLimits
             $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
-        new(DiagnosticCodes.PdfCannotWorkOutField, Fields, what => $"This document has a {what} field. {Route} works out page numbers and page counts only, so this field would print nothing.",
+        new(DiagnosticCodes.PdfCannotWorkOutField, FieldLimits.Found, what => $"This document has {what}. {Route} works out page numbers and counts of pages, in figures, letters or Roman numerals, only, so it would not print as it should.",
             $"Type the text in, or use a tag from the dictionary for a value, {Instead}"),
     ];
 
@@ -117,13 +117,6 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Columns(XElement root)
     {
         return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
-    }
-
-    private static IEnumerable<(XElement, string)> Fields(XElement root)
-    {
-        return root.Descendants().Where(e => e.Name == W + "instrText" || e.Name == W + "fldSimple")
-            .Select(e => (e, Name: (e.Name == W + "fldSimple" ? (string?)e.Attribute(W + "instr") ?? "" : e.Value).Trim().Split(' ', 2)[0].ToUpperInvariant()))
-            .Where(f => f.Name.Length > 0 && f.Name is not ("PAGE" or "NUMPAGES"));
     }
 
     private static IEnumerable<(XElement, string)> Direction(XElement root)

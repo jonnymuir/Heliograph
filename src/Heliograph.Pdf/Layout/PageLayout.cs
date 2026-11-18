@@ -1,4 +1,3 @@
-using System.Globalization;
 using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
@@ -25,20 +24,22 @@ internal static class PageLayout
         pages.Finish();
         foreach (var page in pages.Pages)
         {
-            Decorate(page, pages.Pages.Count);
+            Decorate(page, pages.Pages);
         }
 
         return (pages.Pages, root);
     }
 
-    private static void Decorate(LaidOutPage page, int count)
+    private static void Decorate(LaidOutPage page, IReadOnlyList<LaidOutPage> all)
     {
         var g = page.Section.Page;
         var (header, footer) = PageStories.For(page.Section, page.FirstInSection, page.Number);
-        string Field(string name) => name switch
+        // A page number in its switch's format or else its section's; a count of pages in its switch's format or else figures.
+        string Field(FieldInline f) => f.Field switch
         {
-            "PAGE" => ListLabels.Number(page.Number, page.Section.Numbers.Format),
-            "NUMPAGES" => count.ToString(CultureInfo.InvariantCulture),
+            "PAGE" => ListLabels.Number(page.Number, f.Format ?? page.Section.Numbers.Format),
+            "NUMPAGES" => ListLabels.Number(all.Count, f.Format ?? "decimal"),
+            "SECTIONPAGES" => ListLabels.Number(all.Count(p => p.Section == page.Section), f.Format ?? "decimal"),
             _ => "",
         };
 
@@ -55,7 +56,7 @@ internal static class PageLayout
         }
     }
 
-    private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<string, string> field)
+    private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<FieldInline, string> field)
     {
         y += p.Style.SpaceAbove;
         FloatPlacer.Place(page, p, g, y, null);

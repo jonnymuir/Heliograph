@@ -73,8 +73,11 @@ This plan is built to find out early and keep finding out.
   - a row breaks across pages, each cell at its own last line that fits, unless it is marked not
     to. A row with a set height that breaks across a page can still differ from LibreOffice, and
     rows joined by a merged cell are kept together on a page where LibreOffice may break them.
-- **Headers and footers:** on every page, with a first page of its own, and page numbers and page
-  counts.
+- **Headers and footers:** on every page, with a first page of its own, and page numbers and counts
+  of pages in the letter (`NUMPAGES`) and in its section (`SECTIONPAGES`), each in figures, letters
+  or Roman numerals as its switch says, its instruction read whole though Word may split it across
+  runs. LibreOffice is no guide to the counts: it prints a section's as last saved, and counts a
+  blank page it would add before a page numbered 1 again; a Word probe is.
 - **Sections** that start a new page, each with its own page size, orientation and margins, its
   headers and footers (each one it does not set carried on from the section before, as Word does),
   a first page of its own, different headers and footers on even pages (even and odd by the page's
@@ -290,7 +293,7 @@ generated documents through both routes. Add the Word fixtures.
 - Several sections with their own page size, orientation and margins (done, each starting a new
   page).
 - Even-page headers (done).
-- Page-number formats (done), and section page counts.
+- Page-number formats, and section page counts (both done, with the format switches Word offers).
 - Footnotes, tagged as notes (done, in the body); endnotes (done).
 - Columns.
 
