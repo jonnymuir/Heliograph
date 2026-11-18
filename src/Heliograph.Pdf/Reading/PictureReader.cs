@@ -21,13 +21,21 @@ internal static class PictureReader
     {
         if (drawing.Element(Wp + "anchor") is { } anchor)
         {
-            return Picture(anchor, linked, style) is { } picture ? new FloatingPicture(picture, Position(anchor), On(anchor.Attribute("behindDoc"))) : null;
+            return Picture(anchor, linked, style) is { } picture ? new FloatingPicture(picture, Position(anchor), On(anchor.Attribute("behindDoc"))) { Wrap = Wrap(anchor) } : null;
         }
 
         return Picture(drawing.Element(Wp + "inline"), linked, style);
     }
 
     private static bool On(XAttribute? a) => (string?)a is "1" or "true";
+
+    // How text goes round the picture, and the space kept clear round it.
+    private static TextWrap Wrap(XElement anchor)
+    {
+        var kind = anchor.Element(Wp + "wrapSquare") is not null ? "square" : anchor.Element(Wp + "wrapTopAndBottom") is not null ? "topAndBottom" : "none";
+        var side = (string?)anchor.Element(Wp + "wrapSquare")?.Attribute("wrapText") ?? "bothSides";
+        return new TextWrap(kind, side, Emu(anchor, "distT"), Emu(anchor, "distB"), Emu(anchor, "distL"), Emu(anchor, "distR"));
+    }
 
     private static Anchor Position(XElement anchor)
     {

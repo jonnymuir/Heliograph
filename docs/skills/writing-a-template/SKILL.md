@@ -261,8 +261,8 @@ leader, are laid out, and links in the body to a web page, an email address or a
 can be clicked. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
 and character spacing are all drawn, and so are borders and shading round paragraphs in the body
 of the letter. Pictures set in line with the text, or in front of or behind it, are drawn (PNG
-and JPEG); a picture with text wrapped round it is not yet, so set it **In Line with Text**, **In
-Front of Text** or **Behind Text**. Lists can have several levels, numbered with numbers, letters or Roman
+and JPEG), and in the body of the letter text can wrap **Square** or **Top and Bottom** round a
+picture, on one side of it; text wrapped **Tight** or **Through**, or on both sides, is not yet. Lists can have several levels, numbered with numbers, letters or Roman
 numerals, with Word's ordinary bullets; a picture used as a bullet, or a number style such as
 "1st, 2nd", cannot be drawn yet. Change the template, or ask whoever runs the site to make that letter's
 PDFs another way for now.

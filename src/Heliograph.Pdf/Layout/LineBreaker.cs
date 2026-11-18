@@ -18,13 +18,21 @@ internal sealed class Line
     public bool EndsWithBreak { get; set; }
 }
 
+/// <summary>Where a paragraph starts down its page, and the room a line has across it at a height, beside floating pictures.</summary>
+internal sealed record LineBounds(double Top, Func<double, double, LineRoom> Room);
+
 /// <summary>Breaks a paragraph into lines the way Word does: greedily, at spaces, with tab stops and hanging labels.</summary>
 internal static class LineBreaker
 {
+    public static List<Line> Break(Paragraph p, double width, Func<FieldInline, string> field) => Break(p, width, field, null);
 
-    public static List<Line> Break(Paragraph p, double width, Func<FieldInline, string> field)
+    /// <summary>
+    /// Breaks a paragraph into lines, each as wide as the room the floating pictures on its page leave it, from where the
+    /// paragraph starts down.
+    /// </summary>
+    public static List<Line> Break(Paragraph p, double width, Func<FieldInline, string> field, LineBounds? bounds)
     {
-        var builder = new LineBuilder(p.Style, width - p.Style.Indent.Right);
+        var builder = new LineBuilder(p, width - p.Style.Indent.Right, bounds);
         if (p.Label is { } label)
         {
             builder.Label(new Piece(label.Text, label.Style, TextLook.Width(label.Text, label.Style), PieceKind.Word, IsLabel: true), p.Placement);
@@ -38,30 +46,30 @@ internal static class LineBreaker
         builder.Finish();
         var lines = builder.Lines;
         lines[^1].Last = true;
-        foreach (var line in lines)
-        {
-            Measure(line, p);
-        }
-
         return lines;
     }
 
     /// <summary>The lines of one paragraph so far, the one being filled, and how far along it the next piece goes.</summary>
     private sealed class LineBuilder
     {
+        private readonly Paragraph _p;
         private readonly ParagraphStyle _style;
         private readonly double _limit;
+        private readonly LineBounds? _bounds;
+        private double _y;
+        private double _height;
         private Line _line;
         private double _x;
         private bool _tabbed;
         private bool _afterTab;
         private (int Index, double Origin, TabStop Stop, RunStyle Style)? _segment;
 
-        public LineBuilder(ParagraphStyle style, double limit)
+        public LineBuilder(Paragraph p, double limit, LineBounds? bounds)
         {
-            (_style, _limit) = (style, limit);
+            (_p, _style, _limit, _bounds) = (p, p.Style, limit, bounds);
+            (_y, _height) = (bounds?.Top ?? 0, Natural(p));
+            _x = _style.Indent.Left + _style.Indent.FirstLine;
             _line = NewLine();
-            _x = style.Indent.Left + style.Indent.FirstLine;
         }
 
         public List<Line> Lines { get; } = [];
@@ -150,12 +158,18 @@ internal static class LineBreaker
         private void Next()
         {
             CloseSegment();
-            _line = NewLine();
+            Measure(_line, _p);
+            (_y, _height) = (_y + _line.Height, _line.Height);
             _x = _style.Indent.Left;
+            _line = NewLine();
         }
 
-        /// <summary>Lines up the text after the last tab, once the paragraph ends.</summary>
-        public void Finish() => CloseSegment();
+        /// <summary>Lines up the text after the last tab, and measures the last line, once the paragraph ends.</summary>
+        public void Finish()
+        {
+            CloseSegment();
+            Measure(_line, _p);
+        }
 
         // A tab whose stop is past the line's end starts the next line, and still takes effect there. Text after a left
         // stop starts on it; text after a right, centred or decimal stop is lined up on it when it ends.
@@ -228,12 +242,33 @@ internal static class LineBreaker
             }
         }
 
+        // A new line, as wide as the room beside the floating pictures at its height; where there is none, below them, an
+        // empty line keeping the space between.
         private Line NewLine()
         {
-            var line = new Line { Limit = _limit, Align = _style.Align };
+            var room = Room();
+            while (room.Skip > 0)
+            {
+                Lines.Add(new Line { Limit = _limit, Align = _style.Align, Height = room.Skip });
+                _y += room.Skip;
+                room = Room();
+            }
+
+            _x = Math.Max(_x, room.Left);
+            var line = new Line { Limit = Math.Min(_limit, room.Right), Align = _style.Align };
             Lines.Add(line);
             return line;
         }
+
+        private LineRoom Room() => _bounds is { } b ? b.Room(_y, _height) : new LineRoom(0, _limit, 0);
+    }
+
+    // The height of an empty line of the paragraph, taken for its first line's before it is filled.
+    private static double Natural(Paragraph p)
+    {
+        var probe = new Line();
+        Measure(probe, p);
+        return probe.Height;
     }
 
     private static List<Piece> Pieces(Paragraph p, Func<FieldInline, string> field)
