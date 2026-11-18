@@ -38,7 +38,7 @@ public class PdfLimitsTests
         { DiagnosticCodes.PdfCannotLayOutColumns, $"<w:p {W}><w:pPr><w:sectPr><w:cols w:num=\"2\"/></w:sectPr></w:pPr></w:p>", "columns" },
         { DiagnosticCodes.PdfCannotWorkOutField, $"<w:p {W}><w:fldSimple w:instr=\" DATE \\@ &quot;d MMMM yyyy&quot; \"><w:r><w:t>1 June</w:t></w:r></w:fldSimple></w:p>", "DATE field" },
         { DiagnosticCodes.PdfCannotMakeLink, $"<w:p {W}><w:hyperlink w:anchor=\"top\"><w:r><w:t>Go to the top</w:t></w:r></w:hyperlink></w:p>", "link" },
-        { DiagnosticCodes.PdfCannotDrawFormatting, $"<w:p {W}><w:r><w:rPr><w:color w:val=\"C00000\"/></w:rPr><w:t>Red text</w:t></w:r></w:p>", "coloured text" },
+        { DiagnosticCodes.PdfCannotDrawFormatting, $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small capitals</w:t></w:r></w:p>", "small capitals" },
         { DiagnosticCodes.PdfCannotLayOutDirection, $"<w:p {W}><w:pPr><w:bidi/></w:pPr><w:r><w:t>Right to left</w:t></w:r></w:p>", "right-to-left" },
         { DiagnosticCodes.PdfCannotLayOutTable, $"<w:tbl {W}><w:tblGrid><w:gridCol w:w=\"2000\"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:vMerge w:val=\"restart\"/></w:tcPr><w:p><w:r><w:t>Merged</w:t></w:r></w:p></w:tc></w:tr></w:tbl>", "merged down a column" },
         { DiagnosticCodes.PdfCannotAlignTab, $"<w:p {W}><w:pPr><w:tabs><w:tab w:val=\"decimal\" w:pos=\"5000\"/></w:tabs></w:pPr><w:r><w:t>Total</w:t></w:r><w:r><w:tab/><w:t>12.50</w:t></w:r></w:p>", "decimal point" },
@@ -75,9 +75,9 @@ public class PdfLimitsTests
     [Fact]
     public void Each_limit_is_reported_once_in_a_part_however_often_it_occurs()
     {
-        var red = $"<w:p {W}><w:r><w:rPr><w:color w:val=\"C00000\"/></w:rPr><w:t>Red</w:t></w:r></w:p>";
+        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
 
-        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(red).RawParagraph(red).Build(), Dictionary, Checks);
+        var compilation = DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).RawParagraph(smallCaps).Build(), Dictionary, Checks);
 
         compilation.Diagnostics.Where(d => d.Code == DiagnosticCodes.PdfCannotDrawFormatting).Should().ContainSingle();
     }
@@ -85,9 +85,9 @@ public class PdfLimitsTests
     [Fact]
     public void A_host_that_makes_PDFs_another_way_is_not_held_to_these_limits()
     {
-        var red = $"<w:p {W}><w:r><w:rPr><w:color w:val=\"C00000\"/></w:rPr><w:t>Red</w:t></w:r></w:p>";
+        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
 
-        DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(red).Build(), Dictionary).Succeeded.Should().BeTrue();
+        DocumentTemplate.Compile(TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).Build(), Dictionary).Succeeded.Should().BeTrue();
     }
 
     [Fact]
@@ -96,8 +96,8 @@ public class PdfLimitsTests
         var store = new InMemoryCorrespondenceStore();
         var dictionaries = new InMemoryDictionarySource();
         dictionaries["members"] = """{ "fields": [ { "name": "Member name", "key": "memberName", "type": "text" } ] }""";
-        var red = $"<w:p {W}><w:r><w:rPr><w:color w:val=\"C00000\"/></w:rPr><w:t>Red</w:t></w:r></w:p>";
-        var content = new CorrespondenceContent { Name = "Welcome", Dictionary = "members", Document = TestDocx.With("Dear ((Member name)),").RawParagraph(red).Build().ToArray() };
+        var smallCaps = $"<w:p {W}><w:r><w:rPr><w:smallCaps/></w:rPr><w:t>Small</w:t></w:r></w:p>";
+        var content = new CorrespondenceContent { Name = "Welcome", Dictionary = "members", Document = TestDocx.With("Dear ((Member name)),").RawParagraph(smallCaps).Build().ToArray() };
 
         var before = new CorrespondenceLibrary(store, dictionaries, TimeProvider.System);
         await before.SaveDraftAsync("welcome", content, 0);

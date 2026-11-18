@@ -9,7 +9,7 @@ internal static class RunContent
     /// <summary>The inline an element of a run stands for; null for anything else.</summary>
     public static Inline? Inline(XElement c, RunStyle style, Func<string, byte[]?> linked) => c.Name.Namespace != W ? null : c.Name.LocalName switch
     {
-        "t" => new TextInline(c.Value, style),
+        "t" => new TextInline(style.Caps ? c.Value.ToUpperInvariant() : c.Value, style),
         "tab" => new TabInline(style),
         "br" or "cr" => new BreakInline(style),
         "drawing" => PictureReader.Read(c, linked, style),

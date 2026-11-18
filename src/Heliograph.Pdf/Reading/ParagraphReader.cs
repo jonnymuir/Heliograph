@@ -65,7 +65,8 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
     {
         foreach (var c in r.Elements())
         {
-            if (!field.Consume(c, style, inlines) && RunContent.Inline(c, style, linked) is { } inline)
+            // Hidden text is sent, still hidden, so it is not drawn.
+            if (!field.Consume(c, style, inlines) && !style.Hidden && RunContent.Inline(c, style, linked) is { } inline)
             {
                 inlines.Add(inline);
             }

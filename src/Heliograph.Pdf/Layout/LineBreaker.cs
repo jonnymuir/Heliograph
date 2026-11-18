@@ -21,12 +21,13 @@ internal sealed class Line
 /// <summary>Breaks a paragraph into lines the way Word does: greedily, at spaces, with tab stops and hanging labels.</summary>
 internal static class LineBreaker
 {
+
     public static List<Line> Break(Paragraph p, double width, Func<string, string> field)
     {
         var builder = new LineBuilder(p.Style, width - p.Style.Indent.Right);
         if (p.Label is { } label)
         {
-            builder.Label(new Piece(label.Text, label.Style, FontLibrary.Face(label.Style).Width(label.Text, label.Style.Size), PieceKind.Word, IsLabel: true), p.Placement);
+            builder.Label(new Piece(label.Text, label.Style, TextLook.Width(label.Text, label.Style), PieceKind.Word, IsLabel: true), p.Placement);
         }
 
         foreach (var piece in Pieces(p, field))
@@ -119,24 +120,23 @@ internal static class LineBreaker
                 return;
             }
 
-            var face = FontLibrary.Face(piece.Style);
             var text = piece.Text;
-            while (_x + face.Width(text, piece.Style.Size) > _line.Limit + 0.01 && text.Length > 1)
+            while (_x + TextLook.Width(text, piece.Style) > _line.Limit + 0.01 && text.Length > 1)
             {
-                var fit = Fit(text, face, piece.Style.Size);
-                Put(piece with { Text = text[..fit], Width = face.Width(text[..fit], piece.Style.Size) });
+                var fit = Fit(text, piece.Style);
+                Put(piece with { Text = text[..fit], Width = TextLook.Width(text[..fit], piece.Style) });
                 Next();
                 text = text[fit..];
             }
 
-            Put(piece with { Text = text, Width = face.Width(text, piece.Style.Size) });
+            Put(piece with { Text = text, Width = TextLook.Width(text, piece.Style) });
         }
 
         // How many characters of a word fit on the rest of the line: at least one.
-        private int Fit(string text, TrueTypeFont face, double size)
+        private int Fit(string text, RunStyle style)
         {
             var fit = 1;
-            while (fit < text.Length && _x + face.Width(text[..(fit + 1)], size) <= _line.Limit + 0.01)
+            while (fit < text.Length && _x + TextLook.Width(text[..(fit + 1)], style) <= _line.Limit + 0.01)
             {
                 fit++;
             }
@@ -194,7 +194,6 @@ internal static class LineBreaker
 
     private static void Words(string text, RunStyle style, List<Piece> pieces)
     {
-        var face = FontLibrary.Face(style);
         for (var i = 0; i < text.Length;)
         {
             var space = text[i] == ' ';
@@ -206,7 +205,7 @@ internal static class LineBreaker
 
             foreach (var chunk in space ? [text[i..j]] : BreakableParts(text[i..j]))
             {
-                pieces.Add(new Piece(chunk, style, face.Width(chunk, style.Size), space ? PieceKind.Space : PieceKind.Word));
+                pieces.Add(new Piece(chunk, style, TextLook.Width(chunk, style), space ? PieceKind.Space : PieceKind.Word));
             }
 
             i = j;

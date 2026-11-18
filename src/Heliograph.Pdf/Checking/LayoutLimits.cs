@@ -162,15 +162,17 @@ internal static class LayoutLimits
         return root.Descendants().Select(e => (e, What: FormattingName(e))).Where(f => f.What is not null)!;
     }
 
-    private static string? FormattingName(XElement e) => e.Name.LocalName switch
+    // Colour, highlight, run shading, strikethrough, superscript, subscript, capitals and character spacing are drawn.
+    private static string? FormattingName(XElement e) => e.Name.Namespace != W ? null : e.Name.LocalName switch
     {
-        "color" when e.Parent?.Name == W + "rPr" && Val(e) is { } c && c is not ("auto" or "000000") => "coloured text",
-        "highlight" when Val(e) is not ("none" or null) => "highlighted text",
-        "shd" when (string?)e.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") => "shading",
-        "vertAlign" when Val(e) is "superscript" or "subscript" => "superscript or subscript",
-        "strike" or "dstrike" when On(e) => "strikethrough",
-        "caps" or "smallCaps" when On(e) => "capitals set as formatting",
-        "spacing" when e.Parent?.Name == W + "rPr" && Val(e) is { } s && s != "0" => "spaced-out characters",
+        "shd" when e.Parent?.Name == W + "rPr" && Val(e) is not (null or "clear" or "solid" or "nil") => "patterned shading",
+        "shd" when e.Parent?.Name != W + "rPr" && (string?)e.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") => "shading behind a paragraph or cell",
+        "smallCaps" when On(e) => "small capitals",
+        "w" when e.Parent?.Name == W + "rPr" && Val(e) is { } scale && scale != "100" => "stretched or squeezed characters",
+        "position" when e.Parent?.Name == W + "rPr" && Val(e) is { } p && p != "0" => "text raised or lowered by a set amount",
+        "emboss" or "imprint" or "outline" or "shadow" when On(e) => "embossed, engraved, outlined or shadowed text",
+        "em" when Val(e) is not (null or "none") => "emphasis marks",
+        "fitText" => "text fitted to a set width",
         "pBdr" => "a border round a paragraph",
         _ => null,
     };

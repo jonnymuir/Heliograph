@@ -47,7 +47,7 @@ internal static class PropertyReader
             style = style with { Font = font };
         }
 
-        return style;
+        return RunFormatting.Apply(style, x);
     }
 
     public static ParagraphStyle Paragraph(IReadOnlyList<XElement> layers)

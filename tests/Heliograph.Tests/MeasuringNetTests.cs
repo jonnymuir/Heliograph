@@ -29,16 +29,17 @@ public class MeasuringNetTests
     // Paragraphs gained pictures on 18 November 2026, so seed 12's document changed and its number was set again. A third
     // of documents became Calibri or Cambria the same day, so seeds 3, 13, 15 and 30 (and lists seed 1) were set again too.
     // LibreOffice on Linux sets text in an exact-height Calibri line higher than on a Mac, so those seeds take Linux's.
+    // Runs gained formatting the same day, so seeds 7, 9, 13 and 19 (and lists seed 10) were set again once more.
     private static readonly Dictionary<int, int> FirstDifference = new()
     {
         [2] = 66, [3] = 22, [4] = 341, [5] = 25, [6] = 87, [7] = 3, [8] = 10, [9] = 61, [10] = 24, [11] = 44, [12] = 92,
-        [13] = 3, [14] = 39, [15] = 91, [16] = 48, [18] = 13, [20] = 673, [21] = 45, [22] = 54, [23] = 552, [24] = 28,
-        [25] = 33, [26] = 17, [28] = 27, [29] = 52, [30] = 61,
+        [13] = 3, [14] = 39, [15] = 91, [16] = 48, [18] = 13, [19] = 633, [20] = 673, [21] = 45, [22] = 54, [23] = 552,
+        [24] = 28, [25] = 33, [26] = 17, [28] = 27, [29] = 52, [30] = 61,
     };
     // The same, for documents made mostly of lists with levels.
     private static readonly Dictionary<int, int> FirstDifferenceInLists = new()
     {
-        [1] = 148, [2] = 15, [3] = 24, [4] = 59, [5] = 29, [6] = 62, [7] = 3, [8] = 88, [9] = 90, [10] = 130,
+        [1] = 148, [2] = 15, [3] = 24, [4] = 59, [5] = 29, [6] = 62, [7] = 3, [8] = 88, [9] = 90, [10] = 122,
     };
 
     private static readonly FieldDictionary NoFields = new([]);
@@ -115,7 +116,7 @@ public class MeasuringNetTests
         for (var i = 0; i < Math.Max(expected.Count, actual.Count); i++)
         {
             var (e, a) = (i < expected.Count ? expected[i] : null, i < actual.Count ? actual[i] : null);
-            if (e is null || a is null || e.Page != a.Page || Bullets(e.Text) != a.Text || Math.Abs(e.Top - a.Top) > 1.5)
+            if (e is null || a is null || e.Page != a.Page || Letters(Bullets(e.Text)) != Letters(a.Text) || Math.Abs(e.Top - a.Top) > 1.5)
             {
                 return (i + 1, $"line {i + 1}: LibreOffice {Describe(e)}, Heliograph {Describe(a)}");
             }
@@ -127,6 +128,10 @@ public class MeasuringNetTests
     // LibreOffice keeps the private code points Symbol and Wingdings put their bullets at; Heliograph writes the
     // ordinary characters for the same shapes, which a screen reader can name. The shape is the same, so both count.
     private static string Bullets(string text) => text.Replace('\uF0B7', '\u2022').Replace('\uF0A7', '\u25AA');
+
+    // A line's letters without its spaces: LibreOffice places each letter of spaced-out text on its own, so Poppler reads
+    // them as words, where Heliograph draws the word with character spacing. Which words are on which line still counts.
+    private static string Letters(string text) => text.Replace(" ", "", StringComparison.Ordinal);
 
     private static string Describe(PdfLine? line) =>
         line is null ? "nothing" : string.Create(CultureInfo.InvariantCulture, $"p{line.Page} at {line.Top:0.0} \"{line.Text}\"");
