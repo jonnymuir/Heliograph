@@ -65,7 +65,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         var placed = 0;
         while (placed < lines.Count)
         {
-            var fit = _fit.Fit(lines, placed, s.Flow.WidowControl);
+            var fit = UpToBreak(lines, placed, _fit.Fit(lines, placed, s.Flow.WidowControl));
             for (var k = 0; k < fit; k++)
             {
                 LinePlacer.Place(pages.Current, lines[placed + k], pages.Geometry.Left, pages.Y, owner);
@@ -83,6 +83,10 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         }
 
         Finish(p, box);
+        if (lines[^1].PageBreakAfter)
+        {
+            pages.NewPage();
+        }
     }
 
     // A new page for the rest of the paragraph, with the next part of its box if it has one.
@@ -117,6 +121,13 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
 
         var g = pages.Geometry;
         return LineBreaker.Break(p, g.ContentWidth, _ => "", new LineBounds(pages.Y, (top, height) => WrapRoom.Of(pages.Wraps, g.Left, (top, height), (0, g.ContentWidth))));
+    }
+
+    // As many of the lines that fit as come before a page break, the line it ends included; the rest go on the next page.
+    private static int UpToBreak(List<Line> lines, int placed, int fit)
+    {
+        var at = lines.FindIndex(placed, fit, l => l.PageBreakAfter);
+        return at < 0 ? fit : at - placed + 1;
     }
 
     private void Open(ParagraphBox? box, double before)

@@ -72,6 +72,9 @@ internal static class WordProbes
             .SelectMany(f => new[] { InFont(f.Item1, f.Item2, "w:line=\"480\" w:lineRule=\"exact\""), InFont(f.Item1, f.Item2, "w:line=\"240\" w:lineRule=\"auto\"") }).ToArray())));
         yield return ("probe-nested-table", PdfNestedTableTests.Letter(around: true));
         yield return ("probe-nested-table-alone", PdfNestedTableTests.Letter(around: false));
+        yield return ("probe-page-breaks", Letter("Arial", Extras.None, Body(Plain(Words),
+            "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"page\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>",
+            "<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>", Plain("The appendix, with the fees for the year."))));
         yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 

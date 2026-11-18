@@ -11,7 +11,8 @@ internal static class RunContent
     {
         "t" => new TextInline(style.Caps ? c.Value.ToUpperInvariant() : c.Value, style),
         "tab" => new TabInline(style),
-        "br" or "cr" => new BreakInline(style),
+        "br" => new BreakInline(style) { Page = (string?)c.Attribute(W + "type") is "page" or "column" },
+        "cr" => new BreakInline(style),
         "drawing" => PictureReader.Read(c, links.Files, style),
         _ => Note(c, style, links),
     };

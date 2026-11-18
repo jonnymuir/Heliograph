@@ -19,7 +19,11 @@ internal sealed record TextInline(string Text, RunStyle Style) : Inline(Style);
 
 internal sealed record TabInline(RunStyle Style) : Inline(Style);
 
-internal sealed record BreakInline(RunStyle Style) : Inline(Style);
+/// <summary>A line break; or, when Page, a page break, which also ends the page (a column break is one in a single column).</summary>
+internal sealed record BreakInline(RunStyle Style) : Inline(Style)
+{
+    public bool Page { get; init; }
+}
 
 /// <summary>A field worked out when laid out, such as a page number, and the number format its switch gives it, if any.</summary>
 internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style)

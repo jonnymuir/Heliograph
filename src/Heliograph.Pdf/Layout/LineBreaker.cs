@@ -19,6 +19,9 @@ internal sealed class Line
 
     /// <summary>What a block set in a cell like a line draws, a table inside a table, from the line's top left; else null.</summary>
     public IReadOnlyList<Op>? Block { get; init; }
+
+    /// <summary>Whether the line ends with a page break, so the paragraph goes on at the top of the next page.</summary>
+    public bool PageBreakAfter { get; set; }
 }
 
 /// <summary>Where a paragraph starts down its page, and the room a line has across it at a height, beside floating pictures.</summary>
@@ -48,6 +51,14 @@ internal static class LineBreaker
 
         builder.Finish();
         var lines = builder.Lines;
+
+        // A page break that ends its paragraph keeps the paragraph mark on its own line, as Word and LibreOffice lay it out:
+        // the paragraph ends there, and what follows starts on the next page.
+        if (lines is [.., { PageBreakAfter: true }, { Pieces.Count: 0 }])
+        {
+            lines.RemoveAt(lines.Count - 1);
+        }
+
         lines[^1].Last = true;
         return lines;
     }
@@ -94,6 +105,7 @@ internal static class LineBreaker
             {
                 case PieceKind.Break:
                     _line.EndsWithBreak = true;
+                    _line.PageBreakAfter = piece.PageBreak;
                     Next();
                     break;
                 case PieceKind.Tab:
@@ -284,8 +296,8 @@ internal static class LineBreaker
                 case TabInline:
                     pieces.Add(new Piece("\t", inline.Style, 0, PieceKind.Tab));
                     break;
-                case BreakInline:
-                    pieces.Add(new Piece("\n", inline.Style, 0, PieceKind.Break));
+                case BreakInline b:
+                    pieces.Add(new Piece("\n", inline.Style, 0, PieceKind.Break) { PageBreak = b.Page });
                     break;
                 case TextInline t:
                     Words(t.Text, t.Style, pieces);
