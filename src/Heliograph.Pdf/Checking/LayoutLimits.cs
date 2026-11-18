@@ -44,7 +44,7 @@ internal static class LayoutLimits
     [
         new(DiagnosticCodes.PdfCannotMakeLink, Links, _ => $"This document has a link. {Route} does not make links yet: the text would print, but could not be clicked.",
             $"Write the address out in full as plain text, {Instead}"),
-        new(DiagnosticCodes.PdfCannotDrawFormatting, Formatting, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
+        new(DiagnosticCodes.PdfCannotDrawFormatting, FormattingLimits.Found, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
             $"Take that formatting off, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",
             $"Set the text left to right, {Instead}"),
@@ -156,26 +156,6 @@ internal static class LayoutLimits
             .Select(t => (t, "in a centred or right-aligned paragraph"));
         return aligned.Concat(inAligned).Where(t => t.Item2.Length > 0);
     }
-
-    private static IEnumerable<(XElement, string)> Formatting(XElement root)
-    {
-        return root.Descendants().Select(e => (e, What: FormattingName(e))).Where(f => f.What is not null)!;
-    }
-
-    // Colour, highlight, run shading, strikethrough, superscript, subscript, capitals and character spacing are drawn.
-    private static string? FormattingName(XElement e) => e.Name.Namespace != W ? null : e.Name.LocalName switch
-    {
-        "shd" when e.Parent?.Name == W + "rPr" && Val(e) is not (null or "clear" or "solid" or "nil") => "patterned shading",
-        "shd" when e.Parent?.Name != W + "rPr" && (string?)e.Attribute(W + "fill") is { } fill && fill is not ("auto" or "FFFFFF" or "ffffff") => "shading behind a paragraph or cell",
-        "smallCaps" when On(e) => "small capitals",
-        "w" when e.Parent?.Name == W + "rPr" && Val(e) is { } scale && scale != "100" => "stretched or squeezed characters",
-        "position" when e.Parent?.Name == W + "rPr" && Val(e) is { } p && p != "0" => "text raised or lowered by a set amount",
-        "emboss" or "imprint" or "outline" or "shadow" when On(e) => "embossed, engraved, outlined or shadowed text",
-        "em" when Val(e) is not (null or "none") => "emphasis marks",
-        "fitText" => "text fitted to a set width",
-        "pBdr" => "a border round a paragraph",
-        _ => null,
-    };
 
     // Different headers on even pages only apply when the document turns them on.
     private static Diagnostic? EvenPages(DocumentToCheck document)

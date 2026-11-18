@@ -64,17 +64,7 @@ public class MeasuringNetTests
     public async Task Every_random_layout_is_laid_out_as_LibreOffice_lays_it_out(int share)
     {
         // The seeds are shared between three tests so they run side by side.
-        var failures = new List<string>();
-        for (var seed = 1 + share; seed <= Seeds; seed += 3)
-        {
-            var (line, difference) = await Difference(seed);
-            var recorded = FirstDifference.TryGetValue(seed, out var known) ? known : int.MaxValue;
-            if (line < recorded)
-            {
-                failures.Add($"seed {seed} now differs from line {line}, sooner than {(recorded == int.MaxValue ? "ever" : $"line {recorded}")}: {difference}");
-            }
-        }
-
+        var failures = await Failures(Enumerable.Range(0, Seeds).Where(n => n % 3 == share).Select(n => n + 1), LayoutMix.Everything, FirstDifference);
         failures.Should().BeEmpty(string.Join(Environment.NewLine, failures));
     }
 
@@ -83,18 +73,26 @@ public class MeasuringNetTests
     [InlineData(1)]
     public async Task Every_random_layout_made_mostly_of_lists_is_laid_out_as_LibreOffice_lays_it_out(int share)
     {
+        var failures = await Failures(Enumerable.Range(0, 10).Where(n => n % 2 == share).Select(n => n + 1), LayoutMix.MostlyLists, FirstDifferenceInLists);
+        failures.Should().BeEmpty(string.Join(Environment.NewLine, failures));
+    }
+
+    // Each seed that now differs sooner than its recorded line.
+    private static async Task<List<string>> Failures(IEnumerable<int> seeds, LayoutMix mix, Dictionary<int, int> recorded)
+    {
         var failures = new List<string>();
-        for (var seed = 1 + share; seed <= 10; seed += 2)
+        foreach (var seed in seeds)
         {
-            var (line, difference) = await Difference(seed, LayoutMix.MostlyLists);
-            var recorded = FirstDifferenceInLists.TryGetValue(seed, out var known) ? known : int.MaxValue;
-            if (line < recorded)
+            var (line, difference) = await Difference(seed, mix);
+            var known = recorded.TryGetValue(seed, out var first) ? first : int.MaxValue;
+            if (line < known)
             {
-                failures.Add($"lists seed {seed} now differs from line {line}, sooner than {(recorded == int.MaxValue ? "ever" : $"line {recorded}")}: {difference}");
+                var name = mix == LayoutMix.MostlyLists ? "lists seed" : "seed";
+                failures.Add($"{name} {seed} now differs from line {line}, sooner than {(known == int.MaxValue ? "ever" : $"line {known}")}: {difference}");
             }
         }
 
-        failures.Should().BeEmpty(string.Join(Environment.NewLine, failures));
+        return failures;
     }
 
     private static async Task<(int Line, string? Difference)> Difference(int seed, LayoutMix mix = LayoutMix.Everything)
