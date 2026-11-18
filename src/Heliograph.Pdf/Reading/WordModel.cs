@@ -33,7 +33,14 @@ internal sealed record Flow(bool KeepNext, bool KeepLines, bool WidowControl, bo
 /// of its space before is shared with the space after the paragraph above it: in a document without
 /// doNotUseHTMLParagraphAutoSpacing, Word and LibreOffice put the larger of the two between paragraphs, not their sum.
 /// </summary>
-internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<double> Tabs)
+/// <summary>A tab stop: where it is from the text area's left edge, how text lines up on it, and what fills the gap before it.</summary>
+internal sealed record TabStop(double Position, string Align = "left", string Leader = "none")
+{
+    /// <summary>A stop at the document's default interval, not one the paragraph sets.</summary>
+    public bool Implicit { get; init; }
+}
+
+internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<TabStop> Tabs)
 {
     public double DefaultTab { get; init; } = 36;
 

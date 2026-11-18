@@ -42,7 +42,9 @@ This plan is built to find out early and keep finding out.
   - colour, highlight and shading, single and double strikethrough, superscript and subscript,
     capitals and character spacing; hidden text is not drawn;
   - left, centred, right and justified text;
-  - indents, tab stops, line breaks;
+  - indents and line breaks;
+  - tab stops aligned left, right, centred or on the decimal point, with leaders of dots,
+    hyphens or a line;
   - the three line-spacing modes, and space before and after.
 - **Pages:** widow and orphan control, keep with next, keep together, page breaks.
 - **Lists:** as Word numbers them:
@@ -199,7 +201,8 @@ generated documents through both routes. Add the Word fixtures.
 - Character spacing. Done.
 - Kerning, matching what LibreOffice and Word do by default.
 - Non-breaking spaces and hyphens, and soft hyphens.
-- Right, centre and decimal tabs with leaders. Statements line figures up with these.
+- Right, centre and decimal tabs with leaders. Statements line figures up with these. Done (a
+  bar tab, and tabs in a centred or right-aligned paragraph, are still refused).
 - Hyperlinks, as link annotations tagged as links.
 
 ### 5. Paragraphs and pages

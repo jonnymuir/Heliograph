@@ -42,7 +42,8 @@ internal static class LinePlacer
             return;
         }
 
-        var node = owner.Node is null ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
+        // A leader is decoration, passed over by a screen reader.
+        var node = owner.Node is null || piece.Kind == PieceKind.Leader ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
         Emit(page, new TextOp(at.X, at.Baseline, piece.Text, piece.Style, node));
     }
 

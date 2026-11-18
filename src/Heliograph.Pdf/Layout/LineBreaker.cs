@@ -35,6 +35,7 @@ internal static class LineBreaker
             builder.Add(piece);
         }
 
+        builder.Finish();
         var lines = builder.Lines;
         lines[^1].Last = true;
         foreach (var line in lines)
@@ -54,6 +55,7 @@ internal static class LineBreaker
         private double _x;
         private bool _tabbed;
         private bool _afterTab;
+        private (int Index, double Origin, TabStop Stop, RunStyle Style)? _segment;
 
         public LineBuilder(ParagraphStyle style, double limit)
         {
@@ -70,7 +72,7 @@ internal static class LineBreaker
             var start = LabelLayout.Start(placement, _x, label.Width);
             _line.Pieces.Add((start, label));
             var end = start + label.Width;
-            _x = placement.Suffix == "tab" ? NextTab(end, _style, hanging: true) : end + LabelLayout.Gap(placement, label.Style);
+            _x = placement.Suffix == "tab" ? TabStops.Next(end, _style, hanging: true).Position : end + LabelLayout.Gap(placement, label.Style);
         }
 
         public void Add(Piece piece)
@@ -84,15 +86,7 @@ internal static class LineBreaker
                     Next();
                     break;
                 case PieceKind.Tab:
-                    // A tab whose stop is past the line's end starts the next line, and still takes effect there.
-                    var stop = NextTab(_x, _style, hanging: false);
-                    if (stop > _line.Limit)
-                    {
-                        Next();
-                        stop = NextTab(_x, _style, hanging: false);
-                    }
-
-                    _x = stop;
+                    Tab(piece);
                     break;
                 case PieceKind.Word when _x + piece.Width > _line.Limit + 0.01:
                     _afterTab = tabbed;
@@ -111,7 +105,10 @@ internal static class LineBreaker
             if (_line.Pieces.Any(q => q.Piece.Kind == PieceKind.Word && !q.Piece.IsLabel))
             {
                 Next();
-                _x = _afterTab ? NextTab(_x, _style, hanging: false) : _x;
+                if (_afterTab)
+                {
+                    Start(TabStops.Next(_x, _style, hanging: false), piece.Style);
+                }
             }
 
             if (piece.Picture is not null)
@@ -152,8 +149,83 @@ internal static class LineBreaker
 
         private void Next()
         {
+            CloseSegment();
             _line = NewLine();
             _x = _style.Indent.Left;
+        }
+
+        /// <summary>Lines up the text after the last tab, once the paragraph ends.</summary>
+        public void Finish() => CloseSegment();
+
+        // A tab whose stop is past the line's end starts the next line, and still takes effect there. Text after a left
+        // stop starts on it; text after a right, centred or decimal stop is lined up on it when it ends.
+        private void Tab(Piece tab)
+        {
+            CloseSegment();
+            var stop = TabStops.Next(_x, _style, hanging: false);
+            if (TabStops.PastEnd(stop, _line.Limit))
+            {
+                Next();
+                stop = TabStops.Next(_x, _style, hanging: false);
+            }
+
+            Start(stop, tab.Style);
+        }
+
+        // Text after a left stop starts on it; after a right, centred or decimal stop it is gathered, to line up later.
+        private void Start(TabStop stop, RunStyle style)
+        {
+            if (stop.Align == "left")
+            {
+                AddLeader(stop, _x, stop.Position, style, _line.Pieces.Count);
+                _x = stop.Position;
+                return;
+            }
+
+            _segment = (_line.Pieces.Count, _x, stop, style);
+        }
+
+        // The text since a right, centred or decimal tab, moved onto its stop, with the leader before it.
+        private void CloseSegment()
+        {
+            if (_segment is not var (index, origin, stop, style))
+            {
+                return;
+            }
+
+            _segment = null;
+            var pieces = _line.Pieces.GetRange(index, _line.Pieces.Count - index);
+            var start = TabStops.Start(stop, origin, _x - origin, ToDecimal(pieces, origin));
+            for (var k = index; k < _line.Pieces.Count; k++)
+            {
+                _line.Pieces[k] = (_line.Pieces[k].X + start - origin, _line.Pieces[k].Piece);
+            }
+
+            _x += start - origin;
+            AddLeader(stop, origin, start, style, index);
+        }
+
+        // How far along text after a tab its first full stop comes; all of it when it has none.
+        private static double ToDecimal(List<(double X, Piece Piece)> pieces, double origin)
+        {
+            foreach (var (x, piece) in pieces)
+            {
+                if (piece.Text.IndexOf('.', StringComparison.Ordinal) is var dot and >= 0)
+                {
+                    return x - origin + TextLook.Width(piece.Text[..dot], piece.Style);
+                }
+            }
+
+            return pieces.Count == 0 ? 0 : pieces[^1].X + pieces[^1].Piece.Width - origin;
+        }
+
+        private void AddLeader(TabStop stop, double from, double to, RunStyle style, int at)
+        {
+            // A leader ends where the text starts.
+            if (TabStops.Leader(stop, from, to, style) is { } leader)
+            {
+                _line.Pieces.Insert(at, (to - leader.Width, leader));
+            }
         }
 
         private Line NewLine()
@@ -232,21 +304,6 @@ internal static class LineBreaker
 
     private static bool IsBreakingHyphen(string word, int k) =>
         word[k] is '-' or '\u2010' or '\u2013' && char.IsLetter(word[k - 1]) && char.IsLetter(word[k + 1]);
-
-    // Tab stops are measured from the text area's left edge. A hanging indent is a stop for the label's tab.
-    private static double NextTab(double x, ParagraphStyle s, bool hanging)
-    {
-        var stops = hanging && s.Indent.FirstLine < 0 ? s.Tabs.Append(s.Indent.Left) : s.Tabs;
-        foreach (var stop in stops.Order())
-        {
-            if (stop > x + 0.01)
-            {
-                return stop;
-            }
-        }
-
-        return (Math.Floor((x + 0.01) / s.DefaultTab) + 1) * s.DefaultTab;
-    }
 
     private static void Measure(Line line, Paragraph p)
     {

@@ -112,26 +112,20 @@ internal static class PropertyReader
         return flow;
     }
 
-    private static List<double> TabsOf(IReadOnlyList<XElement> layers)
+    private static List<TabStop> TabsOf(IReadOnlyList<XElement> layers)
     {
-        var tabs = new List<double>();
+        var tabs = new List<TabStop>();
         foreach (var tab in layers.SelectMany(x => x.Element(W + "tabs")?.Elements(W + "tab") ?? []))
         {
             var position = Twips(tab, "pos") ?? 0;
-            switch (Val(tab))
+            tabs.RemoveAll(t => Math.Abs(t.Position - position) < 0.01);
+            if (Val(tab) is not ("clear" or "num"))
             {
-                case "clear":
-                    tabs.Remove(position);
-                    break;
-                case "num":
-                    break;
-                default:
-                    tabs.Add(position);
-                    break;
+                var align = Val(tab) switch { "right" or "end" => "right", "center" => "center", "decimal" => "decimal", _ => "left" };
+                tabs.Add(new TabStop(position, align, (string?)tab.Attribute(W + "leader") ?? "none"));
             }
         }
 
-        tabs.Sort();
-        return tabs;
+        return [.. tabs.OrderBy(t => t.Position)];
     }
 }

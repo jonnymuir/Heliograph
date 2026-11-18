@@ -141,14 +141,7 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Tabs(XElement root)
     {
         var aligned = root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "tabs")
-            .Select(t => (t, Val(t) switch
-            {
-                "right" or "end" => "aligned right",
-                "center" => "centred",
-                "decimal" => "aligned on the decimal point",
-                "bar" => "drawn as a bar",
-                _ => (string?)t.Attribute(W + "leader") is { } leader && leader != "none" ? "with a leader of dots or a line" : "",
-            }));
+            .Select(t => (t, Val(t) == "bar" ? "drawn as a bar" : ""));
 
         // A tab in a centred or right-aligned paragraph follows rules of its own in Word, not laid out yet.
         var inAligned = root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "r"

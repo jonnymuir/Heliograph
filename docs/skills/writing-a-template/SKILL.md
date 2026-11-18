@@ -252,8 +252,9 @@ character that makes every text message cost more.
 Some sites make PDFs with Heliograph's own converter, which is new. It does not yet lay out
 everything a word processor can. Where it cannot, the workbench says so when you upload, with
 the place and a fix (codes `HG4001` to `HG4014`). The main ones are floating pictures, text boxes, links,
-small capitals, footnotes, more than one section, and tab stops aligned right or on the decimal
-point. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
+small capitals, footnotes, more than one section, and a tab in a centred or right-aligned
+paragraph. Tab stops aligned left, right, centred or on the decimal point, with or without a
+leader, are laid out. Coloured, highlighted and shaded text, strikethrough, superscript, subscript, capitals
 and character spacing are all drawn. Pictures set in line with the text are drawn (PNG and JPEG); a picture that
 floats with text around it is not yet, so set it **In Line with Text**. Lists can have several levels, numbered with numbers, letters or Roman
 numerals, with Word's ordinary bullets; a picture used as a bullet, or a number style such as
