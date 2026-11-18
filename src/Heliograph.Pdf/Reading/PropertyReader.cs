@@ -67,7 +67,7 @@ internal static class PropertyReader
             }
         }
 
-        return new ParagraphStyle(outline, SpacingOf(layers), IndentOf(layers), align, FlowOf(layers), TabsOf(layers));
+        return new ParagraphStyle(outline, SpacingOf(layers), IndentOf(layers), align, FlowOf(layers), TabStopReader.Read(layers));
     }
 
     private static Spacing SpacingOf(IReadOnlyList<XElement> layers)
@@ -110,22 +110,5 @@ internal static class PropertyReader
         }
 
         return flow;
-    }
-
-    private static List<TabStop> TabsOf(IReadOnlyList<XElement> layers)
-    {
-        var tabs = new List<TabStop>();
-        foreach (var tab in layers.SelectMany(x => x.Element(W + "tabs")?.Elements(W + "tab") ?? []))
-        {
-            var position = Twips(tab, "pos") ?? 0;
-            tabs.RemoveAll(t => Math.Abs(t.Position - position) < 0.01);
-            if (Val(tab) is not ("clear" or "num"))
-            {
-                var align = Val(tab) switch { "right" or "end" => "right", "center" => "center", "decimal" => "decimal", _ => "left" };
-                tabs.Add(new TabStop(position, align, (string?)tab.Attribute(W + "leader") ?? "none"));
-            }
-        }
-
-        return [.. tabs.OrderBy(t => t.Position)];
     }
 }
