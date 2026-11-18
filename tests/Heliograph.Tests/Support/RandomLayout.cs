@@ -33,6 +33,7 @@ internal sealed class RandomLayout
     private readonly Random _pictures;
     private readonly Random _formatting;
     private readonly Random _tabs;
+    private readonly Random _spacingRules;
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
@@ -46,6 +47,7 @@ internal sealed class RandomLayout
         _pictures = new Random(seed + 20_000);
         _formatting = new Random(seed + 40_000);
         _tabs = new Random(seed + 50_000);
+        _spacingRules = new Random(seed + 60_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -131,11 +133,19 @@ internal sealed class RandomLayout
         }
         else
         {
-            var properties = ParagraphProperties();
-            var paragraph = Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal));
-            paragraph = RandomFormatting.Into(AlignedTabs(paragraph), _formatting);
-            _body.Append(_pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph);
+            _body.Append(PlainParagraph());
         }
+    }
+
+    // An ordinary paragraph: its spacing, indents, alignment and tabs, formatted runs, sometimes a picture. A fifth leave out
+    // space between paragraphs of the same style, as Word's List Paragraph does.
+    private string PlainParagraph()
+    {
+        var properties = ParagraphProperties();
+        properties = _spacingRules.Next(5) == 0 ? properties.Replace("<w:jc ", "<w:contextualSpacing/><w:jc ", StringComparison.Ordinal) : properties;
+        var aligned = properties.Contains("w:val=\"center\"", StringComparison.Ordinal) || properties.Contains("w:val=\"right\"", StringComparison.Ordinal);
+        var paragraph = RandomFormatting.Into(AlignedTabs(Paragraph(Words(1, 120), properties: properties, tabs: !aligned)), _formatting);
+        return _pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph;
     }
 
     private string ParagraphProperties()

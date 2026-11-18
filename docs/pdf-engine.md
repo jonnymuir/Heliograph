@@ -108,6 +108,10 @@ a change makes any seed differ sooner. Its first rounds found, and fixed:
 - superscript and subscript are drawn at 58% of the size, their top or foot meeting the full-size
   text's, and a line is as tall as it would be without them;
 - a paragraph kept with the next counts its space after, which comes between them;
+- Don't add space between paragraphs of the same style, as LibreOffice reads it: a paragraph
+  that says so drops its space after before one of its style, and its space before when the one
+  above says so too, or, where the larger spacing is kept, whenever it says so itself (with
+  Word's List Paragraph the style says so, and every reading agrees);
 - the extra space under a line set wider than single may hang below the foot of a page.
 
 It also found something to refuse: a tab in a centred or right-aligned paragraph (`HG4011`).

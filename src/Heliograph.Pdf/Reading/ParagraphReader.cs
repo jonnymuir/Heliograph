@@ -11,7 +11,8 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
     public Paragraph Read(XElement p)
     {
         var pPr = p.Element(W + "pPr");
-        var chain = styles.Chain(Val(pPr?.Element(W + "pStyle")) ?? styles.DefaultParagraph);
+        var styleId = Val(pPr?.Element(W + "pStyle")) ?? styles.DefaultParagraph;
+        var chain = styles.Chain(styleId);
         var place = numbering.Place(pPr?.Element(W + "numPr") ?? chain.Select(s => s.Element(W + "pPr")?.Element(W + "numPr")).LastOrDefault(n => n is not null));
         var level = place?.Definition;
 
@@ -19,7 +20,13 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         paragraphLayers.AddRange(chain.Select(s => s.Element(W + "pPr")));
         paragraphLayers.Add(level?.Element(W + "pPr"));
         paragraphLayers.Add(pPr);
-        var style = PropertyReader.Paragraph(paragraphLayers.OfType<XElement>().ToList()) with { DefaultTab = defaultTab };
+        var layers = paragraphLayers.OfType<XElement>().ToList();
+        var style = PropertyReader.Paragraph(layers) with
+        {
+            DefaultTab = defaultTab,
+            StyleId = styleId,
+            Contextual = layers.LastOrDefault(l => l.Element(W + "contextualSpacing") is not null)?.Element(W + "contextualSpacing") is { } c && On(c),
+        };
 
         var runLayers = new List<XElement?> { styles.DefaultRun };
         runLayers.AddRange(chain.Select(s => s.Element(W + "rPr")));

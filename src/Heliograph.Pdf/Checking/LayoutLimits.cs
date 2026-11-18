@@ -72,6 +72,16 @@ internal static class LayoutLimits
             diagnostics.Add(even);
         }
 
+        // LibreOffice turns automatic hyphenation on in the settings of every document it saves, and off again for every
+        // paragraph in the defaults; only the two together hyphenate.
+        var suppressed = On(document.Styles?.Root?.Element(W + "docDefaults")?.Element(W + "pPrDefault")?.Element(W + "pPr")?.Element(W + "suppressAutoHyphens"));
+        if (On(document.Settings?.Root?.Element(W + "autoHyphenation")) && !suppressed)
+        {
+            diagnostics.Add(new Diagnostic(DiagnosticCodes.PdfCannotDrawFormatting,
+                $"This document hyphenates words automatically. {Route} does not hyphenate yet, so lines would break in different places.",
+                $"Turn off automatic hyphenation (Layout > Hyphenation in Word), {Instead}"));
+        }
+
         diagnostics.AddRange(ListLimits.Check(document));
         diagnostics.AddRange(PictureLimits.Check(document));
         diagnostics.AddRange(LinkLimits.Check(document));

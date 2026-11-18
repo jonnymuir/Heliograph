@@ -62,7 +62,13 @@ internal sealed class WordReader : IDisposable
         {
             if (e.Name == W + "p")
             {
-                blocks.Add(Spaced(_paragraphs.Read(e), blocks.LastOrDefault()));
+                var p = _paragraphs.Read(e);
+                if (blocks.LastOrDefault() is Paragraph above)
+                {
+                    (blocks[^1], p) = ParagraphSpacing.Between(above, p, _largerSpacing);
+                }
+
+                blocks.Add(p);
             }
             else if (e.Name == W + "tbl")
             {
@@ -76,10 +82,6 @@ internal sealed class WordReader : IDisposable
 
         return blocks;
     }
-
-    private Paragraph Spaced(Paragraph p, Block? above) => _largerSpacing && above is Paragraph prev
-        ? p with { Style = p.Style with { Overlap = Math.Min(p.Style.Spacing.Before, prev.Style.Spacing.After) } }
-        : p;
 
     private IReadOnlyList<Block>? Story(XElement sect, string kind, string type)
     {
