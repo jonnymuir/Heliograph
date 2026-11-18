@@ -80,13 +80,14 @@ This plan is built to find out early and keep finding out.
   figures, letters or Roman numerals. A section break that does not start a new page or starts
   on an odd or even page, a border round the page, line numbers, text set in the middle of the
   page, a gutter, and margins mirrored on facing pages are refused.
-- **Footnotes** referred to from the body: numbered 1, 2, 3 in the order they are referred to, at
+- **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's
   own separator says, and the body stops above it; a line that refers to a note goes on a page
   only with its note. A note is not split across pages, where Word and LibreOffice may carry the
-  rest of a long one over. Footnotes in a table, and notes numbered or placed some other way, are
-  still refused.
+  rest of a long one over. A table row's footnotes take room on its page; where that moves the
+  row to the next page, LibreOffice leaves a gap a row high above it, and a Word probe will say
+  which is right. Notes numbered or placed some other way are still refused.
 - **Endnotes**, numbered i, ii, iii in the order they are referred to, after the letter's text:
   one single line of the default style below the foot of its last line, with the separator drawn
   across it, as for footnotes, then the notes, carrying on to further pages as they need. Notes of

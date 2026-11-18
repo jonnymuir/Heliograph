@@ -6,10 +6,11 @@ namespace Heliograph.Pdf.Layout;
 /// Lays out a table row by row. As in Word, a row that does not fit breaks across the page: each cell carries on from its
 /// own last line that fits, under the heading rows drawn again as artifacts. A heading row, or one marked not to break,
 /// moves whole to the next page instead. The text sits at the table's indent, the border one cell padding to its left.
+/// A row's footnotes take room on its page: all those still to come in it, while working out how much of it fits.
 /// </summary>
-internal sealed class TableFlow(PageSet pages)
+internal sealed class TableFlow(PageSet pages, PageNotes notes)
 {
-    private readonly CellPainter _cells = new(pages);
+    private readonly CellPainter _cells = new(pages, notes);
 
     public void Run(Table t, StructNode node)
     {
@@ -38,9 +39,9 @@ internal sealed class TableFlow(PageSet pages)
     private void Place(Table t, Row row, RowLayout cells, List<Row> headings)
     {
         var from = new int[cells.Count];
-        while (cells.Need(from) > pages.Room + 0.01)
+        while (cells.Need(from) > Room(cells, from) + 0.01)
         {
-            var cut = Breakable(row, from) ? cells.Cut(from, pages.Room) : null;
+            var cut = Breakable(row, from) ? cells.Cut(from, Room(cells, from)) : null;
             if (cut is null && pages.HasContent)
             {
                 NewPage(t, headings, row);
@@ -48,7 +49,7 @@ internal sealed class TableFlow(PageSet pages)
             }
 
             // Nothing fits even on an empty page: place what fits, at least a line of each cell, and go on.
-            cut ??= cells.Cut(from, pages.Room, atLeastOne: true);
+            cut ??= cells.Cut(from, Room(cells, from), atLeastOne: true);
             if (cut is null)
             {
                 break;
@@ -66,7 +67,7 @@ internal sealed class TableFlow(PageSet pages)
     private void PlaceMerged(Table t, List<RowLayout> group, List<Row> headings, Row first)
     {
         var heights = MergedRows.Heights(group);
-        if (Moves(heights.Sum()))
+        if (Moves(heights.Sum() + notes.Footnotes.Cost(group.SelectMany(Lines))))
         {
             NewPage(t, headings, first);
         }
@@ -87,6 +88,12 @@ internal sealed class TableFlow(PageSet pages)
             pages.HasContent = true;
         }
     }
+
+    // The room on this page for the rest of a row, less what its footnotes still to come would take.
+    private double Room(RowLayout cells, int[] from) =>
+        pages.Room - notes.Footnotes.Cost(Enumerable.Range(0, cells.Count).SelectMany(c => cells[c].Lines.Skip(from[c]).Select(l => l.Line)));
+
+    private static IEnumerable<Line> Lines(RowLayout cells) => Enumerable.Range(0, cells.Count).SelectMany(c => cells[c].Lines.Select(l => l.Line));
 
     // Whether rows kept together go to the next page: they do not fit here, but would on a page of their own.
     private bool Moves(double height) => pages.HasContent && height > pages.Room + 0.01 && height <= pages.BodyBottom - pages.BodyTop;

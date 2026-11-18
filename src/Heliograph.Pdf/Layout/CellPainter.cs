@@ -2,8 +2,11 @@ using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
-/// <summary>Draws one cell of a table row at the page's current position: its shading, its lines and its borders.</summary>
-internal sealed class CellPainter(PageSet pages)
+/// <summary>
+/// Draws one cell of a table row at the page's current position: its shading, its lines and its borders. A line's notes go
+/// on the page with it, unless the row is a heading drawn again on a later page.
+/// </summary>
+internal sealed class CellPainter(PageSet pages, PageNotes notes)
 {
     // One cell's shading, its lines from one index to another, moved down by an offset, and its borders.
     public void Draw(RowLayout cells, int c, int from, int end, double height, double down)
@@ -19,6 +22,10 @@ internal sealed class CellPainter(PageSet pages)
         {
             var (top, line, owner) = cell.Lines[k];
             LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
+            if (owner.Node is not null)
+            {
+                notes.Place(line, owner.Node);
+            }
         }
 
         Borders(cell.Borders, left, cell.Width, height);

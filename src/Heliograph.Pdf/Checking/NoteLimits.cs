@@ -5,7 +5,7 @@ using static Heliograph.Pdf.Reading.WordXml;
 namespace Heliograph.Pdf.Checking;
 
 /// <summary>
-/// Notes the converter lays out: footnotes at the foot of each page, referred to from the body outside a table, and
+/// Notes the converter lays out: footnotes at the foot of each page, referred to from the body or a table, and
 /// endnotes after the letter, numbered through the letter as the document's settings say, holding paragraphs and pictures
 /// in line with the text. Anything else is not yet.
 /// </summary>
@@ -22,7 +22,6 @@ internal static class NoteLimits
     private static string? What(XElement e) => e.Name.LocalName switch
     {
         _ when e.Name.Namespace != W && e.Name != Wp + "anchor" => null,
-        "footnoteReference" when e.Ancestors(W + "tbl").Any() => "a footnote in a table",
         "footnoteReference" or "endnoteReference" when On(e.Attribute(W + "customMarkFollows")) => "a note with a mark of its own",
         "footnotePr" or "endnotePr" when e.Parent?.Name == W + "sectPr" => NoteSettings.InSection(e),
         "tbl" when InNote(e) => "a table in a note",
