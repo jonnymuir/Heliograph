@@ -12,10 +12,15 @@ internal sealed class TableFlow(PageSet pages)
     public void Run(Table t, StructNode node)
     {
         var headings = t.Rows.TakeWhile(r => r.Header).ToList();
+        RowLayout? last = null;
         foreach (var row in t.Rows)
         {
-            Place(t, row, RowLayout.Of(t, row, node.Add("TR")), headings);
+            last = RowLayout.Of(t, row, node.Add("TR"), pages.Geometry.ContentWidth);
+            Place(t, row, last, headings);
         }
+
+        // The table's bottom border sits below its last row.
+        pages.Y += last?.BottomBorder ?? 0;
     }
 
     // Places a row: whole if it fits, else broken across pages where it can be, else moved whole to the next page.
@@ -59,7 +64,7 @@ internal sealed class TableFlow(PageSet pages)
         {
             foreach (var heading in headings)
             {
-                var cells = RowLayout.Of(t, heading, null);
+                var cells = RowLayout.Of(t, heading, null, pages.Geometry.ContentWidth);
                 var from = new int[cells.Count];
                 Draw(cells, from, null, cells.Need(from));
             }
@@ -74,6 +79,9 @@ internal sealed class TableFlow(PageSet pages)
             var cell = cells[c];
             var end = to?[c] ?? cell.Lines.Count;
             var offset = from[c] < cell.Lines.Count ? cell.Lines[from[c]].Top : 0;
+            // In a row placed whole, a cell's text sits at its top, middle or foot; in a row broken across pages, at its top,
+            // as LibreOffice lays it out.
+            offset -= to is null && from.All(f => f == 0) ? cells.Offset(c, height) : 0;
             for (var k = from[c]; k < end; k++)
             {
                 var (top, line, owner) = cell.Lines[k];

@@ -61,14 +61,28 @@ internal sealed record Border(double Width);
 
 internal sealed record CellBorders(Border? Top, Border? Left, Border? Bottom, Border? Right);
 
-internal sealed record Cell(IReadOnlyList<Block> Blocks, int Span, CellBorders Borders);
+/// <summary>A cell: its text, how many grid columns it spans, its borders, and where its text sits ("top", "center", "bottom").</summary>
+internal sealed record Cell(IReadOnlyList<Block> Blocks, int Span, CellBorders Borders)
+{
+    public string VAlign { get; init; } = "top";
+}
 
 /// <summary>A table row. Rows break across pages unless marked not to; heading rows repeat at the top of each page.</summary>
-internal sealed record Row(IReadOnlyList<Cell> Cells, bool Header, bool CantSplit);
+internal sealed record Row(IReadOnlyList<Cell> Cells, bool Header, bool CantSplit)
+{
+    /// <summary>The row's set height, if any: at least that, or exactly that.</summary>
+    public double Height { get; init; }
+
+    public bool ExactHeight { get; init; }
+}
 
 internal sealed record CellMargins(double Left, double Right, double Top, double Bottom);
 
-internal sealed record Table(IReadOnlyList<double> Grid, IReadOnlyList<Row> Rows, double Indent, CellMargins Margins) : Block;
+/// <summary>A table: its column grid, rows, indent, cell padding, and where it sits across the text area ("left", "center", "right").</summary>
+internal sealed record Table(IReadOnlyList<double> Grid, IReadOnlyList<Row> Rows, double Indent, CellMargins Margins) : Block
+{
+    public string Align { get; init; } = "left";
+}
 
 internal sealed record PageGeometry(double Width, double Height, double Top, double Bottom, double Left, double Right, double HeaderDistance, double FooterDistance)
 {

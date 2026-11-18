@@ -3,7 +3,10 @@ using Heliograph.Pdf.Reading;
 namespace Heliograph.Pdf.Layout;
 
 /// <summary>One cell of a row, broken into lines, each with its top measured from the top of the cell's text.</summary>
-internal sealed record CellLayout(double Left, double Width, double TextLeft, CellBorders Borders, List<(double Top, Line Line, Owner Owner)> Lines, double Height);
+internal sealed record CellLayout(double Left, double Width, double TextLeft, CellBorders Borders, List<(double Top, Line Line, Owner Owner)> Lines, double Height)
+{
+    public string VAlign { get; init; } = "top";
+}
 
 /// <summary>
 /// A row's cells laid out as lines, so the row can be measured whole or from where a page broke it, and cut where a page
@@ -13,21 +16,29 @@ internal sealed class RowLayout
 {
     private readonly List<CellLayout> _cells;
     private readonly double _below;
+    private readonly Row _row;
+    private readonly double _topBorder;
 
-    private RowLayout(List<CellLayout> cells, double above, double below)
+    private RowLayout(List<CellLayout> cells, (double Padding, double Border) above, double below, Row row)
     {
         _cells = cells;
-        Above = above;
+        Above = above.Padding + above.Border;
+        _topBorder = above.Border;
         _below = below;
+        _row = row;
     }
+
+    /// <summary>The widest bottom border of the row's cells, which the last row of a table adds below itself.</summary>
+    public double BottomBorder => _cells.Max(c => c.Borders.Bottom?.Width ?? 0);
 
     public double Above { get; }
     public int Count => _cells.Count;
     public CellLayout this[int c] => _cells[c];
 
-    public static RowLayout Of(Table t, Row row, StructNode? rowNode)
+    /// <summary>A row laid out in a text area this wide, across which the table is aligned.</summary>
+    public static RowLayout Of(Table t, Row row, StructNode? rowNode, double area = 0)
     {
-        var x = t.Indent - t.Margins.Left;
+        var x = TableLeft(t, area);
         var column = 0;
         var cells = new List<CellLayout>();
         var topBorder = 0.0;
@@ -41,8 +52,26 @@ internal sealed class RowLayout
             x += width;
         }
 
-        return new RowLayout(cells, t.Margins.Top + topBorder, t.Margins.Bottom);
+        return new RowLayout(cells, (t.Margins.Top, topBorder), t.Margins.Bottom, row);
     }
+
+    // Where the table's left border goes: at its indent, a cell's padding left of the text, or centred or to the right.
+    private static double TableLeft(Table t, double width) => t.Align switch
+    {
+        "center" when width > 0 => (width - t.Grid.Sum()) / 2,
+        "right" when width > 0 => width - t.Grid.Sum(),
+        _ => t.Indent - t.Margins.Left,
+    };
+
+    /// <summary>How far down a whole row of this height a cell's text starts: at the top, the middle or the bottom.</summary>
+    public double Offset(int c, double height) => _cells[c].VAlign switch
+    {
+        "center" => Math.Max(0, (height - Natural(c)) / 2),
+        "bottom" => Math.Max(0, height - Natural(c)),
+        _ => 0,
+    };
+
+    private double Natural(int c) => Above + _cells[c].Height + _below;
 
     // The cell's text area is the cell less its padding and half of each side border.
     private static CellLayout Cell(Table t, Cell cell, double x, double width, StructNode? cellNode)
@@ -63,7 +92,7 @@ internal sealed class RowLayout
             y += p.Style.Spacing.After;
         }
 
-        return new CellLayout(x, width, x + t.Margins.Left, cell.Borders, lines, y);
+        return new CellLayout(x, width, x + t.Margins.Left, cell.Borders, lines, y) { VAlign = cell.VAlign };
     }
 
     /// <summary>The height the row needs from these lines on, up to these lines (or to the end).</summary>
@@ -79,7 +108,10 @@ internal sealed class RowLayout
             content = Math.Max(content, bottom - start);
         }
 
-        return Above + content + _below;
+        // A whole row is exactly the height it sets, or at least that height below its top border, as LibreOffice lays it out.
+        var need = Above + content + _below;
+        var whole = to is null && from.All(f => f == 0);
+        return !whole || _row.Height <= 0 ? need : _row.ExactHeight ? _row.Height : Math.Max(need, _row.Height + _topBorder);
     }
 
     /// <summary>
