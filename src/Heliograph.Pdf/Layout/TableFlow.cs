@@ -9,6 +9,8 @@ namespace Heliograph.Pdf.Layout;
 /// </summary>
 internal sealed class TableFlow(PageSet pages)
 {
+    private readonly CellPainter _cells = new(pages);
+
     public void Run(Table t, StructNode node)
     {
         var headings = t.Rows.TakeWhile(r => r.Header).ToList();
@@ -77,7 +79,7 @@ internal sealed class TableFlow(PageSet pages)
                 if (cells.Source[c].VMerge != "continue")
                 {
                     var height = cells.Source[c].VMerge == "restart" ? MergedRows.Down(group, heights, k, c) : heights[k];
-                    DrawCell(cells, c, 0, cells[c].Lines.Count, height, cells.Offset(c, height));
+                    _cells.Draw(cells, c, 0, cells[c].Lines.Count, height, cells.Offset(c, height));
                 }
             }
 
@@ -117,53 +119,10 @@ internal sealed class TableFlow(PageSet pages)
         var whole = to is null && from.All(f => f == 0);
         for (var c = 0; c < cells.Count; c++)
         {
-            DrawCell(cells, c, from[c], to?[c] ?? cells[c].Lines.Count, height, whole ? cells.Offset(c, height) : 0);
+            _cells.Draw(cells, c, from[c], to?[c] ?? cells[c].Lines.Count, height, whole ? cells.Offset(c, height) : 0);
         }
 
         pages.Y += height;
         pages.HasContent = true;
-    }
-
-    // One cell's shading, its lines from one index to another, moved down by an offset, and its borders.
-    private void DrawCell(RowLayout cells, int c, int from, int end, double height, double down)
-    {
-        var cell = cells[c];
-        var (left, offset) = (pages.Geometry.Left + cell.Left, (from < cell.Lines.Count ? cell.Lines[from].Top : 0) - down);
-        if (cells.Source[c].Background is { } shading)
-        {
-            pages.Current.Ops.Add(new FillOp(left, pages.Y, cell.Width, height, shading));
-        }
-
-        for (var k = from; k < end; k++)
-        {
-            var (top, line, owner) = cell.Lines[k];
-            LinePlacer.Place(pages.Current, line, pages.Geometry.Left + cell.TextLeft, pages.Y + cells.Above + (top - offset), owner);
-        }
-
-        Borders(cell.Borders, left, cell.Width, height);
-    }
-
-    private void Borders(CellBorders b, double x, double width, double height)
-    {
-        var (top, ops) = (pages.Y, pages.Current.Ops);
-        if (b.Top is { } t)
-        {
-            ops.Add(new LineOp(x, top, x + width, top, t.Width));
-        }
-
-        if (b.Bottom is { } bottom)
-        {
-            ops.Add(new LineOp(x, top + height, x + width, top + height, bottom.Width));
-        }
-
-        if (b.Left is { } left)
-        {
-            ops.Add(new LineOp(x, top, x, top + height, left.Width));
-        }
-
-        if (b.Right is { } right)
-        {
-            ops.Add(new LineOp(x + width, top, x + width, top + height, right.Width));
-        }
     }
 }
