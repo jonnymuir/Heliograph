@@ -42,8 +42,9 @@ public sealed class HeliographPdfConverter(HeliographPdfOptions? options = null)
             var (pages, root) = PageLayout.Run(document, _options.MaxPages, cancellationToken);
             return Task.FromResult(DocumentWriter.Write(document, pages, root));
         }
-        catch (PageLimitException e)
+        catch (Exception e) when (e is PageLimitException or UndrawableCharacterException)
         {
+            // A fault in one recipient's data, such as a name in a script no built-in font has: said without quoting it.
             throw new PdfConversionException(e.Message, e);
         }
         catch (Exception e) when (e is InvalidDataException or System.Xml.XmlException or ArgumentException or IndexOutOfRangeException or FormatException)

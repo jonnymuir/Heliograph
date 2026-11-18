@@ -69,12 +69,22 @@ public class PdfTests
     [EditorFact]
     public async Task Converting_leaves_nothing_behind_in_the_temporary_folder()
     {
-        var before = Directory.GetDirectories(Path.GetTempPath(), "heliograph-pdf-*").Length;
+        // Other tests convert at the same time, so their folders come and go. A folder this conversion left behind would
+        // stay; every other new one is gone once its own conversion ends.
+        var before = Folders();
 
         await new LibreOfficePdfConverter().ConvertAsync(Letter("acknowledgement", "typical"));
 
-        Directory.GetDirectories(Path.GetTempPath(), "heliograph-pdf-*").Should().HaveCount(before);
+        var left = Folders().Except(before).ToList();
+        for (var waited = 0; left.Any(Directory.Exists) && waited < 120; waited++)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+
+        left.Where(Directory.Exists).Should().BeEmpty();
     }
+
+    private static HashSet<string> Folders() => [.. Directory.GetDirectories(Path.GetTempPath(), "heliograph-pdf-*")];
 
     [EditorFact]
     public async Task Letters_can_be_converted_side_by_side()

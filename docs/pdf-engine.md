@@ -206,7 +206,9 @@ generated documents through both routes. Add the Word fixtures.
   - Calibri → Carlito;
   - Cambria → Caladea.
 - **Fallback per character.** A character the chosen font lacks is drawn from the next font
-  that has it. A character no font has is a compile error.
+  that has it. A character no font has is a compile error. Done: the built-in fonts are tried in
+  turn (Liberation Sans, Serif and Mono, Carlito, Caladea); one none has is refused in a template
+  (`HG4015`) and, in a recipient's data, fails that letter's conversion without quoting it.
 - **More font files:** TrueType collections and OpenType with CFF outlines (subset, or embedded
   whole).
 

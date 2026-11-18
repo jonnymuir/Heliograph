@@ -86,6 +86,7 @@ internal static class LayoutLimits
         diagnostics.AddRange(PictureLimits.Check(document));
         diagnostics.AddRange(LinkLimits.Check(document));
         diagnostics.AddRange(TableLimits.Check(document));
+        diagnostics.AddRange(GlyphLimits.Check(document));
         diagnostics.AddRange(FontLimits.Check(document));
 
         return diagnostics;

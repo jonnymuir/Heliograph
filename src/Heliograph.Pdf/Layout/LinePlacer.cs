@@ -48,7 +48,12 @@ internal static class LinePlacer
 
         // A leader is decoration, passed over by a screen reader.
         var node = owner.Node is null || piece.Kind == PieceKind.Leader ? null : piece.IsLabel ? owner.Label ?? owner.Node : owner.Node;
-        Emit(page, new TextOp(at.X, at.Baseline, piece.Text, piece.Style, node));
+        var x = at.X;
+        foreach (var (text, style) in piece.Segments ?? [(piece.Text, piece.Style)])
+        {
+            Emit(page, new TextOp(x, at.Baseline, text, style, node));
+            x += TextLook.Width(text, style);
+        }
     }
 
     // A described picture is a figure in its paragraph; any other is an artifact a screen reader passes over.
