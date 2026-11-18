@@ -140,7 +140,8 @@ to a twip in a way that differs by font, size and platform (a line of Times New 
 11.55pt there, 11.5pt here). Chasing that would mean matching one build of LibreOffice, so it is
 left until Word fixtures show what Word does.
 
-The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
+Word fixtures are made by `tools/Heliograph.WordFixtures` (see its README), and compared by
+`WordConformityTests`. The first Word fixture is in (`tests/Heliograph.Tests/Fixtures/Word`): a document made from a
 blank one in Word for the web, and the PDF Word exported from it. A new Word document leaves out
 `doNotUseHTMLParagraphAutoSpacing`, which LibreOffice and the benchmark letters write. Without it,
 Word puts the larger of a paragraph's space after and the next one's space before between them,
@@ -157,7 +158,7 @@ Every check runs in CI, and an agent can run all of them without a person.
 | Same words | Copying out and screen readers get the right text in the right order | Text extracted from our PDF equals text extracted from LibreOffice's for the same letter |
 | Same layout | Lines break, pages break and things sit where LibreOffice puts them | Compare the position of every line in the two PDFs: same words on each line, same page, baseline within a tolerance. A pixel comparison of page images backs it up |
 | Many documents | It works beyond the letters it was written for | The randomised template generator writes documents with every feature the engine claims; each goes through both routes and all the checks above. A failure names a seed |
-| Word | It matches what authors see | The maintainer exports a PDF from Microsoft 365 for each benchmark letter once. It is committed and compared by the same layout measure, and reviewed by eye when it differs |
+| Word | It matches what authors see | `tools/Heliograph.WordFixtures` has Word for the web lay out a set of rendered letters (the benchmark letters, some of the net's documents, and a probe for each rule taken from LibreOffice where Word may differ) through Microsoft Graph and the maintainer's OneDrive. The PDFs are committed, and `WordConformityTests` compares the converter with each by the same layout measure, with a ratchet of its own |
 | Same bytes | Deterministic | Convert twice, compare |
 | Fast and small | Fit for a small server | A budget test: time and memory per letter, and 50 letters at once |
 | Robust | A strange document fails clearly and never hangs | Malformed and hostile documents, and generated ones pushed to extremes: each finishes within a time limit or is refused with a reason |

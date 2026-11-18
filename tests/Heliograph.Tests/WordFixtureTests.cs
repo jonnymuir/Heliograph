@@ -7,7 +7,7 @@ namespace Heliograph.Tests;
 
 /// <summary>
 /// Documents saved by Microsoft 365 with the PDF Word itself exported from them, the check on LibreOffice as the reference
-/// (docs/pdf-engine.md). Fixtures/Word/new-document.docx was made from a blank document in Word for the web; its text says
+/// (docs/pdf-engine.md). Fixtures/Word/inputs/new-document.docx was made from a blank document in Word for the web; its text says
 /// how. A new Word document leaves out doNotUseHTMLParagraphAutoSpacing, and Word then puts the larger of a paragraph's
 /// space after and the next one's space before between them, not their sum.
 /// </summary>
@@ -24,7 +24,7 @@ public class WordFixtureTests
     [PdfLinesFact]
     public async Task The_built_in_converter_spaces_paragraphs_as_Word_does_in_a_new_document()
     {
-        var pdf = await new HeliographPdfConverter().ConvertAsync(File.ReadAllBytes(Fixture("new-document.docx")));
+        var pdf = await new HeliographPdfConverter().ConvertAsync(File.ReadAllBytes(Fixture(Path.Combine("inputs", "new-document.docx"))));
 
         GapAboveHeading(pdf).Should().BeApproximately(Larger, 1);
     }
@@ -32,7 +32,7 @@ public class WordFixtureTests
     [PdfLinesFact]
     public async Task With_doNotUseHTMLParagraphAutoSpacing_the_two_spacings_are_added()
     {
-        var docx = WithSetting(File.ReadAllBytes(Fixture("new-document.docx")), "<w:doNotUseHTMLParagraphAutoSpacing />");
+        var docx = WithSetting(File.ReadAllBytes(Fixture(Path.Combine("inputs", "new-document.docx"))), "<w:doNotUseHTMLParagraphAutoSpacing />");
 
         GapAboveHeading(await new HeliographPdfConverter().ConvertAsync(docx)).Should().BeApproximately(Sum, 1);
     }
