@@ -24,6 +24,6 @@ internal static class PageStories
     public static TextArea Area((IReadOnlyList<Block> Header, IReadOnlyList<Block> Footer) stories, PageGeometry g) => new(
         Math.Max(g.Top, g.HeaderDistance + Height(stories.Header, g)), g.Height - Math.Max(g.Bottom, g.FooterDistance + Height(stories.Footer, g)));
 
-    public static double Height(IReadOnlyList<Block> blocks, PageGeometry g, Func<string, string>? field = null) =>
+    public static double Height(IReadOnlyList<Block> blocks, PageGeometry g, Func<FieldInline, string>? field = null) =>
         blocks.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, field ?? (_ => "9")).Sum(l => l.Height) + p.Style.Spacing.After);
 }

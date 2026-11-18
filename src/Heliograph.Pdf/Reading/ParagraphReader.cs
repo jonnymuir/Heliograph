@@ -52,7 +52,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         {
             if (r.Name == W + "fldSimple")
             {
-                inlines.Add(new FieldInline(FieldState.Name((string?)r.Attribute(W + "instr")), PropertyReader.Run(runLayers)));
+                inlines.Add(FieldState.Inline((string?)r.Attribute(W + "instr"), PropertyReader.Run(runLayers)));
             }
             else if (!r.Ancestors(W + "fldSimple").Any())
             {
@@ -100,8 +100,11 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
         private string? _instruction;
         private bool _inResult;
 
-        public static string Name(string? instruction) =>
-            (instruction ?? "").Trim().Split(' ', 2)[0].ToUpperInvariant();
+        public static FieldInline Inline(string? instruction, RunStyle style)
+        {
+            var read = FieldInstruction.Parse(instruction);
+            return new FieldInline(read.Name, style) { Format = read.Format };
+        }
 
         public bool Consume(XElement c, RunStyle style, List<Inline> inlines)
         {
@@ -113,7 +116,7 @@ internal sealed class ParagraphReader(StyleSheet styles, NumberingDefinitions nu
                         _instruction = "";
                         break;
                     case "separate":
-                        inlines.Add(new FieldInline(Name(_instruction), style));
+                        inlines.Add(Inline(_instruction, style));
                         _inResult = true;
                         break;
                     case "end":

@@ -38,6 +38,7 @@ internal static class WordProbes
         body.AddRange(Enumerable.Range(0, 27).Select(i => NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership.")));
         body.Add(NoteTables.FeesTable(2));
         body.Add(NoteLetters.Referring("The late charge is ten pounds.", 3));
+        yield return ("probe-page-fields", Rendered(FieldLetters.Letter()));
         yield return ("probe-table-footnote", Rendered(NoteLetters.Letter(body, "Membership runs from April to March.", "Charged on fees paid after the end of April.", "A third note.")));
     }
 

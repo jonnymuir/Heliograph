@@ -21,7 +21,11 @@ internal sealed record TabInline(RunStyle Style) : Inline(Style);
 
 internal sealed record BreakInline(RunStyle Style) : Inline(Style);
 
-internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style);
+/// <summary>A field worked out when laid out, such as a page number, and the number format its switch gives it, if any.</summary>
+internal sealed record FieldInline(string Field, RunStyle Style) : Inline(Style)
+{
+    public string? Format { get; init; }
+}
 
 /// <summary>A reference to a footnote: its mark, the note's number, and the note it refers to.</summary>
 internal sealed record NoteInline(string Mark, string Id, RunStyle Style) : Inline(Style)
