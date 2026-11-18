@@ -20,10 +20,10 @@ internal static class DocumentWriter
         var images = new ImageEmbedder(objects);
         var pageIds = pages.Select(_ => objects.Reserve()).ToList();
         var marked = new List<List<StructNode>>();
-        var g = document.Section.Page;
         var annotations = new LinkAnnotations(objects, pages.Count);
         for (var n = 0; n < pages.Count; n++)
         {
+            var g = pages[n].Section.Page;
             var writer = new ContentWriter(fonts, images, g.Height);
             var content = objects.Stream(writer.Write(n, pages[n]));
             var fontDict = string.Join(" ", writer.FontsUsed.Select(f => Invariant($"/{f.Name} {f.Id} 0 R")));

@@ -54,6 +54,14 @@ internal sealed record LineOp(double X1, double Y1, double X2, double Y2, double
 internal sealed class LaidOutPage
 {
     public List<Op> Ops { get; } = [];
+
+    /// <summary>The section the page is in, which gives its size, header and footer.</summary>
+    public Section Section { get; init; } = null!;
+
+    /// <summary>The page's number as its section counts it.</summary>
+    public int Number { get; init; }
+
+    public bool FirstInSection { get; init; }
 }
 
 /// <summary>Where a line goes: whose text it is, and whether it is an artifact.</summary>

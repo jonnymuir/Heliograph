@@ -13,9 +13,9 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, Footnotes notes)
     private readonly PageFit _fit = new(pages, notes);
     private ParagraphFrame? _frame;
 
+    /// <summary>Lays out a section's blocks from where the page set stands.</summary>
     public void Run(IReadOnlyList<Block> blocks)
     {
-        pages.NewPage();
         for (var i = 0; i < blocks.Count; i++)
         {
             var next = i + 1 < blocks.Count ? blocks[i + 1] : null;

@@ -108,11 +108,34 @@ internal sealed record Table(IReadOnlyList<double> Grid, IReadOnlyList<Row> Rows
 
 
 /// <summary>The headers and footers of a section: the usual ones, and the first page's when it has its own.</summary>
-internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block> Footer, IReadOnlyList<Block>? FirstHeader, IReadOnlyList<Block>? FirstFooter);
+internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block> Footer, IReadOnlyList<Block>? FirstHeader, IReadOnlyList<Block>? FirstFooter)
+{
+    /// <summary>The first page's header and footer a later section takes on when it gives its first page its own.</summary>
+    public IReadOnlyList<Block> InheritedFirstHeader { get; init; } = [];
 
-internal sealed record Section(PageGeometry Page, Stories Stories);
+    public IReadOnlyList<Block> InheritedFirstFooter { get; init; } = [];
 
-internal sealed record WordDocument(string Title, string Language, Section Section, IReadOnlyList<Block> Body)
+    /// <summary>The header and footer on even pages, when the document has different ones there; else null.</summary>
+    public IReadOnlyList<Block>? EvenHeader { get; init; }
+
+    public IReadOnlyList<Block>? EvenFooter { get; init; }
+}
+
+/// <summary>How a section numbers its pages: from where (or on from the section before when null), and in what format.</summary>
+internal sealed record PageNumbers(int? Start, string Format)
+{
+    public static readonly PageNumbers Continue = new(null, "decimal");
+}
+
+/// <summary>A section: its page, its headers and footers, how it numbers its pages, and its text. Each starts on a new page.</summary>
+internal sealed record Section(PageGeometry Page, Stories Stories)
+{
+    public PageNumbers Numbers { get; init; } = PageNumbers.Continue;
+
+    public IReadOnlyList<Block> Body { get; init; } = [];
+}
+
+internal sealed record WordDocument(string Title, string Language, IReadOnlyList<Section> Sections)
 {
     /// <summary>Each footnote referred to, by its id: its paragraphs.</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<Block>> Notes { get; init; } = new Dictionary<string, IReadOnlyList<Block>>();

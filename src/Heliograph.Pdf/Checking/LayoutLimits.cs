@@ -20,6 +20,8 @@ internal static class LayoutLimits
     private static readonly XNamespace Wp = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing";
     private static readonly XNamespace Mc = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
+    private static readonly string[] FacingPages = ["mirrorMargins", "bookFoldPrinting", "bookFoldRevPrinting", "printTwoOnOne"];
+
     private static readonly Limit[] Limits = [.. ThingsOnThePage(), .. ThingsInTheText()];
 
     // Objects and page structure.
@@ -31,8 +33,8 @@ internal static class LayoutLimits
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
             $"Put the note's text in the body of the letter, or make it an ordinary footnote there, {Instead}"),
-        new(DiagnosticCodes.PdfCannotLayOutSections, Sections, _ => $"This document has more than one section. {Route} lays out one section only, so pages after a section break would take the first section's page and margins.",
-            $"Remove the section break, keeping one page size and set of margins for the whole letter, {Instead}"),
+        new(DiagnosticCodes.PdfCannotLayOutSections, SectionLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet.",
+            $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
         new(DiagnosticCodes.PdfCannotWorkOutField, Fields, what => $"This document has a {what} field. {Route} works out page numbers and page counts only, so this field would print nothing.",
@@ -112,11 +114,6 @@ internal static class LayoutLimits
             .Select(e => (e, "a text box, shape or chart"));
     }
 
-    private static IEnumerable<(XElement, string)> Sections(XElement root)
-    {
-        return root.Descendants(W + "sectPr").Where(s => s.Parent?.Name == W + "pPr").Select(s => (s, "a section break"));
-    }
-
     private static IEnumerable<(XElement, string)> Columns(XElement root)
     {
         return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
@@ -153,12 +150,13 @@ internal static class LayoutLimits
         return aligned.Concat(inAligned).Where(t => t.Item2.Length > 0);
     }
 
-    // Different headers on even pages only apply when the document turns them on.
+    // Margins mirrored on facing pages, or pages printed as a booklet, set even pages out differently from odd ones.
     private static Diagnostic? EvenPages(DocumentToCheck document)
     {
-        var on = document.Settings?.Root?.Element(W + "evenAndOddHeaders") is { } setting && On(setting);
+        var settings = document.Settings?.Root;
+        var on = FacingPages.Any(name => settings?.Element(W + name) is { } setting && On(setting));
         return !on ? null : new Diagnostic(DiagnosticCodes.PdfCannotLayOutEvenPages,
-            $"This document has different headers and footers on even pages. {Route} uses the same header and footer on every page after the first.",
-            $"Turn off different odd and even pages in the header and footer settings, {Instead}");
+            $"This document mirrors its margins on facing pages, or prints as a booklet. {Route} sets every page out with the same margins.",
+            $"Set the margins to Normal, not Mirrored, in the page setup, {Instead}");
     }
 }

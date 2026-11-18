@@ -6,15 +6,19 @@ namespace Heliograph.Pdf.Layout;
 internal sealed record TextArea(double Top, double Bottom);
 
 /// <summary>
-/// The pages laid out so far, the current one, and how far down its text area the next line goes. The first page has a
-/// text area of its own when it has its own header or footer.
+/// The pages laid out so far, the current one, and how far down its text area the next line goes. Each section starts a
+/// page of its own, with its page size and margins; its first page has a text area of its own when it has its own header
+/// or footer. Each page carries its number as the section counts it.
 /// </summary>
-internal sealed class PageSet(PageGeometry geometry, TextArea first, TextArea rest, int maxPages, CancellationToken cancellation)
+internal sealed class PageSet(int maxPages, CancellationToken cancellation)
 {
     private readonly List<LaidOutPage> _pages = [];
+    private Section _section = null!;
+    private bool _sectionStarts;
+    private int _number;
     private double _areaBottom;
 
-    public PageGeometry Geometry { get; } = geometry;
+    public PageGeometry Geometry => _section.Page;
     public double BodyTop { get; private set; }
 
     /// <summary>Where the body's text may go down to: the foot of the text area, less the room its footnotes take.</summary>
@@ -25,33 +29,55 @@ internal sealed class PageSet(PageGeometry geometry, TextArea first, TextArea re
 
     /// <summary>Called as each page is finished, with the foot of its text area: footnotes are drawn then.</summary>
     public Action<LaidOutPage, double>? Finishing { get; set; }
+
     public IReadOnlyList<LaidOutPage> Pages => _pages;
     public LaidOutPage Current { get; private set; } = null!;
     public double Y { get; set; }
     public bool HasContent { get; set; }
     public double Room => BodyBottom - Y;
 
-    /// <summary>Finishes the last page.</summary>
-    public void Finish() => Finishing?.Invoke(Current, _areaBottom);
-
-    public void NewPage()
+    /// <summary>Starts a section on a new page, numbered from where the section says or on from the page before.</summary>
+    public void StartSection(Section section)
     {
-        cancellation.ThrowIfCancellationRequested();
+        // The page before is finished, footnotes and all, on its own section's page.
         if (_pages.Count > 0)
         {
             Finish();
         }
 
+        (_section, _sectionStarts) = (section, true);
+        Open();
+    }
+
+    /// <summary>Finishes the last page.</summary>
+    public void Finish() => Finishing?.Invoke(Current, _areaBottom);
+
+    public void NewPage()
+    {
+        if (_pages.Count > 0)
+        {
+            Finish();
+        }
+
+        Open();
+    }
+
+    private void Open()
+    {
+        cancellation.ThrowIfCancellationRequested();
         if (_pages.Count >= maxPages)
         {
             throw new PageLimitException(maxPages);
         }
 
-        Current = new LaidOutPage();
+        _number = _sectionStarts && _section.Numbers.Start is { } start ? start : _number + 1;
+        Current = new LaidOutPage { Section = _section, Number = _number, FirstInSection = _sectionStarts };
         _pages.Add(Current);
-        (BodyTop, _areaBottom) = _pages.Count == 1 ? (first.Top, first.Bottom) : (rest.Top, rest.Bottom);
-        Reserved = 0;
+        var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), Geometry);
+        (BodyTop, _areaBottom) = (area.Top, area.Bottom);
+        _sectionStarts = false;
         Y = BodyTop;
+        Reserved = 0;
         HasContent = false;
     }
 }

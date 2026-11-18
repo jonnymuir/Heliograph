@@ -3,42 +3,40 @@ using Heliograph.Pdf.Reading;
 
 namespace Heliograph.Pdf.Layout;
 
-/// <summary>Lays a whole document out: the body first, then each page's header and footer once the page count is known.</summary>
+/// <summary>
+/// Lays a whole document out: each section's body on pages of its own, then each page's header and footer once the page
+/// count is known.
+/// </summary>
 internal static class PageLayout
 {
     public static (IReadOnlyList<LaidOutPage> Pages, StructNode Root) Run(WordDocument document, int maxPages, CancellationToken cancellation)
     {
-        var g = document.Section.Page;
-        var stories = document.Section.Stories;
-        // As in Word, the text starts at the top margin, or below the page's header when the header reaches further down.
-        TextArea Area(IReadOnlyList<Block> header, IReadOnlyList<Block> footer) => new(
-            Math.Max(g.Top, g.HeaderDistance + Height(header, g)), g.Height - Math.Max(g.Bottom, g.FooterDistance + Height(footer, g)));
-        var rest = Area(stories.Header, stories.Footer);
-        var first = Area(stories.FirstHeader ?? stories.Header, stories.FirstFooter ?? stories.Footer);
-        var pages = new PageSet(g, first, rest, maxPages, cancellation);
+        var pages = new PageSet(maxPages, cancellation);
         var root = new StructNode("Document", null);
-        new BodyFlow(pages, root, new Footnotes(document, pages)).Run(document.Body);
-        pages.Finish();
-        for (var n = 0; n < pages.Pages.Count; n++)
+        Footnotes? notes = null;
+        foreach (var section in document.Sections)
         {
-            Decorate(pages.Pages[n], n, pages.Pages.Count, document.Section);
+            pages.StartSection(section);
+            notes ??= new Footnotes(document, pages);
+            new BodyFlow(pages, root, notes).Run(section.Body);
+        }
+
+        pages.Finish();
+        foreach (var page in pages.Pages)
+        {
+            Decorate(page, pages.Pages.Count);
         }
 
         return (pages.Pages, root);
     }
 
-    private static double Height(IReadOnlyList<Block> blocks, PageGeometry g) =>
-        blocks.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, _ => "9").Sum(l => l.Height) + p.Style.Spacing.After);
-
-    private static void Decorate(LaidOutPage page, int index, int count, Section section)
+    private static void Decorate(LaidOutPage page, int count)
     {
-        var (g, stories) = (section.Page, section.Stories);
-        var first = index == 0;
-        var header = first && stories.FirstHeader is not null ? stories.FirstHeader : stories.Header;
-        var footer = first && stories.FirstFooter is not null ? stories.FirstFooter : stories.Footer;
+        var g = page.Section.Page;
+        var (header, footer) = PageStories.For(page.Section, page.FirstInSection, page.Number);
         string Field(string name) => name switch
         {
-            "PAGE" => (index + 1).ToString(CultureInfo.InvariantCulture),
+            "PAGE" => ListLabels.Number(page.Number, page.Section.Numbers.Format),
             "NUMPAGES" => count.ToString(CultureInfo.InvariantCulture),
             _ => "",
         };
@@ -49,7 +47,7 @@ internal static class PageLayout
             y = Story(page, p, y, g, Field);
         }
 
-        y = g.Height - g.FooterDistance - footer.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, Field).Sum(l => l.Height) + p.Style.Spacing.After);
+        y = g.Height - g.FooterDistance - PageStories.Height(footer, g, Field);
         foreach (var p in footer.OfType<Paragraph>())
         {
             y = Story(page, p, y, g, Field);
