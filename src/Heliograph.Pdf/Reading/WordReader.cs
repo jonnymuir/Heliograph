@@ -66,7 +66,7 @@ internal sealed class WordReader : IDisposable
         return new WordDocument(title, Styles.Language, sections)
         {
             Notes = Notes(),
-            Endnotes = NotesIn("endnotes", "endnote", _endnotes),
+            Endnotes = NotesIn(NoteKind.Endnote, _endnotes),
             NoteSeparator = _paragraphs.Read(new XElement(W + "p", new XElement(W + "pPr", new XElement(W + "spacing",
                 new XAttribute(W + "before", 0), new XAttribute(W + "after", 0), new XAttribute(W + "line", 240), new XAttribute(W + "lineRule", "auto"))))),
         };
@@ -120,25 +120,25 @@ internal sealed class WordReader : IDisposable
     private (NoteNumbers Footnotes, NoteNumbers Endnotes) NoteNumbering(XElement? settings)
     {
         var last = _package.Part("word/document.xml")?.Root?.Element(W + "body")?.Element(W + "sectPr");
-        return (Numbering("footnotePr", "decimal", settings, last), Numbering("endnotePr", "lowerRoman", settings, last));
+        return (Numbering(NoteKind.Footnote, settings, last), Numbering(NoteKind.Endnote, settings, last));
     }
 
     // How the document numbers its footnotes or endnotes: the format, and the number the first takes, each from the
     // section's settings or else the document's.
-    private static NoteNumbers Numbering(string name, string format, params XElement?[] layers)
+    private static NoteNumbers Numbering(NoteKind kind, params XElement?[] layers)
     {
-        string? Setting(string setting) => layers.Select(l => Val(l?.Element(W + name)?.Element(W + setting))).LastOrDefault(v => v is not null);
-        return new(Setting("numFmt") ?? format, int.TryParse(Setting("numStart"), out var start) ? start : 1);
+        string? Setting(string setting) => layers.Select(l => Val(l?.Element(W + kind.Settings)?.Element(W + setting))).LastOrDefault(v => v is not null);
+        return new(Setting("numFmt") ?? kind.Format, int.TryParse(Setting("numStart"), out var start) ? start : 1);
     }
 
     // The paragraphs of each footnote the body refers to, each opening with its number.
-    private Dictionary<string, IReadOnlyList<Block>> Notes() => NotesIn("footnotes", "footnote", _notes).ToDictionary(n => n.Id, n => n.Blocks, StringComparer.Ordinal);
+    private Dictionary<string, IReadOnlyList<Block>> Notes() => NotesIn(NoteKind.Footnote, _notes).ToDictionary(n => n.Id, n => n.Blocks, StringComparer.Ordinal);
 
     // The paragraphs of each note of a kind the body refers to, in the order first referred to.
-    private List<(string Id, IReadOnlyList<Block> Blocks)> NotesIn(string part, string element, NoteNumbers numbers)
+    private List<(string Id, IReadOnlyList<Block> Blocks)> NotesIn(NoteKind kind, NoteNumbers numbers)
     {
         var notes = new List<(string Id, IReadOnlyList<Block> Blocks)>();
-        var target = _relationships.FirstOrDefault(r => _relationshipTypes.GetValueOrDefault(r.Key)?.EndsWith("/" + part, StringComparison.Ordinal) == true).Value;
+        var target = _relationships.FirstOrDefault(r => _relationshipTypes.GetValueOrDefault(r.Key)?.EndsWith("/" + kind.Part, StringComparison.Ordinal) == true).Value;
         var name = target is null ? null : "word/" + target;
         if ((name is null ? null : Part(name)?.Root) is not { } root)
         {
@@ -149,7 +149,7 @@ internal sealed class WordReader : IDisposable
         foreach (var id in numbers.Order.ToList())
         {
             numbers.Current = id;
-            var note = root.Elements(W + element).FirstOrDefault(f => (string?)f.Attribute(W + "id") == id);
+            var note = root.Elements(W + kind.Element).FirstOrDefault(f => (string?)f.Attribute(W + "id") == id);
             notes.Add((id, note is null ? [] : Blocks(note)));
         }
 

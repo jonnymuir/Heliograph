@@ -43,11 +43,12 @@ internal static class NoteLetters
     public static string Plain(string text) => $"<w:p {W}><w:r><w:t>{text}</w:t></w:r></w:p>";
 
     /// <summary>A letter of these body paragraphs, with these notes.</summary>
-    public static MemoryStream Letter(IEnumerable<string> body, params string[] notes) => Letter(body, notes, []);
+    public static MemoryStream Letter(IEnumerable<string> body, params string[] notes) => Letter(body, new NoteSet(notes, []));
 
-    /// <summary>A letter of these body paragraphs, with these footnotes and endnotes.</summary>
-    public static MemoryStream Letter(IEnumerable<string> body, string[] notes, string[] endnotes, string? settings = null)
+    /// <summary>A letter of these body paragraphs, with these footnotes and endnotes, and any settings.</summary>
+    public static MemoryStream Letter(IEnumerable<string> body, NoteSet set)
     {
+        var (notes, endnotes, settings) = (set.Footnotes, set.Endnotes, set.Settings);
         var docx = new TestDocx()
             .Part("word/styles.xml", Styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")
             .Relationship(Rels + "/styles", "styles.xml", external: false)
@@ -73,3 +74,6 @@ internal static class NoteLetters
         return docx.Build();
     }
 }
+
+/// <summary>A letter's footnotes, endnotes and any settings, as the note letters write them.</summary>
+internal sealed record NoteSet(string[] Footnotes, string[] Endnotes, string? Settings = null);

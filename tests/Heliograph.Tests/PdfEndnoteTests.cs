@@ -56,7 +56,7 @@ public class PdfEndnoteTests
     [InlineData("<w:footnotePr><w:numFmt w:val=\"chicago\"/></w:footnotePr>", "numbered or placed")]
     public void Notes_numbered_or_placed_some_other_way_are_refused_at_compile(string settings, string named)
     {
-        var docx = NoteLetters.Letter([NoteLetters.EndReferring("Your membership renews in April.", 1)], [], ["Membership runs from April to March."], settings);
+        var docx = NoteLetters.Letter([NoteLetters.EndReferring("Your membership renews in April.", 1)], new NoteSet([], ["Membership runs from April to March."], settings));
 
         DocumentTemplate.Compile(docx, NoFields, [new HeliographPdfConverter()]).Diagnostics
             .Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotLayOutNotes).Which.Message.Should().Contain(named);
@@ -73,32 +73,31 @@ public class PdfEndnoteTests
             $"<w:sectPr {W}><w:endnotePr><w:numFmt w:val=\"upperRoman\"/></w:endnotePr></w:sectPr>",
         };
 
-        DocumentTemplate.Compile(NoteLetters.Letter(body, [], ["Membership runs from April to March."]), NoFields, [new HeliographPdfConverter()]).Diagnostics
+        DocumentTemplate.Compile(NoteLetters.Letter(body, new NoteSet([], ["Membership runs from April to March."])), NoFields, [new HeliographPdfConverter()]).Diagnostics
             .Should().Contain(d => d.Code == DiagnosticCodes.PdfCannotLayOutNotes && d.Message.Contains("differently", StringComparison.Ordinal));
     }
 
     private static MemoryStream Letter(string kind)
     {
+        var withFootnotes = kind.EndsWith("with footnotes", StringComparison.Ordinal);
         var body = new List<string> { NoteLetters.EndReferring("Your membership renews in April.", 1) };
-        var plain = kind switch { "endnotes on a later page" => 40, "endnotes running over a page" => 33, _ => 2 };
-        for (var i = 0; i < plain; i++)
-        {
-            body.Add(NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership."));
-        }
-
-        body.Add(kind.EndsWith("with footnotes", StringComparison.Ordinal) ? NoteLetters.Referring("The late charge is ten pounds.", 1) : NoteLetters.EndReferring("The late charge is ten pounds.", 2));
+        body.AddRange(Enumerable.Range(0, Paragraphs(kind)).Select(i => NoteLetters.Plain($"Paragraph {i} of the body of the letter, about the renewal of your membership.")));
+        body.Add(withFootnotes ? NoteLetters.Referring("The late charge is ten pounds.", 1) : NoteLetters.EndReferring("The late charge is ten pounds.", 2));
         body.Add(NoteLetters.Plain("We look forward to seeing you."));
-        var endnotes = kind == "endnotes running over a page" ? Enumerable.Repeat(Long + " " + Long, 6).ToArray() : ["Membership runs from April to March.", Long];
-        var footnotes = kind.EndsWith("with footnotes", StringComparison.Ordinal) ? new[] { "Ten pounds for each month late." } : [];
-        // Word writes the numbering into the section's settings when it is set in its dialog.
         if (kind.StartsWith("numbered as the settings say", StringComparison.Ordinal))
         {
-            body.Add("<w:sectPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:footnotePr><w:numFmt w:val=\"lowerLetter\"/></w:footnotePr>"
-                + "<w:endnotePr><w:numFmt w:val=\"decimal\"/><w:numStart w:val=\"5\"/></w:endnotePr></w:sectPr>");
+            body.Add(SectionNumbering);
         }
 
-        return NoteLetters.Letter(body, footnotes, endnotes);
+        var endnotes = kind == "endnotes running over a page" ? Enumerable.Repeat(Long + " " + Long, 6).ToArray() : ["Membership runs from April to March.", Long];
+        return NoteLetters.Letter(body, new NoteSet(withFootnotes ? ["Ten pounds for each month late."] : [], endnotes));
     }
+
+    // Word writes the numbering into the section's settings when it is set in its dialog.
+    private const string SectionNumbering = "<w:sectPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:footnotePr><w:numFmt w:val=\"lowerLetter\"/></w:footnotePr>"
+        + "<w:endnotePr><w:numFmt w:val=\"decimal\"/><w:numStart w:val=\"5\"/></w:endnotePr></w:sectPr>";
+
+    private static int Paragraphs(string kind) => kind switch { "endnotes on a later page" => 40, "endnotes running over a page" => 33, _ => 2 };
 
     private static byte[] Rendered(MemoryStream template)
     {
