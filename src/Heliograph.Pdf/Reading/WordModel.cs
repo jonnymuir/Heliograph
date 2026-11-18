@@ -3,6 +3,9 @@ namespace Heliograph.Pdf.Reading;
 // A rendered letter read into what a page needs: paragraphs with their styles resolved, tables, and the section's page,
 // margins, headers and footers. Lengths are in points.
 
+/// <summary>What the part being read links to: its files, such as pictures, by relationship id, and its addresses outside.</summary>
+internal sealed record PartLinks(Func<string, byte[]?> Files, Func<string, string?> Addresses);
+
 internal abstract record Inline(RunStyle Style);
 
 internal sealed record TextInline(string Text, RunStyle Style) : Inline(Style);
@@ -33,16 +36,6 @@ internal sealed record Flow(bool KeepNext, bool KeepLines, bool WidowControl, bo
 /// of its space before is shared with the space after the paragraph above it: in a document without
 /// doNotUseHTMLParagraphAutoSpacing, Word and LibreOffice put the larger of the two between paragraphs, not their sum.
 /// </summary>
-internal sealed record ParagraphStyle(int? OutlineLevel, Spacing Spacing, Indent Indent, string Align, Flow Flow, IReadOnlyList<double> Tabs)
-{
-    public double DefaultTab { get; init; } = 36;
-
-    public double Overlap { get; init; }
-
-    /// <summary>The space before this paragraph when it follows another paragraph.</summary>
-    public double SpaceAbove => Spacing.Before - Overlap;
-}
-
 internal abstract record Block;
 
 /// <summary>

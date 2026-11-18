@@ -32,6 +32,7 @@ internal sealed class RandomLayout
     private readonly Random _lists;
     private readonly Random _pictures;
     private readonly Random _formatting;
+    private readonly Random _tabs;
     private readonly bool _mostlyLists;
     private readonly StringBuilder _body = new();
 
@@ -44,6 +45,7 @@ internal sealed class RandomLayout
         _lists = new Random(seed + 10_000);
         _pictures = new Random(seed + 20_000);
         _formatting = new Random(seed + 40_000);
+        _tabs = new Random(seed + 50_000);
         // Odd seeds are saved as a new Word document is, without doNotUseHTMLParagraphAutoSpacing. Taken from the seed, not
         // drawn, so every other choice for a seed stays as it was.
         LargerSpacing = seed % 2 == 1;
@@ -131,7 +133,7 @@ internal sealed class RandomLayout
         {
             var properties = ParagraphProperties();
             var paragraph = Paragraph(Words(1, 120), properties: properties, tabs: !properties.Contains("w:val=\"center\"", StringComparison.Ordinal) && !properties.Contains("w:val=\"right\"", StringComparison.Ordinal));
-            paragraph = RandomFormatting.Into(paragraph, _formatting);
+            paragraph = RandomFormatting.Into(AlignedTabs(paragraph), _formatting);
             _body.Append(_pictures.Next(8) == 0 ? RandomPictures.Into(paragraph, _pictures) : paragraph);
         }
     }
@@ -181,6 +183,20 @@ internal sealed class RandomLayout
 
     // A list with levels steps up or down a level, or stays, from one item to the next.
     private int NextLevel(int level, bool rich) => rich ? Math.Clamp(level + _lists.Next(-1, 2), 0, 2) : 0;
+
+    // Half the paragraphs' tab stops line text up on their right, centre or decimal point, some with a leader.
+    private string AlignedTabs(string paragraph)
+    {
+        const string Left = "<w:tab w:val=\"left\" ";
+        if (!paragraph.Contains(Left, StringComparison.Ordinal) || _tabs.Next(2) == 0)
+        {
+            return paragraph;
+        }
+
+        var align = new[] { "right", "center", "decimal" }[_tabs.Next(3)];
+        var leader = new[] { "", "", "w:leader=\"dot\" ", "w:leader=\"hyphen\" ", "w:leader=\"underscore\" " }[_tabs.Next(5)];
+        return paragraph.Replace(Left, $"<w:tab w:val=\"{align}\" {leader}", StringComparison.Ordinal);
+    }
 
     // What block comes next, out of 100: a document made mostly of lists turns most draws into a list (8 to 15).
     private int Kind()

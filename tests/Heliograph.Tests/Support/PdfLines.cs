@@ -17,6 +17,10 @@ internal static class PdfLines
 
     public static string? Executable => Candidates.FirstOrDefault(File.Exists);
 
+    /// <summary>Why a test comparing with LibreOffice is skipped here, or null when it runs.</summary>
+    public static string? ComparedSkip =>
+        (LibreOffice.Executable is not null && Executable is not null) || LibreOffice.Required ? null : "This needs LibreOffice, and Poppler's pdftotext to read where lines sit.";
+
     public static List<PdfLine> Read(byte[] pdf)
     {
         var work = Directory.CreateTempSubdirectory("heliograph-lines-");
@@ -90,10 +94,7 @@ internal sealed class ComparedPdfTheoryAttribute : TheoryAttribute
 {
     public ComparedPdfTheoryAttribute()
     {
-        if ((LibreOffice.Executable is null || PdfLines.Executable is null) && !LibreOffice.Required)
-        {
-            Skip = "This needs LibreOffice, and Poppler's pdftotext to read where lines sit.";
-        }
+        Skip = PdfLines.ComparedSkip;
     }
 }
 
@@ -120,6 +121,16 @@ internal sealed class PdfLinesTheoryAttribute : TheoryAttribute
         {
             Skip = "This needs Poppler, to read or draw the PDF.";
         }
+    }
+}
+
+/// <summary>A test that needs LibreOffice, and Poppler's pdftotext to read where lines sit.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+internal sealed class ComparedPdfFactAttribute : FactAttribute
+{
+    public ComparedPdfFactAttribute()
+    {
+        Skip = PdfLines.ComparedSkip;
     }
 }
 

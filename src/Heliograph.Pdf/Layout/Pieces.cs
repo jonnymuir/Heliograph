@@ -8,6 +8,7 @@ internal enum PieceKind
     Space,
     Tab,
     Break,
+    Leader,
 }
 
 /// <summary>A word, a run of spaces, a tab or a line break, measured in its style. A picture is a word that never splits.</summary>

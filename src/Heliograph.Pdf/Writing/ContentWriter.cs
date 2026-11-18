@@ -24,6 +24,9 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
 
     public IEnumerable<(string Name, int Id)> ImagesUsed => _images.OrderBy(i => i.Id);
 
+    /// <summary>The page's link areas, in the order they were laid out.</summary>
+    public List<LinkOp> Links { get; } = [];
+
     public byte[] Write(int pageIndex, LaidOutPage page)
     {
         foreach (var op in page.Ops)
@@ -44,6 +47,9 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
                     var (name, id) = images.Use(image.File);
                     _images.Add((name, id));
                     _content.Append(Invariant($"q {N(image.Width)} 0 0 {N(image.Height)} {N(image.X)} {N(pageHeight - image.Top - image.Height)} cm /{name} Do Q\n"));
+                    break;
+                case LinkOp link:
+                    Links.Add(link);
                     break;
                 case LineOp line:
                     Mark(pageIndex, null, "/Artifact BMC\n");

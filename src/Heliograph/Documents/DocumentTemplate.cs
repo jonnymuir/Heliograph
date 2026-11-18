@@ -108,7 +108,7 @@ public static class DocumentTemplate
         }
 
         var document = new DocumentToCheck(
-            [.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!, id => PackageLinks.Linked(package, part.Name, id)))],
+            [.. parts.Select(part => new DocumentPart(part.Label, package.Xml(part.Name)!, id => PackageLinks.Linked(package, part.Name, id), id => PackageLinks.External(package, part.Name, id)))],
             package.Xml("word/settings.xml"),
             package.Xml("word/styles.xml"), package.Xml("word/numbering.xml"), Theme(package, parts[0].Name));
         return [.. checks.SelectMany(check => check.Check(document))];

@@ -40,6 +40,14 @@ internal sealed class PackageParts(byte[] docx) : IDisposable
         return bytes.ToArray();
     }
 
+    /// <summary>Where a part points outside the package by relationship id, such as a link's address; null for none.</summary>
+    public string? External(string partName, string id)
+    {
+        var folder = partName[..(partName.LastIndexOf('/') + 1)];
+        return (string?)Part($"{folder}_rels/{partName[folder.Length..]}.rels")?.Root?.Elements()
+            .FirstOrDefault(e => (string?)e.Attribute("Id") == id && (string?)e.Attribute("TargetMode") == "External")?.Attribute("Target");
+    }
+
     public void Dispose() => _zip.Dispose();
 
     // "word/../media/a.png" as "media/a.png".

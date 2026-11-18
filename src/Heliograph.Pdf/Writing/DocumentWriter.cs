@@ -21,6 +21,7 @@ internal static class DocumentWriter
         var pageIds = pages.Select(_ => objects.Reserve()).ToList();
         var marked = new List<List<StructNode>>();
         var g = document.Section.Page;
+        var annotations = new LinkAnnotations(objects, pages.Count);
         for (var n = 0; n < pages.Count; n++)
         {
             var writer = new ContentWriter(fonts, images, g.Height);
@@ -28,13 +29,14 @@ internal static class DocumentWriter
             var fontDict = string.Join(" ", writer.FontsUsed.Select(f => Invariant($"/{f.Name} {f.Id} 0 R")));
             var imageDict = string.Join(" ", writer.ImagesUsed.Select(i => Invariant($"/{i.Name} {i.Id} 0 R")));
             var xobjects = imageDict.Length > 0 ? $" /XObject <<{imageDict}>>" : "";
+            var annots = annotations.Write(n, pageIds[n], writer.Links, g.Height);
             objects.Set(pageIds[n], Invariant($"<</Type /Page /Parent {pagesId} 0 R /MediaBox [0 0 {N(g.Width)} {N(g.Height)}] ") +
-                Invariant($"/Resources <</Font <<{fontDict}>>{xobjects}>> /Contents {content} 0 R /StructParents {n} /Tabs /S>>"));
+                Invariant($"/Resources <</Font <<{fontDict}>>{xobjects}>> /Contents {content} 0 R /StructParents {n} /Tabs /S{annots}>>"));
             marked.Add(writer.Marked);
         }
 
         fonts.WriteAll();
-        StructureWriter.Write(objects, structRoot, root, pageIds, marked);
+        StructureWriter.Write(objects, structRoot, root, pageIds, marked, annotations.Parents);
         objects.Set(pagesId, Invariant($"<</Type /Pages /Kids [{string.Join(" ", pageIds.Select(id => Invariant($"{id} 0 R")))}] /Count {pages.Count}>>"));
 
         // PDF/UA needs a title. A document without one was warned about at compile (HG1020); its PDF says what it is.

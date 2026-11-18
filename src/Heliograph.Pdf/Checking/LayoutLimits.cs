@@ -42,8 +42,6 @@ internal static class LayoutLimits
     // How text is set.
     private static Limit[] ThingsInTheText() =>
     [
-        new(DiagnosticCodes.PdfCannotMakeLink, Links, _ => $"This document has a link. {Route} does not make links yet: the text would print, but could not be clicked.",
-            $"Write the address out in full as plain text, {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawFormatting, FormattingLimits.Found, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
             $"Take that formatting off, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",
@@ -76,6 +74,7 @@ internal static class LayoutLimits
 
         diagnostics.AddRange(ListLimits.Check(document));
         diagnostics.AddRange(PictureLimits.Check(document));
+        diagnostics.AddRange(LinkLimits.Check(document));
         diagnostics.AddRange(FontLimits.Check(document));
 
         return diagnostics;
@@ -120,11 +119,6 @@ internal static class LayoutLimits
             .Where(f => f.Name.Length > 0 && f.Name is not ("PAGE" or "NUMPAGES"));
     }
 
-    private static IEnumerable<(XElement, string)> Links(XElement root)
-    {
-        return root.Descendants(W + "hyperlink").Select(e => (e, "a link"));
-    }
-
     private static IEnumerable<(XElement, string)> Direction(XElement root)
     {
         return root.Descendants().Where(e => (e.Name == W + "bidi" && On(e)) || (e.Name == W + "rtl" && On(e))
@@ -141,14 +135,7 @@ internal static class LayoutLimits
     private static IEnumerable<(XElement, string)> Tabs(XElement root)
     {
         var aligned = root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "tabs")
-            .Select(t => (t, Val(t) switch
-            {
-                "right" or "end" => "aligned right",
-                "center" => "centred",
-                "decimal" => "aligned on the decimal point",
-                "bar" => "drawn as a bar",
-                _ => (string?)t.Attribute(W + "leader") is { } leader && leader != "none" ? "with a leader of dots or a line" : "",
-            }));
+            .Select(t => (t, Val(t) == "bar" ? "drawn as a bar" : ""));
 
         // A tab in a centred or right-aligned paragraph follows rules of its own in Word, not laid out yet.
         var inAligned = root.Descendants(W + "tab").Where(t => t.Parent?.Name == W + "r"

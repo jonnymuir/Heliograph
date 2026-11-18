@@ -129,7 +129,9 @@ public class MeasuringNetTests
 
     // A line's letters without its spaces: LibreOffice places each letter of spaced-out text on its own, so Poppler reads
     // them as words, where Heliograph draws the word with character spacing. Which words are on which line still counts.
-    private static string Letters(string text) => text.Replace(" ", "", StringComparison.Ordinal);
+    // A leader is left out too: each converter draws as many dots as fit.
+    private static string Letters(string text) =>
+        System.Text.RegularExpressions.Regex.Replace(text, "[._\\-\u00B7]{3,}", "").Replace(" ", "", StringComparison.Ordinal);
 
     private static string Describe(PdfLine? line) =>
         line is null ? "nothing" : string.Create(CultureInfo.InvariantCulture, $"p{line.Page} at {line.Top:0.0} \"{line.Text}\"");

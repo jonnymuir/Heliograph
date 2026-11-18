@@ -26,7 +26,8 @@ internal sealed class WordReader : IDisposable
         var defaultTab = Twips(settings?.Element(W + "defaultTabStop"), "val") ?? 36;
         // A new Word document leaves this out, and then the space between paragraphs is the larger of the two, not the sum.
         _largerSpacing = !On(settings?.Element(W + "compat")?.Element(W + "doNotUseHTMLParagraphAutoSpacing"));
-        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab, id => _package.Linked(_part, id));
+        _paragraphs = new ParagraphReader(Styles, new NumberingDefinitions(Part("word/numbering.xml")), defaultTab,
+            new PartLinks(id => _package.Linked(_part, id), id => _package.External(_part, id)));
     }
 
     private StyleSheet Styles { get; }

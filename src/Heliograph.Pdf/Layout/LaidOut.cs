@@ -36,6 +36,12 @@ internal sealed record TextOp(double X, double Baseline, string Text, RunStyle S
 /// <summary>A picture at its top-left corner and size. With no node it is an artifact: decorative, undescribed, or in a header.</summary>
 internal sealed record ImageOp(double X, double Top, double Width, double Height, Pictures.PictureFile File, StructNode? Node) : Op;
 
+/// <summary>An area of a page that goes to an address when clicked, and the Link in the structure it belongs to.</summary>
+internal sealed record LinkOp(double X1, double Top, double X2, double Bottom, string Address, StructNode Node) : Op;
+
+/// <summary>A link's clickable area, as its Link holds it: the page it is on and its annotation object.</summary>
+internal sealed record AnnotationRef(int Page, int Id);
+
 /// <summary>A ruled line, such as a table border; always an artifact. Y runs down the page.</summary>
 internal sealed record LineOp(double X1, double Y1, double X2, double Y2, double Width) : Op;
 
