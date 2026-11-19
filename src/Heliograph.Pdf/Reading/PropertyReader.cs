@@ -34,7 +34,7 @@ internal static class PropertyReader
 
         if (x.Element(W + "u") is { } u)
         {
-            style = style with { Underline = Val(u) is not ("none" or null) };
+            style = UnderlineReader.Read(style, u);
         }
 
         if (Val(x.Element(W + "sz")) is { } sz)

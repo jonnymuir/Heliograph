@@ -112,16 +112,12 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
         var colour = Rgb(style.Color);
         _content.Append(Invariant($"BT /{name} {N(size)} Tf {colour} rg {N(style.CharacterSpacing)} Tc 1 0 0 1 {N(text.X)} {N(baseline)} Tm <{hex}> Tj ET\n"));
         var thickness = style.Size / 20;
-        var lines = new List<double>();
-        if (style.Underline)
-        {
-            lines.Add(pageHeight - text.Baseline - (style.Size / 8));
-        }
+        _content.Append(Underlines.Of(text, width, thickness, pageHeight));
 
         // Strikethrough runs through the middle of the lower-case letters; a double one is two lines either side of it.
         var through = baseline + (size * 0.25);
-        lines.AddRange(style.Strike switch { 1 => [through], 2 => [through + thickness, through - thickness], _ => [] });
-        foreach (var y in lines)
+        double[] strikes = style.Strike switch { 1 => [through], 2 => [through + thickness, through - thickness], _ => [] };
+        foreach (var y in strikes)
         {
             _content.Append(Invariant($"{colour} RG {N(thickness)} w {N(text.X)} {N(y)} m {N(text.X + width)} {N(y)} l S\n"));
         }
