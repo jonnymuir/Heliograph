@@ -112,18 +112,56 @@ internal sealed class ContentWriter(FontEmbedder fonts, ImageEmbedder images, do
         var colour = Rgb(style.Color);
         _content.Append(Invariant($"BT /{name} {N(size)} Tf {colour} rg {N(style.CharacterSpacing)} Tc 1 0 0 1 {N(text.X)} {N(baseline)} Tm <{hex}> Tj ET\n"));
         var thickness = style.Size / 20;
-        var lines = new List<double>();
-        if (style.Underline)
-        {
-            lines.Add(pageHeight - text.Baseline - (style.Size / 8));
-        }
+        Underline(text, width, thickness);
 
         // Strikethrough runs through the middle of the lower-case letters; a double one is two lines either side of it.
         var through = baseline + (size * 0.25);
-        lines.AddRange(style.Strike switch { 1 => [through], 2 => [through + thickness, through - thickness], _ => [] });
-        foreach (var y in lines)
+        double[] strikes = style.Strike switch { 1 => [through], 2 => [through + thickness, through - thickness], _ => [] };
+        foreach (var y in strikes)
         {
             _content.Append(Invariant($"{colour} RG {N(thickness)} w {N(text.X)} {N(y)} m {N(text.X + width)} {N(y)} l S\n"));
+        }
+    }
+
+    // An underline below the baseline in its own colour or the text's: one line, two for double, a heavier one for thick,
+    // and none under the spaces when only the words are underlined.
+    private void Underline(TextOp text, double width, double thickness)
+    {
+        var style = text.Style;
+        if (!style.Underline)
+        {
+            return;
+        }
+
+        var y = pageHeight - text.Baseline - (style.Size / 8);
+        var (weight, ys) = style.UnderlineStyle switch
+        {
+            "double" => (thickness, new[] { y, y - (thickness * 2.5) }),
+            "thick" => (thickness * 2, new[] { y }),
+            _ => (thickness, new[] { y }),
+        };
+        foreach (var (from, to) in Spans(text, width))
+        {
+            foreach (var at in ys)
+            {
+                _content.Append(Invariant($"{Rgb(style.UnderlineColor ?? style.Color)} RG {N(weight)} w {N(from)} {N(at)} m {N(to)} {N(at)} l S\n"));
+            }
+        }
+    }
+
+    // Where an underline runs across a piece of text: all of it, or under each word only, leaving out the spaces.
+    private static IEnumerable<(double From, double To)> Spans(TextOp text, double width)
+    {
+        if (text.Style.UnderlineStyle != "words")
+        {
+            yield return (text.X, text.X + width);
+            yield break;
+        }
+
+        foreach (System.Text.RegularExpressions.Match word in System.Text.RegularExpressions.Regex.Matches(text.Text, @"\S+"))
+        {
+            var before = TextLook.Width(text.Text[..word.Index], text.Style);
+            yield return (text.X + before, text.X + before + TextLook.Width(word.Value, text.Style));
         }
     }
 

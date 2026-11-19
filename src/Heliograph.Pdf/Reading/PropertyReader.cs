@@ -34,7 +34,13 @@ internal static class PropertyReader
 
         if (x.Element(W + "u") is { } u)
         {
-            style = style with { Underline = Val(u) is not ("none" or null) };
+            var colour = (string?)u.Attribute(W + "color");
+            style = style with
+            {
+                Underline = Val(u) is not ("none" or null),
+                UnderlineStyle = Val(u) is "words" or "double" or "thick" ? Val(u)! : "single",
+                UnderlineColor = colour is { Length: 6 } && colour != "auto" ? colour.ToUpperInvariant() : null,
+            };
         }
 
         if (Val(x.Element(W + "sz")) is { } sz)
