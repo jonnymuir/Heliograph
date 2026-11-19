@@ -11,10 +11,14 @@ internal static class RunContent
     {
         "t" => new TextInline(style.Caps ? c.Value.ToUpperInvariant() : c.Value, style),
         "tab" => new TabInline(style),
-        "br" or "cr" => new BreakInline(style),
+        "br" or "cr" => Break(c, style),
         "drawing" => PictureReader.Read(c, links.Files, style),
         _ => Note(c, style, links),
     };
+
+    // A line break; or a page break, or a column break, which in a single column is one.
+    private static BreakInline Break(XElement c, RunStyle style) =>
+        new(style) { Page = c.Name.LocalName == "br" && (string?)c.Attribute(W + "type") is "page" or "column" };
 
     // A reference to a footnote or an endnote in the text, or the mark that opens the note itself: either way, the note's
     // number, each kind counted on its own.

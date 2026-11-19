@@ -6,13 +6,20 @@ namespace Heliograph.Pdf.Checking;
 
 /// <summary>
 /// A section's page settings the converter lays out: its size, orientation and margins, its headers and footers, a first
-/// page of its own, and page numbers from where it says in figures, letters or Roman numerals. A section that starts
-/// other than on a new page, and anything else on the page, is not yet.
+/// page of its own, and page numbers from where it says in figures, letters or Roman numerals, and page breaks in the
+/// body. A section that starts other than on a new page, a page break elsewhere, and anything else on the page, is not yet.
 /// </summary>
 internal static class SectionLimits
 {
     public static IEnumerable<(XElement, string)> Found(XElement root) =>
-        root.Descendants(W + "sectPr").SelectMany(s => s.Elements().Select(e => (e, What: What(e))).Where(f => f.What is not null))!;
+        root.Descendants(W + "sectPr").SelectMany(s => s.Elements().Select(e => (e, What: What(e))).Where(f => f.What is not null))
+            .Concat(Breaks(root))!;
+
+    // A page break, or a column break, starts a new page in the body; in a table, a header, a footer or a note it is not laid out yet.
+    private static IEnumerable<(XElement, string?)> Breaks(XElement root) =>
+        root.Descendants(W + "br").Where(b => (string?)b.Attribute(W + "type") is "page" or "column")
+            .Where(b => b.Ancestors(W + "tbl").Any() || b.Ancestors().Any(a => a.Name.LocalName is "hdr" or "ftr" or "footnotes" or "endnotes"))
+            .Select(b => (b, (string?)"a page break in a table, header, footer or note"));
 
     private static string? What(XElement e) => e.Name.LocalName switch
     {

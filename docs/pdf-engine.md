@@ -86,6 +86,11 @@ This plan is built to find out early and keep finding out.
   figures, letters or Roman numerals. A section break that does not start a new page or starts
   on an odd or even page, a border round the page, line numbers, text set in the middle of the
   page, a gutter, and margins mirrored on facing pages are refused.
+- **Page breaks** typed in the text (Ctrl+Enter in Word), and a column break in a single column:
+  the rest of the paragraph goes on at the top of the next page; a break that ends its paragraph
+  keeps the paragraph mark with it, so what follows starts the next page, as Word and LibreOffice
+  lay it out. Until this was built a page break was read as a line break, without a word. A page
+  break in a table, header, footer or note is refused.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's
