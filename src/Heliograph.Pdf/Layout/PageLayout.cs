@@ -35,17 +35,18 @@ internal static class PageLayout
         var g = page.Section.Page;
         var (header, footer) = PageStories.For(page.Section, page.FirstInSection, page.Number);
         string Field(FieldInline f) => Value(f, page, all);
+        using var fields = FieldValues.Use(Field);
 
         var y = g.HeaderDistance;
-        foreach (var p in header.OfType<Paragraph>())
+        foreach (var block in header)
         {
-            y = Story(page, p, y, g, Field);
+            y = Story(page, block, y, g, Field);
         }
 
         y = g.Height - g.FooterDistance - PageStories.Height(footer, g, Field);
-        foreach (var p in footer.OfType<Paragraph>())
+        foreach (var block in footer)
         {
-            y = Story(page, p, y, g, Field);
+            y = Story(page, block, y, g, Field);
         }
     }
 
@@ -58,8 +59,21 @@ internal static class PageLayout
         _ => "",
     };
 
-    private static double Story(LaidOutPage page, Paragraph p, double y, PageGeometry g, Func<FieldInline, string> field)
+    // A header's or footer's paragraph, or its table laid out as one block across the text, as a table in a cell is.
+    private static double Story(LaidOutPage page, Block block, double y, PageGeometry g, Func<FieldInline, string> field)
     {
+        if (block is Table t)
+        {
+            var table = NestedTable.Lay(t, g.ContentWidth, null);
+            page.Ops.AddRange(table.Block!.Select(op => Shift.Moved(op, g.Left, y)));
+            return y + table.Height;
+        }
+
+        if (block is not Paragraph p)
+        {
+            return y;
+        }
+
         y += p.Style.SpaceAbove;
         FloatPlacer.Place(page, p, g, y, null);
         foreach (var line in LineBreaker.Break(p, g.ContentWidth, field))

@@ -74,7 +74,9 @@ This plan is built to find out early and keep finding out.
   - a row breaks across pages, each cell at its own last line that fits, unless it is marked not
     to. A row with a set height that breaks across a page can still differ from LibreOffice, and
     rows joined by a merged cell are kept together on a page where LibreOffice may break them.
-- **Headers and footers:** on every page, with a first page of its own, and page numbers and counts
+- **Headers and footers:** on every page, with a first page of its own, tables in them laid out
+  as a table in a cell is (a letterhead set out as a table, say; until this was built they were
+  left out without a word), and page numbers and counts
   of pages in the letter (`NUMPAGES`) and in its section (`SECTIONPAGES`), each in figures, letters
   or Roman numerals as its switch says, its instruction read whole though Word may split it across
   runs. LibreOffice is no guide to the counts: it prints a section's as last saved, and counts a

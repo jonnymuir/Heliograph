@@ -40,7 +40,7 @@ internal sealed class CellLines(double width, StructNode? cell)
     {
         _y += p.Style.SpaceAbove;
         var owner = cell is null ? Owner.Artifact : new Owner(cell.Add("P"), null);
-        foreach (var line in LineBreaker.Break(p, width, _ => ""))
+        foreach (var line in LineBreaker.Break(p, width, FieldValues.Of))
         {
             _lines.Add((_y, line, owner));
             _y += line.Height;
