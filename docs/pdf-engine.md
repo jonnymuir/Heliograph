@@ -99,6 +99,11 @@ This plan is built to find out early and keep finding out.
   old page number out, so a Word probe is the judge of those. A symbol from a symbol font, an
   optional hyphen, a phonetic guide and a date block are refused, and so is a count of pages in
   the body or a page field in a table or a note.
+- **Content Word wraps in something else:** paragraphs in custom XML, and table rows and cells in
+  content controls (as a repeating section wraps rows), all of which were left out before; and a
+  row that starts further along the grid (gridBefore), whose cells were drawn from the first
+  column. A paragraph in a frame or a drop capital, content imported from another file, text
+  spread across the whole line, and a section break inside a content control are refused.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's

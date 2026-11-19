@@ -123,6 +123,9 @@ internal sealed record Cell(IReadOnlyList<Block> Blocks, int Span, CellBorders B
 /// <summary>A table row. Rows break across pages unless marked not to; heading rows repeat at the top of each page.</summary>
 internal sealed record Row(IReadOnlyList<Cell> Cells, bool Header, bool CantSplit)
 {
+    /// <summary>How many grid columns the row leaves empty before its first cell.</summary>
+    public int GridBefore { get; init; }
+
     /// <summary>The row's set height, if any: at least that, or exactly that.</summary>
     public double Height { get; init; }
 

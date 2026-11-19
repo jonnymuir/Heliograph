@@ -32,8 +32,9 @@ internal sealed class RowLayout
     /// <summary>A row laid out in a text area this wide, across which the table is aligned.</summary>
     public static RowLayout Of(Table t, Row row, StructNode? rowNode, double area = 0)
     {
-        var x = TableLeft(t, area);
-        var column = 0;
+        // A row may leave grid columns empty before its first cell.
+        var column = row.GridBefore;
+        var x = TableLeft(t, area) + t.Grid.Take(column).Sum();
         var cells = new List<CellLayout>();
         var topBorder = 0.0;
         foreach (var cell in row.Cells)
@@ -100,7 +101,7 @@ internal sealed class RowLayout
     public IReadOnlyList<Cell> Source => _row.Cells;
 
     /// <summary>The grid column each cell starts in.</summary>
-    public IReadOnlyList<int> Columns => [.. _row.Cells.Select((_, c) => _row.Cells.Take(c).Sum(cell => cell.Span))];
+    public IReadOnlyList<int> Columns => [.. _row.Cells.Select((_, c) => _row.GridBefore + _row.Cells.Take(c).Sum(cell => cell.Span))];
 
     // A whole row is exactly the height it sets, or at least that height below its top border, as LibreOffice lays it out.
     private double Settle(double need, bool whole) =>
