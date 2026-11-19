@@ -182,6 +182,10 @@ internal sealed class WordReader : IDisposable
             {
                 blocks.AddRange(Blocks(content));
             }
+            else if (e.Name == W + "customXml")
+            {
+                blocks.AddRange(Blocks(e));
+            }
         }
 
         return blocks;

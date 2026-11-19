@@ -13,7 +13,7 @@ internal static class TableReader
     public static Table Read(XElement tbl, TableStyle style, Func<XElement, IReadOnlyList<Block>> blocks)
     {
         var grid = tbl.Element(W + "tblGrid")?.Elements(W + "gridCol").Select(g => Twips(g, "w") ?? 0).ToList() ?? [];
-        var trs = tbl.Elements(W + "tr").ToList();
+        var trs = Unwrapped(tbl, W + "tr").ToList();
         var rows = trs.Select((tr, r) => Row(tr, new Edges(r == 0, r == trs.Count - 1), style, blocks)).ToList();
         return new Table(grid, rows, Twips(style.Property("tblInd"), "w") ?? 0, Margins(style))
         {
@@ -24,11 +24,12 @@ internal static class TableReader
     private static Row Row(XElement tr, Edges edges, TableStyle style, Func<XElement, IReadOnlyList<Block>> blocks)
     {
         var trPr = tr.Element(W + "trPr");
-        var tcs = tr.Elements(W + "tc").ToList();
+        var tcs = Unwrapped(tr, W + "tc").ToList();
         var cells = tcs.Select((tc, c) => Cell(tc, edges with { Left = c == 0, Right = c == tcs.Count - 1 }, style, blocks)).ToList();
         var height = trPr?.Element(W + "trHeight");
         return new Row(cells, On(trPr?.Element(W + "tblHeader")), On(trPr?.Element(W + "cantSplit")))
         {
+            GridBefore = (int?)trPr?.Element(W + "gridBefore")?.Attribute(W + "val") ?? 0,
             Height = Twips(height, "val") ?? 0,
             ExactHeight = (string?)height?.Attribute(W + "hRule") == "exact",
         };
