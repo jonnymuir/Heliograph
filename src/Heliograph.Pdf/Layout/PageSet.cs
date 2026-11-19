@@ -42,6 +42,14 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     public bool HasContent { get; set; }
     public double Room => BodyBottom - Y;
 
+    /// <summary>
+    /// A field in the body worked out as it is laid out: the page number, in its switch's format or its section's, of the
+    /// page the paragraph starts on. Counts of pages are only known once the letter is laid out, so they are kept to
+    /// headers and footers.
+    /// </summary>
+    public string Field(FieldInline f) =>
+        f.Field == "PAGE" ? ListLabels.Number(Current.Number, f.Format ?? Current.Section.Numbers.Format) : "";
+
     /// <summary>Starts a section on a new page, numbered from where the section says or on from the page before.</summary>
     public void StartSection(Section section)
     {

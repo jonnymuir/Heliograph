@@ -75,6 +75,11 @@ internal static class WordProbes
         yield return ("probe-page-breaks", Letter("Arial", Extras.None, Body(Plain(Words),
             "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"page\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>",
             "<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>", Plain("The appendix, with the fees for the year."))));
+        yield return ("probe-run-content", Letter("Arial", Extras.None, Body(
+            "<w:p><w:r><w:ptab w:relativeTo=\"margin\" w:alignment=\"right\" w:leader=\"none\"/><w:t>Our reference: 4567</w:t></w:r></w:p>",
+            "<w:p><w:r><w:ptab w:relativeTo=\"margin\" w:alignment=\"center\" w:leader=\"none\"/><w:t>Private and confidential</w:t></w:r></w:p>",
+            "<w:p><w:r><w:t xml:space=\"preserve\">Please telephone the membership team at the National Juggling Federation on 0300</w:t></w:r><w:r><w:noBreakHyphen/><w:t>123</w:t></w:r><w:r><w:noBreakHyphen/><w:t>4567 today.</w:t></w:r></w:p>",
+            "<w:p><w:r><w:t xml:space=\"preserve\">This is page </w:t></w:r><w:r><w:pgNum/></w:r><w:r><w:t xml:space=\"preserve\">, and again page </w:t></w:r><w:fldSimple w:instr=\" PAGE \"><w:r><w:t>9</w:t></w:r></w:fldSimple><w:r><w:t>.</w:t></w:r></w:p>")));
         yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 

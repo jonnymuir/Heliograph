@@ -47,7 +47,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
             pages.NewPage();
         }
 
-        var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, _ => "");
+        var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, pages.Field);
         // Space before is kept at the top of a page too, as LibreOffice lays out a Word document, less any part shared with
         // the space after the paragraph above, wherever that paragraph ended; but a paragraph a keep rule moves to a new
         // page starts at its top.
@@ -120,7 +120,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         }
 
         var g = pages.Geometry;
-        return LineBreaker.Break(p, g.ContentWidth, _ => "", new LineBounds(pages.Y, (top, height) => WrapRoom.Of(pages.Wraps, g.Left, (top, height), (0, g.ContentWidth))));
+        return LineBreaker.Break(p, g.ContentWidth, pages.Field, new LineBounds(pages.Y, (top, height) => WrapRoom.Of(pages.Wraps, g.Left, (top, height), (0, g.ContentWidth))));
     }
 
     // As many of the lines that fit as come before a page break, the line it ends included; the rest go on the next page.

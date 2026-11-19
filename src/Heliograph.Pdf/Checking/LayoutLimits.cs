@@ -44,6 +44,8 @@ internal static class LayoutLimits
     // How text is set.
     private static Limit[] ThingsInTheText() =>
     [
+        new(DiagnosticCodes.PdfCannotDrawFormatting, RunLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet, so its PDFs would be missing it.",
+            $"Type the character or text itself in an ordinary font, or take it out, {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawFormatting, FormattingLimits.Found, what => $"This document uses {what}. {Route} does not draw that yet, so it would print as plain text.",
             $"Take that formatting off, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutDirection, Direction, what => $"This document has {what}. {Route} lays out text left to right only.",

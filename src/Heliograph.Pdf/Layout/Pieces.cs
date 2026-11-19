@@ -27,6 +27,9 @@ internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKin
     /// <summary>For a break, whether it is a page break.</summary>
     public bool PageBreak { get; init; }
 
+    /// <summary>For a position tab, where it goes and how text lines up on it; null for an ordinary tab.</summary>
+    public PositionTab? Position { get; init; }
+
     /// <summary>For an endnote's mark in the text, the endnote it refers to.</summary>
     public string? Endnote { get; init; }
 }

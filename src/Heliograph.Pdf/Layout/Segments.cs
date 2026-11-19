@@ -49,8 +49,10 @@ internal static class Segments
     private static IEnumerable<(Rune Rune, RunStyle Style)> Drawn(string text, RunStyle style)
     {
         var small = style.SmallCaps && !style.Caps ? style with { Size = style.Size * SmallCapitals, SmallCaps = false } : null;
-        foreach (var rune in text.EnumerateRunes())
+        foreach (var character in text.EnumerateRunes())
         {
+            // A non-breaking hyphen is drawn as a hyphen; it stays one in the text, where no line breaks at it.
+            var rune = character.Value == 0x2011 ? new Rune('-') : character;
             yield return small is not null && Rune.IsLower(rune) ? (Rune.ToUpperInvariant(rune), small) : (rune, style);
         }
     }
