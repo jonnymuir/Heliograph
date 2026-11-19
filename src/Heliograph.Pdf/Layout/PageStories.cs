@@ -25,5 +25,10 @@ internal static class PageStories
         Math.Max(g.Top, g.HeaderDistance + Height(stories.Header, g)), g.Height - Math.Max(g.Bottom, g.FooterDistance + Height(stories.Footer, g)));
 
     public static double Height(IReadOnlyList<Block> blocks, PageGeometry g, Func<FieldInline, string>? field = null) =>
-        blocks.OfType<Paragraph>().Sum(p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, field ?? (_ => "9")).Sum(l => l.Height) + p.Style.Spacing.After);
+        blocks.Sum(b => b switch
+        {
+            Paragraph p => p.Style.SpaceAbove + LineBreaker.Break(p, g.ContentWidth, field ?? (_ => "9")).Sum(l => l.Height) + p.Style.Spacing.After,
+            Table t => NestedTable.Lay(t, g.ContentWidth, null).Height,
+            _ => 0,
+        });
 }
