@@ -25,28 +25,10 @@ internal static class WordXml
     /// A container's children of a kind, looking through the wrappers Word may put round them: a content control (sdt),
     /// whose content counts, and custom XML.
     /// </summary>
-    public static IEnumerable<XElement> Unwrapped(XElement container, XName name)
-    {
-        foreach (var e in container.Elements())
-        {
-            if (e.Name == name)
-            {
-                yield return e;
-            }
-            else if (e.Name == W + "customXml" || e.Name == W + "sdtContent")
-            {
-                foreach (var inner in Unwrapped(e, name))
-                {
-                    yield return inner;
-                }
-            }
-            else if (e.Name == W + "sdt" && e.Element(W + "sdtContent") is { } content)
-            {
-                foreach (var inner in Unwrapped(content, name))
-                {
-                    yield return inner;
-                }
-            }
-        }
-    }
+    public static IEnumerable<XElement> Unwrapped(XElement container, XName name) =>
+        container.Elements().SelectMany(e => e.Name == name ? [e] : Inside(e) is { } inner ? Unwrapped(inner, name) : []);
+
+    // What a wrapper holds: a content control's content, or the wrapper itself for custom XML; null for anything else.
+    private static XElement? Inside(XElement e) =>
+        e.Name == W + "sdt" ? e.Element(W + "sdtContent") : e.Name == W + "customXml" || e.Name == W + "sdtContent" ? e : null;
 }
