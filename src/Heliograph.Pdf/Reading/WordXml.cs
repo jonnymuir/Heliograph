@@ -20,4 +20,15 @@ internal static class WordXml
         e?.Attribute(W + attribute) is { } a && double.TryParse(a.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v / 20 : null;
 
     public static double Number(string value) => double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// A container's children of a kind, looking through the wrappers Word may put round them: a content control (sdt),
+    /// whose content counts, and custom XML.
+    /// </summary>
+    public static IEnumerable<XElement> Unwrapped(XElement container, XName name) =>
+        container.Elements().SelectMany(e => e.Name == name ? [e] : Inside(e) is { } inner ? Unwrapped(inner, name) : []);
+
+    // What a wrapper holds: a content control's content, or the wrapper itself for custom XML; null for anything else.
+    private static XElement? Inside(XElement e) =>
+        e.Name == W + "sdt" ? e.Element(W + "sdtContent") : e.Name == W + "customXml" || e.Name == W + "sdtContent" ? e : null;
 }

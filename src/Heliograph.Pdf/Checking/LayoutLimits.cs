@@ -29,6 +29,8 @@ internal static class LayoutLimits
     [
         new(DiagnosticCodes.PdfCannotDrawPicture, Pictures, what => $"This document has {what}. {Route} does not lay that out yet, so its PDFs would be missing it or set it out wrongly.",
             $"Set the picture in line with text, in front of or behind it, or wrap text Square or Top and Bottom on one side of it in the body of the letter (Wrap Text in Word), {Instead}"),
+        new(DiagnosticCodes.PdfCannotDrawShape, BlockLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet, so its PDFs would set it out wrongly or be missing it.",
+            $"Make it an ordinary paragraph, aligned left, right, centred or justified, {Instead}"),
         new(DiagnosticCodes.PdfCannotDrawShape, Shapes, what => $"This document has {what}. {Route} does not draw text boxes, shapes or charts yet, so its PDFs would be missing it.",
             $"Put the text in an ordinary paragraph or table instead, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutNotes, NoteLimits.Found, what => $"This document has {what}. {Route} lays out footnotes in the body of the letter, numbered 1, 2, 3 at the foot of the page, only.",
