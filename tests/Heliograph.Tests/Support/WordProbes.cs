@@ -81,6 +81,8 @@ internal static class WordProbes
             "<w:p><w:r><w:t xml:space=\"preserve\">Please telephone the membership team at the National Juggling Federation on 0300</w:t></w:r><w:r><w:noBreakHyphen/><w:t>123</w:t></w:r><w:r><w:noBreakHyphen/><w:t>4567 today.</w:t></w:r></w:p>",
             "<w:p><w:r><w:t xml:space=\"preserve\">This is page </w:t></w:r><w:r><w:pgNum/></w:r><w:r><w:t xml:space=\"preserve\">, and again page </w:t></w:r><w:fldSimple w:instr=\" PAGE \"><w:r><w:t>9</w:t></w:r></w:fldSimple><w:r><w:t>.</w:t></w:r></w:p>")));
         yield return ("probe-columns", PdfColumnTests.Letter(PdfColumnTests.Three, "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"column\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>", before: true));
+        yield return ("probe-autofit", Letter("Arial", Extras.None, Body(Plain("A table that fits its contents, then one of fixed layout, each with a word too long for its first column."),
+            Autofit(fixedLayout: false), Plain("And the fixed one:"), Autofit(fixedLayout: true), Plain("Yours sincerely,"))));
         yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 
@@ -100,6 +102,15 @@ internal static class WordProbes
     {
         var rPr = $"<w:rPr><w:rFonts w:ascii=\"{font}\" w:hAnsi=\"{font}\"/><w:sz w:val=\"{size}\"/></w:rPr>";
         return $"<w:p><w:pPr><w:spacing w:before=\"0\" w:after=\"0\" {line}/>{rPr}</w:pPr><w:r>{rPr}<w:t>{font} at {size / 2} points, a line set to show where it sits.</w:t></w:r></w:p>";
+    }
+
+    // Two columns, the first an inch wide, holding an email address far wider than that.
+    private static string Autofit(bool fixedLayout)
+    {
+        static string Cell(string text, int width) => $"<w:tc><w:tcPr><w:tcW w:w=\"{width}\" w:type=\"dxa\"/></w:tcPr><w:p><w:r><w:t>{text}</w:t></w:r></w:p></w:tc>";
+        var layout = fixedLayout ? "<w:tblLayout w:type=\"fixed\"/>" : "";
+        return $"<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/>{layout}</w:tblPr><w:tblGrid><w:gridCol w:w=\"1440\"/><w:gridCol w:w=\"7586\"/></w:tblGrid>"
+            + $"<w:tr>{Cell("Email", 1440)}{Cell("Where we write to you", 7586)}</w:tr><w:tr>{Cell("membership.secretary@example.org", 1440)}{Cell("Every letter about your membership, and your renewal.", 7586)}</w:tr></w:tbl>";
     }
 
     private static string Styled(string style, string text) => $"<w:p><w:pPr><w:pStyle w:val=\"{style}\"/></w:pPr><w:r><w:t>{text}</w:t></w:r></w:p>";
