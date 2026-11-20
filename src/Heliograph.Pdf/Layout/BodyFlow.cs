@@ -44,7 +44,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         var s = p.Style;
         if (s.Flow.PageBreakBefore && pages.HasContent)
         {
-            pages.NewPage();
+            pages.BreakPage();
         }
 
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, pages.Field);
@@ -62,31 +62,61 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         Open(box, before);
         FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         lines = Wrapped(p, lines);
+        Place(lines, owner, box, s.Flow.WidowControl);
+        Finish(p, box);
+        if (lines[^1].PageBreakAfter)
+        {
+            Break(lines[^1]);
+        }
+    }
+
+    // A paragraph's lines, as many on each page or column as fit, going on where the last run leaves off.
+    private void Place(List<Line> lines, Owner owner, ParagraphBox? box, bool widowControl)
+    {
         var placed = 0;
         while (placed < lines.Count)
         {
-            var fit = UpToBreak(lines, placed, _fit.Fit(lines, placed, s.Flow.WidowControl));
-            for (var k = 0; k < fit; k++)
+            var fit = UpToBreak(lines, placed, _fit.Fit(lines, placed, widowControl));
+            foreach (var line in lines.GetRange(placed, fit))
             {
-                LinePlacer.Place(pages.Current, lines[placed + k], pages.Geometry.Left, pages.Y, owner);
-                notes.Place(lines[placed + k], owner.Node);
-                pages.TextFoot = pages.Y + lines[placed + k].Height - lines[placed + k].Hang;
-                pages.Y += lines[placed + k].Height;
+                LinePlacer.Place(pages.Current, line, pages.Geometry.Left, pages.Y, owner);
+                notes.Place(line, owner.Node);
+                pages.TextFoot = pages.Y + line.Height - line.Hang;
+                pages.Y += line.Height;
                 pages.HasContent = true;
             }
 
             placed += fit;
             if (placed < lines.Count)
             {
-                NextPage(box);
+                Turn(fit > 0 ? lines[placed - 1] : null, box);
             }
         }
+    }
 
-        Finish(p, box);
-        if (lines[^1].PageBreakAfter)
+    // Where the rest of a paragraph goes after a run of lines: on the next page after a page break, else in the next column
+    // or on the next page, with the next part of its box.
+    private void Turn(Line? last, ParagraphBox? box)
+    {
+        if (last is { PageBreakAfter: true, ColumnBreakAfter: false })
+        {
+            pages.BreakPage();
+            return;
+        }
+
+        NextPage(box);
+    }
+
+    // A break that ends the paragraph: a column break goes on in the next column, a page break on the next page.
+    private void Break(Line line)
+    {
+        if (line.ColumnBreakAfter)
         {
             pages.NewPage();
+            return;
         }
+
+        pages.BreakPage();
     }
 
     // A new page for the rest of the paragraph, with the next part of its box if it has one.

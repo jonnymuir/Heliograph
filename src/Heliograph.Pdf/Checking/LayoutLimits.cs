@@ -37,7 +37,7 @@ internal static class LayoutLimits
             $"Put the note's text in the body of the letter, or make it an ordinary footnote there, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutSections, SectionLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet.",
             $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
-        new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
+        new(DiagnosticCodes.PdfCannotLayOutColumns, ColumnLimits.Found, what => $"This document sets text in columns, with {what}. {Route} does not lay that out yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
         new(DiagnosticCodes.PdfCannotWorkOutField, FieldLimits.Found, what => $"This document has {what}. {Route} works out page numbers and counts of pages, in figures, letters or Roman numerals, only, so it would not print as it should.",
             $"Type the text in, or use a tag from the dictionary for a value, {Instead}"),
@@ -116,11 +116,6 @@ internal static class LayoutLimits
         return root.Descendants().Where(e => (e.Name == A + "graphicData" && !((string?)e.Attribute("uri") ?? "").EndsWith("/picture", StringComparison.Ordinal))
             || e.Name == Mc + "AlternateContent" || (e.Name.Namespace == V && e.Name.LocalName is "shape" or "rect" or "roundrect" or "oval" or "line" && !e.Descendants(V + "imagedata").Any()))
             .Select(e => (e, "a text box, shape or chart"));
-    }
-
-    private static IEnumerable<(XElement, string)> Columns(XElement root)
-    {
-        return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
     }
 
     private static IEnumerable<(XElement, string)> Direction(XElement root)

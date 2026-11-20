@@ -15,10 +15,13 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     private readonly List<LaidOutPage> _pages = [];
     private Section _section = null!;
     private bool _sectionStarts;
+    private int _column;
+    private double _deepest;
     private int _number;
     private double _areaBottom;
 
-    public PageGeometry Geometry => _section.Page;
+    /// <summary>The text area being laid out: the page's, or, in a section set in columns, the column's.</summary>
+    public PageGeometry Geometry => _section.Columns is { } set ? Column(set, _column) : _section.Page;
     public double BodyTop { get; private set; }
 
     /// <summary>Where the body's text may go down to: the foot of the text area, less the room its footnotes take.</summary>
@@ -63,10 +66,34 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         Open();
     }
 
-    /// <summary>Finishes the last page.</summary>
-    public void Finish() => Finishing?.Invoke(Current, _areaBottom);
+    /// <summary>Finishes the last page: the lines between its columns, if its section asks, then its footnotes.</summary>
+    public void Finish()
+    {
+        if (_section.Columns is { Separator: true } set)
+        {
+            Separators(set);
+        }
 
+        Finishing?.Invoke(Current, _areaBottom);
+    }
+
+    /// <summary>Goes on in the next column, or, in the last or only one, on a new page.</summary>
     public void NewPage()
+    {
+        if (_section.Columns is { } set && _column + 1 < set.Columns.Count)
+        {
+            _deepest = Math.Max(_deepest, Y);
+            _column++;
+            Y = TextFoot = BodyTop;
+            HasContent = false;
+            return;
+        }
+
+        BreakPage();
+    }
+
+    /// <summary>Goes on on a new page, whichever column this is: a page break.</summary>
+    public void BreakPage()
     {
         if (_pages.Count > 0)
         {
@@ -74,6 +101,25 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         }
 
         Open();
+    }
+
+    // A column's text area: the page's, from the column's left edge, as wide as the column.
+    private PageGeometry Column(ColumnSet set, int column)
+    {
+        var page = _section.Page;
+        var left = page.Left + set.Columns.Take(column).Sum(c => c.Width + c.Space);
+        return page with { Left = left, Right = page.Width - left - set.Columns[column].Width };
+    }
+
+    // A line down the middle of each space between columns, from the top of the text to the foot of the deepest column.
+    private void Separators(ColumnSet set)
+    {
+        var bottom = Math.Max(_deepest, Y);
+        for (var c = 0; c < set.Columns.Count - 1; c++)
+        {
+            var x = Column(set, c).Left + set.Columns[c].Width + (set.Columns[c].Space / 2);
+            Current.Ops.Add(new LineOp(x, BodyTop, x, bottom, 0.5));
+        }
     }
 
     private void Open()
@@ -87,9 +133,9 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         _number = _sectionStarts && _section.Numbers.Start is { } start ? start : _number + 1;
         Current = new LaidOutPage { Section = _section, Number = _number, FirstInSection = _sectionStarts };
         _pages.Add(Current);
-        var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), Geometry);
+        var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), _section.Page);
         (BodyTop, _areaBottom) = (area.Top, area.Bottom);
-        _sectionStarts = false;
+        (_sectionStarts, _column, _deepest) = (false, 0, 0);
         Y = TextFoot = BodyTop;
         Reserved = 0;
         HasContent = false;

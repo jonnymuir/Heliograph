@@ -22,6 +22,9 @@ internal sealed class Line
 
     /// <summary>Whether the line ends with a page break, so the paragraph goes on at the top of the next page.</summary>
     public bool PageBreakAfter { get; set; }
+
+    /// <summary>Whether that break is a column break, going on in the next column rather than on the next page.</summary>
+    public bool ColumnBreakAfter { get; set; }
 }
 
 /// <summary>Where a paragraph starts down its page, and the room a line has across it at a height, beside floating pictures.</summary>
@@ -106,6 +109,7 @@ internal static class LineBreaker
                 case PieceKind.Break:
                     _line.EndsWithBreak = true;
                     _line.PageBreakAfter = piece.PageBreak;
+                    _line.ColumnBreakAfter = piece.ColumnBreak;
                     Next();
                     break;
                 case PieceKind.Tab:
@@ -311,7 +315,7 @@ internal static class LineBreaker
                     pieces.Add(new Piece("\t", inline.Style, 0, PieceKind.Tab) { Position = t.Position });
                     break;
                 case BreakInline b:
-                    pieces.Add(new Piece("\n", inline.Style, 0, PieceKind.Break) { PageBreak = b.Page });
+                    pieces.Add(new Piece("\n", inline.Style, 0, PieceKind.Break) { PageBreak = b.Page, ColumnBreak = b.Column });
                     break;
                 case TextInline t:
                     Words(t.Text, t.Style, pieces);
