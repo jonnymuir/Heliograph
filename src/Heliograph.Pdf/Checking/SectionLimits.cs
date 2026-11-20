@@ -23,8 +23,7 @@ internal static class SectionLimits
 
     private static string? What(XElement e) => e.Name.LocalName switch
     {
-        "type" when Val(e) == "continuous" => Continuous(e.Parent!),
-        "type" when Val(e) is not (null or "nextPage") => "a section break that starts on an odd or even page",
+        "type" => Break(e),
         "pgBorders" => "a border round the page",
         "pgMar" when (double?)e.Attribute(W + "gutter") > 0 => "a gutter beside the margin",
         "lnNumType" => "line numbers in the margin",
@@ -37,9 +36,14 @@ internal static class SectionLimits
 
     private static bool Numbered(string format) => format is "decimal" or "lowerRoman" or "upperRoman" or "lowerLetter" or "upperLetter";
 
-    // A continuous break is laid out, but not next to text in columns, which Word balances.
-    private static string? Continuous(XElement sect) =>
-        Columned(sect) || Columned(Before(sect)) ? "a section break that does not start a new page, next to text in columns" : null;
+    // How a section starts: on a new page, or down the same page, but not next to text in columns, which Word balances;
+    // on an odd or even page is not laid out yet.
+    private static string? Break(XElement type) => Val(type) switch
+    {
+        null or "nextPage" => null,
+        "continuous" => Columned(type.Parent) || Columned(Before(type.Parent!)) ? "a section break that does not start a new page, next to text in columns" : null,
+        _ => "a section break that starts on an odd or even page",
+    };
 
     // Whether a section's settings set its text in columns.
     private static bool Columned(XElement? sect) =>
