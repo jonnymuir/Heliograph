@@ -5,7 +5,7 @@
     <IsPackable>true</IsPackable>
     <PackageId>Heliograph.Pdf</PackageId>
     <Title>Heliograph.Pdf</Title>
-    <Version>0.1.0-alpha.9</Version>
+    <Version>0.1.0-alpha.10</Version>
     <Authors>Jonny Muir</Authors>
     <Description>Converts a letter rendered by Heliograph to an accessible, tagged PDF (PDF/UA-1) in .NET alone: no program to install, nothing started. Carries free look-alike fonts so it works anywhere .NET runs.</Description>
     <PackageTags>Correspondence;PDF;PDF/UA;Accessibility</PackageTags>
