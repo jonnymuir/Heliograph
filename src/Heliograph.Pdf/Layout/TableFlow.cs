@@ -14,6 +14,7 @@ internal sealed class TableFlow(PageSet pages, PageNotes notes)
 
     public void Run(Table t, StructNode node)
     {
+        t = Autofit.Widen(t);
         var headings = t.Rows.TakeWhile(r => r.Header).ToList();
         RowLayout? last = null;
         for (var r = 0; r < t.Rows.Count; r++)
