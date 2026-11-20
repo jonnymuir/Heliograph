@@ -252,7 +252,7 @@ character that makes every text message cost more.
 Some sites make PDFs with Heliograph's own converter, which is new. It does not yet lay out
 everything a word processor can. Where it cannot, the workbench says so when you upload, with
 the place and a fix (codes `HG4001` to `HG4014`). The main ones are floating pictures, text boxes, links to a place in the document or in a header,
-a section break that does not start a new page, and a tab in a centred or
+a continuous section break next to text in columns, and a tab in a centred or
 right-aligned paragraph. Sections that start a new page are laid out, each with its
 own page size, orientation, margins, headers and footers (different on the first page or on even
 pages if you ask), and page numbers. Footnotes are laid out at the foot of the page, in the body or in a table, and endnotes after

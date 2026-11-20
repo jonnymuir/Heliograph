@@ -56,6 +56,14 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     /// <summary>Starts a section on a new page, numbered from where the section says or on from the page before.</summary>
     public void StartSection(Section section)
     {
+        // A continuous section goes on down this page, with its own margins across it, when the page is the same size; as
+        // in Word, one on a page of another size starts a new page.
+        if (section.Continuous && _pages.Count > 0 && section.Page.Width == _section.Page.Width && section.Page.Height == _section.Page.Height)
+        {
+            _section = section;
+            return;
+        }
+
         // The page before is finished, footnotes and all, on its own section's page.
         if (_pages.Count > 0)
         {

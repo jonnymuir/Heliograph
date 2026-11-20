@@ -34,7 +34,7 @@ public class PdfLimitsTests
         { DiagnosticCodes.PdfCannotDrawPicture, $"<w:p {W}><w:r><w:drawing><wp:inline {Drawing}><a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\"/></a:graphic></wp:inline></w:drawing></w:r></w:p>", "picture" },
         { DiagnosticCodes.PdfCannotDrawShape, $"<w:p {W}><w:r><w:drawing><wp:anchor {Drawing}><a:graphic><a:graphicData uri=\"http://schemas.microsoft.com/office/word/2010/wordprocessingShape\"/></a:graphic></wp:anchor></w:drawing></w:r></w:p>", "text box" },
         { DiagnosticCodes.PdfCannotLayOutNotes, $"<w:p {W}><w:r><w:t>See note</w:t></w:r><w:r><w:endnoteReference w:customMarkFollows=\"1\" w:id=\"1\"/><w:t>*</w:t></w:r></w:p>", "mark of its own" },
-        { DiagnosticCodes.PdfCannotLayOutSections, $"<w:p {W}><w:pPr><w:sectPr><w:type w:val=\"continuous\"/></w:sectPr></w:pPr><w:r><w:t>Before the break</w:t></w:r></w:p>", "does not start a new page" },
+        { DiagnosticCodes.PdfCannotLayOutSections, $"<w:p {W}><w:pPr><w:sectPr><w:type w:val=\"continuous\"/><w:cols w:num=\"2\"/></w:sectPr></w:pPr><w:r><w:t>Before the break</w:t></w:r></w:p>", "does not start a new page" },
         { DiagnosticCodes.PdfCannotLayOutColumns, $"<w:p {W}><w:pPr><w:sectPr><w:cols w:num=\"2\" w:equalWidth=\"0\"><w:col w:w=\"3000\"/><w:col w:w=\"5000\"/></w:cols></w:sectPr></w:pPr></w:p>", "different widths" },
         { DiagnosticCodes.PdfCannotWorkOutField, $"<w:p {W}><w:fldSimple w:instr=\" DATE \\@ &quot;d MMMM yyyy&quot; \"><w:r><w:t>1 June</w:t></w:r></w:fldSimple></w:p>", "DATE field" },
         { DiagnosticCodes.PdfCannotMakeLink, $"<w:p {W}><w:hyperlink w:anchor=\"top\"><w:r><w:t>Go to the top</w:t></w:r></w:hyperlink></w:p>", "link" },

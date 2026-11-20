@@ -23,7 +23,8 @@ internal static class SectionLimits
 
     private static string? What(XElement e) => e.Name.LocalName switch
     {
-        "type" when Val(e) is not (null or "nextPage") => Val(e) == "continuous" ? "a section break that does not start a new page" : "a section break that starts on an odd or even page",
+        "type" when Val(e) == "continuous" => Columned(e.Parent) || Columned(Before(e.Parent!)) ? "a section break that does not start a new page, next to text in columns" : null,
+        "type" when Val(e) is not (null or "nextPage") => "a section break that starts on an odd or even page",
         "pgBorders" => "a border round the page",
         "pgMar" when (double?)e.Attribute(W + "gutter") > 0 => "a gutter beside the margin",
         "lnNumType" => "line numbers in the margin",
@@ -35,4 +36,12 @@ internal static class SectionLimits
     };
 
     private static bool Numbered(string format) => format is "decimal" or "lowerRoman" or "upperRoman" or "lowerLetter" or "upperLetter";
+
+    // Whether a section's settings set its text in columns.
+    private static bool Columned(XElement? sect) =>
+        sect?.Element(W + "cols") is { } cols && ((int?)cols.Attribute(W + "num") > 1 || cols.Elements(W + "col").Skip(1).Any());
+
+    // The section before this one: the settings of the last paragraph to end a section before it.
+    private static XElement? Before(XElement sect) =>
+        sect.Document?.Descendants(W + "sectPr").TakeWhile(s => s != sect).LastOrDefault();
 }

@@ -171,6 +171,9 @@ internal sealed record Section(PageGeometry Page, Stories Stories)
 {
     public PageNumbers Numbers { get; init; } = PageNumbers.Continue;
 
+    /// <summary>Whether the section goes on down the page the section before ends on, rather than starting a new one.</summary>
+    public bool Continuous { get; init; }
+
     /// <summary>The section's columns across its text area, each width with the space after it, and whether a line runs between them; null for one.</summary>
     public ColumnSet? Columns { get; init; }
 

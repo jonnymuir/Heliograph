@@ -59,7 +59,7 @@ internal sealed class WordReader : IDisposable
         {
             var stories = StoriesOf(sect, before);
             var page = PageGeometry.Of(sect);
-            sections.Add(new Section(page, stories) { Numbers = Numbers(sect), Columns = ColumnReader.Read(sect, page), Body = Blocks(elements) });
+            sections.Add(new Section(page, stories) { Numbers = Numbers(sect), Columns = ColumnReader.Read(sect, page), Continuous = Val(sect.Element(W + "type")) == "continuous", Body = Blocks(elements) });
             before = stories;
         }
 
