@@ -56,9 +56,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
     /// <summary>Starts a section on a new page, numbered from where the section says or on from the page before.</summary>
     public void StartSection(Section section)
     {
-        // A continuous section goes on down this page, with its own margins across it, when the page is the same size; as
-        // in Word, one on a page of another size starts a new page.
-        if (section.Continuous && _pages.Count > 0 && section.Page.Width == _section.Page.Width && section.Page.Height == _section.Page.Height)
+        if (GoesOn(section))
         {
             _section = section;
             return;
@@ -73,6 +71,11 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         (_section, _sectionStarts) = (section, true);
         Open();
     }
+
+    // A continuous section goes on down this page, with its own margins across it, when the page is the same size; as in
+    // Word, one on a page of another size starts a new page.
+    private bool GoesOn(Section section) =>
+        section.Continuous && _pages.Count > 0 && (section.Page.Width, section.Page.Height) == (_section.Page.Width, _section.Page.Height);
 
     /// <summary>Finishes the last page: the lines between its columns, if its section asks, then its footnotes.</summary>
     public void Finish()
