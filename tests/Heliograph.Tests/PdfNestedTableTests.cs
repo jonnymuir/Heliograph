@@ -23,9 +23,9 @@ public class PdfNestedTableTests
     private const string Borders = "<w:tblBorders><w:top w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/><w:left w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/><w:bottom w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/>"
         + "<w:right w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/><w:insideH w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/><w:insideV w:val=\"single\" w:sz=\"4\" w:color=\"auto\"/></w:tblBorders>";
 
-    // With nothing after the inner table, its cell still ends with the empty paragraph Word requires there, which Word shows
-    // as a line and LibreOffice does not; Word's layout of probe-nested-table-alone is the judge of that one.
-    public static TheoryData<string, bool> Letters => new() { { "text before and after the inner table", true } };
+    // With nothing after the inner table, its cell still ends with the empty paragraph Word requires there, which takes no
+    // room in Word (its own PDF of probe-nested-table-alone) or LibreOffice.
+    public static TheoryData<string, bool> Letters => new() { { "a table inside a cell", false }, { "text before and after the inner table", true } };
 
     [ComparedPdfTheory]
     [MemberData(nameof(Letters))]

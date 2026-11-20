@@ -14,13 +14,17 @@ internal sealed class CellLines(double width, StructNode? cell)
     public static (List<(double Top, Line Line, Owner Owner)> Lines, double Height) Of(IReadOnlyList<Block> blocks, double width, StructNode? cell)
     {
         var lines = new CellLines(width, cell);
-        foreach (var block in blocks)
+        foreach (var block in blocks.Where((b, i) => !EndAfterTable(blocks, i)))
         {
             lines.Add(block);
         }
 
         return (lines._lines, lines._y);
     }
+
+    // The empty paragraph Word requires after a table at the end of a cell takes no room, as Word and LibreOffice lay it out.
+    private static bool EndAfterTable(IReadOnlyList<Block> blocks, int i) =>
+        i == blocks.Count - 1 && i > 0 && blocks[i] is Paragraph p && p.Inlines.All(x => x is TextInline { Text.Length: 0 }) && blocks[i - 1] is Table;
 
     private void Add(Block block)
     {

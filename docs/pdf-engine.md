@@ -63,7 +63,8 @@ This plan is built to find out early and keep finding out.
   - a list inside a list tagged as one, for screen readers.
 - **Tables:** fixed column grids, cell padding and borders, column spans, and heading rows repeated
   on each page, and a table inside a table's cell, laid out across the cell's text as one block
-  that keeps together (its cells merged down a column, or footnotes in it, are refused):
+  that keeps together, the empty paragraph Word requires after it at a cell's end taking no room
+  (its cells merged down a column, or footnotes in it, are refused):
   - through their style (Word's Table Grid, say): borders, padding, indent and alignment, the
     style's outer borders on the edges and inside borders between cells, and the paragraph and
     run settings it gives text in its cells;
@@ -114,9 +115,9 @@ This plan is built to find out early and keep finding out.
   document, the separator takes one single line of the default style, whatever the document's
   own separator says, and the body stops above it; a line that refers to a note goes on a page
   only with its note. A note is not split across pages, where Word and LibreOffice may carry the
-  rest of a long one over. A table row's footnotes take room on its page; where that moves the
-  row to the next page, LibreOffice leaves a gap a row high above it, and a Word probe will say
-  which is right. Notes numbered or placed some other way are still refused.
+  rest of a long one over. A table row's footnotes take room on its page. A row whose text would
+  fit but not the space after it goes to the next page whole, as Word lays it out (LibreOffice
+  leaves a gap a row high instead). Notes numbered or placed some other way are still refused.
 - **Endnotes**, numbered i, ii, iii in the order they are referred to, after the letter's text:
   one single line of the default style below the foot of its last line, with the separator drawn
   across it, as for footnotes, then the notes, carrying on to further pages as they need. Notes of
