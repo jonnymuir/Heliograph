@@ -86,8 +86,11 @@ This plan is built to find out early and keep finding out.
   headers and footers (each one it does not set carried on from the section before, as Word does),
   a first page of its own, different headers and footers on even pages (even and odd by the page's
   number, as Word and LibreOffice both count), and page numbers restarted where it says, in
-  figures, letters or Roman numerals. A section break that does not start a new page or starts
-  on an odd or even page, a border round the page, line numbers, text set in the middle of the
+  figures, letters or Roman numerals. A continuous section break goes on down the same page, with
+  the new section's margins across it, as Word does it (LibreOffice keeps the page's first
+  section's margins); one on a page of another size starts a new page. A continuous break next
+  to text in columns, which Word balances, and a section break that starts on an odd or even
+  page, a border round the page, line numbers, text set in the middle of the
   page, a gutter, and margins mirrored on facing pages are refused.
 - **Page breaks** typed in the text (Ctrl+Enter in Word), and a column break in a single column:
   the rest of the paragraph goes on at the top of the next page; a break that ends its paragraph

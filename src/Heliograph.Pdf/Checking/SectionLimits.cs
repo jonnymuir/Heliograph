@@ -23,7 +23,7 @@ internal static class SectionLimits
 
     private static string? What(XElement e) => e.Name.LocalName switch
     {
-        "type" when Val(e) is not (null or "nextPage") => Val(e) == "continuous" ? "a section break that does not start a new page" : "a section break that starts on an odd or even page",
+        "type" => Break(e),
         "pgBorders" => "a border round the page",
         "pgMar" when (double?)e.Attribute(W + "gutter") > 0 => "a gutter beside the margin",
         "lnNumType" => "line numbers in the margin",
@@ -35,4 +35,21 @@ internal static class SectionLimits
     };
 
     private static bool Numbered(string format) => format is "decimal" or "lowerRoman" or "upperRoman" or "lowerLetter" or "upperLetter";
+
+    // How a section starts: on a new page, or down the same page, but not next to text in columns, which Word balances;
+    // on an odd or even page is not laid out yet.
+    private static string? Break(XElement type) => Val(type) switch
+    {
+        null or "nextPage" => null,
+        "continuous" => Columned(type.Parent) || Columned(Before(type.Parent!)) ? "a section break that does not start a new page, next to text in columns" : null,
+        _ => "a section break that starts on an odd or even page",
+    };
+
+    // Whether a section's settings set its text in columns.
+    private static bool Columned(XElement? sect) =>
+        sect?.Element(W + "cols") is { } cols && ((int?)cols.Attribute(W + "num") > 1 || cols.Elements(W + "col").Skip(1).Any());
+
+    // The section before this one: the settings of the last paragraph to end a section before it.
+    private static XElement? Before(XElement sect) =>
+        sect.Document?.Descendants(W + "sectPr").TakeWhile(s => s != sect).LastOrDefault();
 }
