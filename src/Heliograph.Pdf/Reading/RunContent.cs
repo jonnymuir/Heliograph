@@ -30,7 +30,7 @@ internal static class RunContent
 
     // A line break; or a page break, or a column break, which in a single column is one.
     private static BreakInline Break(XElement c, RunStyle style) =>
-        new(style) { Page = c.Name.LocalName == "br" && (string?)c.Attribute(W + "type") is "page" or "column" };
+        new(style) { Page = c.Name.LocalName == "br" && (string?)c.Attribute(W + "type") is "page" or "column", Column = (string?)c.Attribute(W + "type") == "column" };
 
     private static string? Attribute(XElement e, string name) => (string?)e.Attribute(W + name);
 

@@ -58,7 +58,8 @@ internal sealed class WordReader : IDisposable
         foreach (var (sect, elements) in SectionParts(body))
         {
             var stories = StoriesOf(sect, before);
-            sections.Add(new Section(PageGeometry.Of(sect), stories) { Numbers = Numbers(sect), Body = Blocks(elements) });
+            var page = PageGeometry.Of(sect);
+            sections.Add(new Section(page, stories) { Numbers = Numbers(sect), Columns = ColumnReader.Read(sect, page), Body = Blocks(elements) });
             before = stories;
         }
 

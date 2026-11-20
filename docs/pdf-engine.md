@@ -110,6 +110,12 @@ This plan is built to find out early and keep finding out.
 - **Underlines:** single, double, thick, and under the words only, each in the underline's own
   colour if it has one; before, every kind was drawn as one line in the text's colour. Dotted,
   dashed and wavy underlines, a border round text, and an equation are refused.
+- **Columns** of equal width in a section, half an inch apart unless it says, with a line between
+  them if it asks: text flows down each column and on to the next page; a column break goes on
+  in the next column and a page break on the next page. Word balances columns only before a
+  continuous section break, which is still refused, so they are not balanced here. Columns of
+  different widths, and footnotes, endnotes or floating pictures in a letter set in columns, are
+  refused.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's
@@ -327,7 +333,7 @@ generated documents through both routes. Add the Word fixtures.
 - Even-page headers (done).
 - Page-number formats, and section page counts (both done, with the format switches Word offers).
 - Footnotes, tagged as notes (done, in the body); endnotes (done).
-- Columns.
+- Columns (done, of equal width, each section starting a new page).
 
 ### 9. Switch over (done early: the maintainer chose to switch while still in alpha)
 

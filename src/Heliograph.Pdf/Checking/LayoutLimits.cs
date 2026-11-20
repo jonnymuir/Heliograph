@@ -37,7 +37,7 @@ internal static class LayoutLimits
             $"Put the note's text in the body of the letter, or make it an ordinary footnote there, {Instead}"),
         new(DiagnosticCodes.PdfCannotLayOutSections, SectionLimits.Found, what => $"This document has {what}. {Route} does not lay that out yet.",
             $"Use a section break that starts a new page, with the page settings Word gives a new document otherwise, {Instead}"),
-        new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, _ => $"This document sets text in columns. {Route} does not lay out columns yet.",
+        new(DiagnosticCodes.PdfCannotLayOutColumns, Columns, what => $"This document sets text in columns, with {what}. {Route} does not lay that out yet.",
             $"Set the text in a single column, or use a table, {Instead}"),
         new(DiagnosticCodes.PdfCannotWorkOutField, FieldLimits.Found, what => $"This document has {what}. {Route} works out page numbers and counts of pages, in figures, letters or Roman numerals, only, so it would not print as it should.",
             $"Type the text in, or use a tag from the dictionary for a value, {Instead}"),
@@ -118,9 +118,19 @@ internal static class LayoutLimits
             .Select(e => (e, "a text box, shape or chart"));
     }
 
+    // Columns of equal width are laid out. Columns of different widths are not yet, a paragraph carrying on into a wider
+    // one keeping the narrower one's lines; nor are footnotes, endnotes and floating pictures in a letter set in columns.
     private static IEnumerable<(XElement, string)> Columns(XElement root)
     {
-        return root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1).Select(c => (c, "columns"));
+        var all = root.Descendants(W + "cols").Where(c => (int?)c.Attribute(W + "num") > 1 || c.Elements(W + "col").Skip(1).Any()).ToList();
+        if (all.FirstOrDefault(c => c.Elements(W + "col").Select(col => (string?)col.Attribute(W + "w")).Distinct().Skip(1).Any()
+            && (string?)c.Attribute(W + "equalWidth") is "0" or "false") is { } uneven)
+        {
+            return [(uneven, "columns of different widths")];
+        }
+
+        var placed = root.Descendants().Any(e => e.Name == W + "footnoteReference" || e.Name == W + "endnoteReference" || e.Name.LocalName == "anchor");
+        return all.Count > 0 && placed ? [(all[0], "footnotes, endnotes or floating pictures")] : [];
     }
 
     private static IEnumerable<(XElement, string)> Direction(XElement root)

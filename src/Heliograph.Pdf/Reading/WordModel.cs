@@ -29,10 +29,12 @@ internal sealed record TabInline(RunStyle Style) : Inline(Style)
 /// <summary>Where a position tab goes: Alignment "left", "center" or "right" of RelativeTo "margin" or "indent".</summary>
 internal sealed record PositionTab(string Alignment, string RelativeTo, string Leader);
 
-/// <summary>A line break; or, when Page, a page break, which also ends the page (a column break is one in a single column).</summary>
+/// <summary>A line break; or, when Page, a page break, or, when Column too, a column break, which in a single column ends the page.</summary>
 internal sealed record BreakInline(RunStyle Style) : Inline(Style)
 {
     public bool Page { get; init; }
+
+    public bool Column { get; init; }
 }
 
 /// <summary>A field worked out when laid out, such as a page number, and the number format its switch gives it, if any.</summary>
@@ -155,6 +157,9 @@ internal sealed record Stories(IReadOnlyList<Block> Header, IReadOnlyList<Block>
     public IReadOnlyList<Block>? EvenFooter { get; init; }
 }
 
+/// <summary>A section's columns: each one's width and the space after it, in points, and whether a line runs between them.</summary>
+internal sealed record ColumnSet(IReadOnlyList<(double Width, double Space)> Columns, bool Separator);
+
 /// <summary>How a section numbers its pages: from where (or on from the section before when null), and in what format.</summary>
 internal sealed record PageNumbers(int? Start, string Format)
 {
@@ -165,6 +170,9 @@ internal sealed record PageNumbers(int? Start, string Format)
 internal sealed record Section(PageGeometry Page, Stories Stories)
 {
     public PageNumbers Numbers { get; init; } = PageNumbers.Continue;
+
+    /// <summary>The section's columns across its text area, each width with the space after it, and whether a line runs between them; null for one.</summary>
+    public ColumnSet? Columns { get; init; }
 
     public IReadOnlyList<Block> Body { get; init; } = [];
 }

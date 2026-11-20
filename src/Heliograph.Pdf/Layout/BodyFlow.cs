@@ -44,7 +44,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         var s = p.Style;
         if (s.Flow.PageBreakBefore && pages.HasContent)
         {
-            pages.NewPage();
+            pages.BreakPage();
         }
 
         var lines = LineBreaker.Break(p, pages.Geometry.ContentWidth, pages.Field);
@@ -76,7 +76,11 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
             }
 
             placed += fit;
-            if (placed < lines.Count)
+            if (placed < lines.Count && fit > 0 && lines[placed - 1] is { PageBreakAfter: true, ColumnBreakAfter: false })
+            {
+                pages.BreakPage();
+            }
+            else if (placed < lines.Count)
             {
                 NextPage(box);
             }
@@ -85,8 +89,20 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         Finish(p, box);
         if (lines[^1].PageBreakAfter)
         {
-            pages.NewPage();
+            Break(lines[^1]);
         }
+    }
+
+    // A break that ends the paragraph: a column break goes on in the next column, a page break on the next page.
+    private void Break(Line line)
+    {
+        if (line.ColumnBreakAfter)
+        {
+            pages.NewPage();
+            return;
+        }
+
+        pages.BreakPage();
     }
 
     // A new page for the rest of the paragraph, with the next part of its box if it has one.

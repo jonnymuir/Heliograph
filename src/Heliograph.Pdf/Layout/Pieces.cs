@@ -27,6 +27,9 @@ internal sealed record Piece(string Text, RunStyle Style, double Width, PieceKin
     /// <summary>For a break, whether it is a page break.</summary>
     public bool PageBreak { get; init; }
 
+    /// <summary>For a page break, whether it is a column break.</summary>
+    public bool ColumnBreak { get; init; }
+
     /// <summary>For a position tab, where it goes and how text lines up on it; null for an ordinary tab.</summary>
     public PositionTab? Position { get; init; }
 
