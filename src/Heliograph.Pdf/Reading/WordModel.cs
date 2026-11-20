@@ -140,6 +140,9 @@ internal sealed record CellMargins(double Left, double Right, double Top, double
 internal sealed record Table(IReadOnlyList<double> Grid, IReadOnlyList<Row> Rows, double Indent, CellMargins Margins) : Block
 {
     public string Align { get; init; } = "left";
+
+    /// <summary>Whether the table keeps its columns' widths whatever is in them, rather than fitting its contents.</summary>
+    public bool Fixed { get; init; }
 }
 
 

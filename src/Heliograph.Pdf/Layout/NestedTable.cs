@@ -10,6 +10,7 @@ internal static class NestedTable
 {
     public static Line Lay(Table t, double width, StructNode? node)
     {
+        t = Autofit.Widen(t);
         var canvas = new LaidOutPage();
         var y = 0.0;
         RowLayout? last = null;
