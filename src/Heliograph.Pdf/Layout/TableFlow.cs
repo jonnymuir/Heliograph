@@ -41,7 +41,7 @@ internal sealed class TableFlow(PageSet pages, PageNotes notes)
         var from = new int[cells.Count];
         while (cells.Need(from) > Room(cells, from) + 0.01)
         {
-            var cut = Breakable(row, from) ? cells.Cut(from, Room(cells, from)) : null;
+            var cut = Breakable(row, from) ? Lines(cells, cells.Cut(from, Room(cells, from))) : null;
             if (cut is null && pages.HasContent)
             {
                 NewPage(t, headings, row);
@@ -88,6 +88,11 @@ internal sealed class TableFlow(PageSet pages, PageNotes notes)
             pages.HasContent = true;
         }
     }
+
+    // A cut that breaks the row between lines; none when every line would stay on this page and only the space after them
+    // runs over, as Word moves such a row whole to the next page.
+    private static int[]? Lines(RowLayout cells, int[]? cut) =>
+        cut is not null && Enumerable.Range(0, cells.Count).All(c => cut[c] >= cells[c].Lines.Count) ? null : cut;
 
     // The room on this page for the rest of a row, less what its footnotes still to come would take.
     private double Room(RowLayout cells, int[] from) =>

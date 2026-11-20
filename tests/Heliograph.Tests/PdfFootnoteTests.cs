@@ -29,8 +29,8 @@ public class PdfFootnoteTests
         PdfComparison.FirstDifference(expected, actual, "LibreOffice").Difference.Should().BeNull(kind);
     }
 
-    // LibreOffice moves the row to the next page too, but leaves a gap a row high above it; Word's own layout of the probe
-    // (WordProbes) is the judge of where it goes.
+    // As Word lays it out (its own PDF of probe-table-footnote matches throughout): the row above, whose text would fit but
+    // not the space after it, goes over with it. LibreOffice leaves a gap a row high instead.
     [PdfLinesFact]
     public async Task A_table_row_goes_to_the_next_page_with_its_note()
     {
@@ -39,7 +39,7 @@ public class PdfFootnoteTests
 
         row.Page.Should().Be(2);
         lines.Where(l => l.Page == 2).Should().Contain(l => l.Text.StartsWith("2 Charged", StringComparison.Ordinal));
-        lines.First(l => l.Page == 2).Should().Be(row);
+        lines.First(l => l.Page == 2).Text.Should().StartWith("Membership");
     }
 
     [PdfLinesFact]
