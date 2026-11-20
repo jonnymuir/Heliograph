@@ -107,6 +107,9 @@ This plan is built to find out early and keep finding out.
   row that starts further along the grid (gridBefore), whose cells were drawn from the first
   column. A paragraph in a frame or a drop capital, content imported from another file, text
   spread across the whole line, and a section break inside a content control are refused.
+- **Underlines:** single, double, thick, and under the words only, each in the underline's own
+  colour if it has one; before, every kind was drawn as one line in the text's colour. Dotted,
+  dashed and wavy underlines, a border round text, and an equation are refused.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word
   document, the separator takes one single line of the default style, whatever the document's

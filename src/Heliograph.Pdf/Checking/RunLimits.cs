@@ -5,7 +5,8 @@ namespace Heliograph.Pdf.Checking;
 
 /// <summary>
 /// What a run may hold beyond text, tabs, breaks, pictures, notes and fields that the converter does not lay out yet, and
-/// would otherwise leave out of the PDF: a symbol from a symbol font, an optional hyphen, a phonetic guide, a date block.
+/// would otherwise leave out of the PDF or draw wrongly: a symbol from a symbol font, an optional hyphen, a phonetic guide, a
+/// date block, an equation, a border round text, and an underline dotted, dashed or wavy.
 /// </summary>
 internal static class RunLimits
 {
@@ -22,6 +23,18 @@ internal static class RunLimits
         ["yearLong"] = "a date block",
     };
 
+    private static readonly XNamespace Math = "http://schemas.openxmlformats.org/officeDocument/2006/math";
+
     public static IEnumerable<(XElement, string)> Found(XElement root) =>
-        root.Descendants().Where(e => e.Name.Namespace == W && Unbuilt.ContainsKey(e.Name.LocalName)).Select(e => (e, Unbuilt[e.Name.LocalName]));
+        root.Descendants().Select(e => (e, What: What(e))).Where(f => f.What is not null)!;
+
+    private static string? What(XElement e) => e.Name.Namespace == Math
+        ? e.Name.LocalName is "oMath" or "oMathPara" && !e.Ancestors(Math + "oMathPara").Any() ? "an equation" : null
+        : e.Name.Namespace != W ? null : e.Name.LocalName switch
+        {
+            _ when Unbuilt.TryGetValue(e.Name.LocalName, out var what) => what,
+            "bdr" when e.Parent?.Name == W + "rPr" && Val(e) is not (null or "none" or "nil") => "a border round text",
+            "u" when Val(e) is { } u && u is not ("none" or "single" or "words" or "double" or "thick") => "a dotted, dashed or wavy underline",
+            _ => null,
+        };
 }

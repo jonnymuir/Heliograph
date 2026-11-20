@@ -16,6 +16,12 @@ internal sealed record RunStyle(bool Bold, bool Italic, bool Underline, double S
 
     public bool Caps { get; init; }
 
+    /// <summary>How an underlined run is underlined: "single", "words" (not under the spaces), "double" or "thick".</summary>
+    public string UnderlineStyle { get; init; } = "single";
+
+    /// <summary>The underline's own colour, as RGB hex, or null for the text's.</summary>
+    public string? UnderlineColor { get; init; }
+
     /// <summary>Small capitals: lowercase letters drawn as capitals at a smaller size.</summary>
     public bool SmallCaps { get; init; }
 
