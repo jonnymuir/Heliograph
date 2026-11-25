@@ -7,8 +7,9 @@ internal sealed record TextArea(double Top, double Bottom);
 
 /// <summary>
 /// The pages laid out so far, the current one, and how far down its text area the next line goes. Each section starts a
-/// page of its own, with its page size and margins; its first page has a text area of its own when it has its own header
-/// or footer. Each page carries its number as the section counts it.
+/// page of its own, with its page size and margins, unless it goes on down the page before, or after a blank page when it
+/// starts on an odd or even page; its first page has a text area of its own when it has its own header or footer. Each
+/// page carries its number as the section counts it.
 /// </summary>
 internal sealed class PageSet(int maxPages, CancellationToken cancellation)
 {
@@ -62,20 +63,35 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
             return;
         }
 
-        // The page before is finished, footnotes and all, on its own section's page.
+        // The page before is finished, footnotes and all, on its own section's page; then, for a section that starts on an
+        // odd or even page, a blank page of the section before when the next page's number is the other.
         if (_pages.Count > 0)
         {
             Finish();
+            if (NeedsBlank(section))
+            {
+                Open();
+                Finishing?.Invoke(Current, _areaBottom);
+            }
         }
 
         (_section, _sectionStarts) = (section, true);
         Open();
     }
 
+    // Whether the page this section would start on is numbered even when it should be odd, or odd when it should be
+    // even. Word goes by the page's number, as it does for even pages' headers, so a section numbered from 1 again is
+    // already on an odd page.
+    private bool NeedsBlank(Section section)
+    {
+        var odd = (section.Numbers.Start ?? _number + 1) % 2 != 0;
+        return (section.Start, odd) is (SectionStart.OddPage, false) or (SectionStart.EvenPage, true);
+    }
+
     // A continuous section goes on down this page, with its own margins across it, when the page is the same size; as in
     // Word, one on a page of another size starts a new page.
     private bool GoesOn(Section section) =>
-        section.Continuous && _pages.Count > 0 && (section.Page.Width, section.Page.Height) == (_section.Page.Width, _section.Page.Height);
+        section.Start == SectionStart.Continuous && _pages.Count > 0 && (section.Page.Width, section.Page.Height) == (_section.Page.Width, _section.Page.Height);
 
     /// <summary>Finishes the last page: the lines between its columns, if its section asks, then its footnotes.</summary>
     public void Finish()

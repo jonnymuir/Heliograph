@@ -67,6 +67,35 @@ public partial class PdfSectionTests
         headers[second - 1].Should().Be("Odd pages");
     }
 
+    [ComparedPdfFact]
+    public async Task A_section_that_starts_on_an_odd_page_is_laid_out_as_LibreOffice_lays_it_out()
+    {
+        var docx = Rendered(OddPageLetter("oddPage", numbers: ""));
+        var (theirs, ours) = (PdfLines.Read(await new LibreOfficePdfConverter().ConvertAsync(docx)), PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(docx)));
+
+        // LibreOffice counts the blank page but leaves it out of the PDF, where Word prints it so that the section starts on
+        // the right side of the paper; the pages either side are compared.
+        var printed = ours.Where(l => l.Page != 2).Select(l => l.Page > 2 ? l with { Page = l.Page - 1 } : l).ToList();
+        PdfComparison.FirstDifference(theirs, printed, "LibreOffice").Difference.Should().BeNull();
+    }
+
+    [PdfLinesTheory]
+    [InlineData("oddPage", "", 3)]
+    [InlineData("evenPage", "", 2)]
+    [InlineData("oddPage", "<w:pgNumType w:start=\"1\"/>", 2)]
+    [InlineData("evenPage", "<w:pgNumType w:start=\"1\"/>", 3)]
+    public async Task A_section_that_starts_on_an_odd_or_even_page_goes_by_the_page_number(string type, string numbers, int page)
+    {
+        var lines = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(Rendered(OddPageLetter(type, numbers))));
+
+        lines.First(l => l.Text.StartsWith("Second part", StringComparison.Ordinal)).Page.Should().Be(page);
+        if (page == 3)
+        {
+            // The blank page left before it carries the section before's header and footer, and its number.
+            lines.Where(l => l.Page == 2).Select(l => l.Text).Should().Equal("Membership renewal", "Page 2");
+        }
+    }
+
     [Fact]
     public void Margins_mirrored_on_facing_pages_are_refused_at_compile()
     {
@@ -84,7 +113,6 @@ public partial class PdfSectionTests
 
     [Theory]
     [InlineData("<w:type w:val=\"continuous\"/><w:cols w:num=\"2\"/>", "next to text in columns")]
-    [InlineData("<w:type w:val=\"oddPage\"/>", "odd or even page")]
     [InlineData("<w:pgBorders><w:top w:val=\"single\" w:sz=\"4\" w:space=\"24\" w:color=\"auto\"/></w:pgBorders>", "border round the page")]
     [InlineData("<w:lnNumType w:countBy=\"1\"/>", "line numbers")]
     [InlineData("<w:vAlign w:val=\"center\"/>", "middle")]
@@ -131,6 +159,19 @@ public partial class PdfSectionTests
         Part(docx, 80, "<w:headerReference w:type=\"default\" r:id=\"rIdX2\"/><w:headerReference w:type=\"even\" r:id=\"rIdX3\"/>");
         docx.RawParagraph($"<w:p {W}><w:r><w:t>Second part, which numbers its pages from 1 again.</w:t></w:r></w:p>");
         docx.RawParagraph($"<w:sectPr {W}><w:pgNumType w:start=\"1\"/></w:sectPr>");
+        return docx.Build();
+    }
+
+    // A one-page first section with a header and a numbered footer, then a second that starts on an odd or even page.
+    internal static MemoryStream OddPageLetter(string type, string numbers)
+    {
+        var docx = Styled()
+            .Part("word/header1.xml", Story("hdr", "<w:r><w:t>Membership renewal</w:t></w:r>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml").Relationship($"{R}/header", "header1.xml", external: false)
+            .Part("word/footer1.xml", Story("ftr", "<w:r><w:t xml:space=\"preserve\">Page </w:t></w:r><w:fldSimple w:instr=\" PAGE \"><w:r><w:t>1</w:t></w:r></w:fldSimple>"), "application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml")
+            .Relationship($"{R}/footer", "footer1.xml", external: false);
+        Part(docx, 3, "<w:headerReference w:type=\"default\" r:id=\"rIdX1\"/><w:footerReference w:type=\"default\" r:id=\"rIdX2\"/>");
+        docx.RawParagraph($"<w:p {W}><w:r><w:t>Second part, which starts on the page its section break says.</w:t></w:r></w:p>");
+        docx.RawParagraph($"<w:sectPr {W}><w:type w:val=\"{type}\"/>{numbers}</w:sectPr>");
         return docx.Build();
     }
 

@@ -7,7 +7,7 @@ namespace Heliograph.Pdf.Checking;
 /// <summary>
 /// A section's page settings the converter lays out: its size, orientation and margins, its headers and footers, a first
 /// page of its own, and page numbers from where it says in figures, letters or Roman numerals, and page breaks in the
-/// body. A section that starts other than on a new page, a page break elsewhere, and anything else on the page, is not yet.
+/// body. A continuous section next to text in columns, a page break elsewhere, and anything else on the page, is not yet.
 /// </summary>
 internal static class SectionLimits
 {
@@ -36,14 +36,10 @@ internal static class SectionLimits
 
     private static bool Numbered(string format) => format is "decimal" or "lowerRoman" or "upperRoman" or "lowerLetter" or "upperLetter";
 
-    // How a section starts: on a new page, or down the same page, but not next to text in columns, which Word balances;
-    // on an odd or even page is not laid out yet.
-    private static string? Break(XElement type) => Val(type) switch
-    {
-        null or "nextPage" => null,
-        "continuous" => Columned(type.Parent) || Columned(Before(type.Parent!)) ? "a section break that does not start a new page, next to text in columns" : null,
-        _ => "a section break that starts on an odd or even page",
-    };
+    // How a section starts: on a new page, the next odd or even one, or down the same page, but not next to text in
+    // columns, which Word balances.
+    private static string? Break(XElement type) =>
+        Val(type) == "continuous" && (Columned(type.Parent) || Columned(Before(type.Parent!))) ? "a section break that does not start a new page, next to text in columns" : null;
 
     // Whether a section's settings set its text in columns.
     private static bool Columned(XElement? sect) =>

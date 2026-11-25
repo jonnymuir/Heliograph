@@ -88,10 +88,12 @@ This plan is built to find out early and keep finding out.
   number, as Word and LibreOffice both count), and page numbers restarted where it says, in
   figures, letters or Roman numerals. A continuous section break goes on down the same page, with
   the new section's margins across it, as Word does it (LibreOffice keeps the page's first
-  section's margins); one on a page of another size starts a new page. A continuous break next
-  to text in columns, which Word balances, and a section break that starts on an odd or even
-  page, a border round the page, line numbers, text set in the middle of the
-  page, a gutter, and margins mirrored on facing pages are refused.
+  section's margins); one on a page of another size starts a new page. A section that starts on
+  an odd or even page has a blank page put before it when the next page's number is the other,
+  as Word decides it; the blank page carries the section before's header, footer and number.
+  LibreOffice counts that page but leaves it out of its PDF. A continuous break next to text in
+  columns, which Word balances, a border round the page, line numbers, text set in the middle of
+  the page, a gutter, and margins mirrored on facing pages are refused.
 - **Page breaks** typed in the text (Ctrl+Enter in Word), and a column break in a single column:
   the rest of the paragraph goes on at the top of the next page; a break that ends its paragraph
   keeps the paragraph mark with it, so what follows starts the next page, as Word and LibreOffice

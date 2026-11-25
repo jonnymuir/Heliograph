@@ -50,6 +50,15 @@ internal sealed class WordReader : IDisposable
 
     public void Dispose() => _package.Dispose();
 
+    // Where a section starts, from its section break's type; a new page when it gives none, or one Word does not know.
+    private static SectionStart Start(XElement sect) => Val(sect.Element(W + "type")) switch
+    {
+        "continuous" => SectionStart.Continuous,
+        "oddPage" => SectionStart.OddPage,
+        "evenPage" => SectionStart.EvenPage,
+        _ => SectionStart.NewPage,
+    };
+
     private WordDocument Document()
     {
         var body = Part("word/document.xml")?.Root?.Element(W + "body") ?? throw new InvalidDataException("The document has no body.");
@@ -59,7 +68,7 @@ internal sealed class WordReader : IDisposable
         {
             var stories = StoriesOf(sect, before);
             var page = PageGeometry.Of(sect);
-            sections.Add(new Section(page, stories) { Numbers = Numbers(sect), Columns = ColumnReader.Read(sect, page), Continuous = Val(sect.Element(W + "type")) == "continuous", Body = Blocks(elements) });
+            sections.Add(new Section(page, stories) { Numbers = Numbers(sect), Columns = ColumnReader.Read(sect, page), Start = Start(sect), Body = Blocks(elements) });
             before = stories;
         }
 
