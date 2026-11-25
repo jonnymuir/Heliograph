@@ -81,7 +81,7 @@ started together by an Aspire host. Then its own first release.
 ### 8. Heliograph's own PDF engine
 
 A pure .NET converter, `Heliograph.Pdf`, so PDFs need nothing installed. Stages, checks, risks
-and where it is are in [pdf-engine.md](pdf-engine.md). It is in stage 1: the benchmark letters
+and where it is are in [pdf-engine.md](pdf-engine.md). Stage 1 is done: the benchmark letters
 convert, accessible and laid out as LibreOffice lays them out, and stages 2 to 8 are well under
 way, with Word's own PDFs as the judge where Word and LibreOffice differ.
 
