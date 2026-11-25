@@ -81,38 +81,47 @@ started together by an Aspire host. Then its own first release.
 ### 8. Heliograph's own PDF engine
 
 A pure .NET converter, `Heliograph.Pdf`, so PDFs need nothing installed. Stages, checks, risks
-and where it is are in [pdf-engine.md](pdf-engine.md). It is in stage 1: the benchmark letters
-convert, accessible and laid out as LibreOffice lays them out.
+and where it is are in [pdf-engine.md](pdf-engine.md). Stage 1 is done: the benchmark letters
+convert, accessible and laid out as LibreOffice lays them out, and stages 2 to 8 are well under
+way, with Word's own PDFs as the judge where Word and LibreOffice differ.
 
 ## Where we are
 
-Step 4 is done: a rendered letter converts to a tagged PDF that passes an independent PDF/UA
-check, once the template has a title. What to do about a template without one is an open
-decision. The API, MCP server, reference app and workbench are next (step 5).
+Steps 1 to 4 are done, apart from shared parts. Step 5 is done apart from the evaluation of an
+agent and the whole-system tests. Prereleases (`0.1.0-alpha.N`) go to nuget.org as the engine
+grows, and Heliograph.Umbraco restores from there. Step 8 is under way, brought ahead of step 6.
 
-The reference app runs: the workbench over the REST API and the MCP server, the benchmark letters
-seeded and published, an outbox page showing the run-time call, and an Aspire host. Opening a
-document in Word from the workbench and the evaluation of an agent are still to do.
+Built:
 
-Step 5 has begun: `CorrespondenceLibrary` holds the operations the API, the MCP server and
-Heliograph.Umbraco all offer, over a store and a dictionary source the host supplies.
-`Heliograph.Mcp` offers them to agents, and the guides in `docs/skills` are served to agents as
-they are written for people. The REST API, the workbench, the reference app and the evaluation
-of an agent writing a template are still to do.
+- **The core.** Values, conditions (whole sections and inside a sentence), rows repeated over a
+  list, money and numbers by type, every way a template can be wrong reported at compile with a
+  code, the place and a fix, and the refusal of unsafe files. The three benchmark letters compile
+  and render for every sample, and survive a save in LibreOffice and in Word in Microsoft 365.
+- **The SMS and email parts**, with the same tags, conditions and lists, and one call that
+  compiles and renders all three parts.
+- **Stored correspondence.** `CorrespondenceLibrary` holds drafts and numbered versions over a
+  store and a dictionary source the host supplies.
+- **The REST API, the MCP server and the workbench**, offering the same operations to people and
+  agents. The workbench keeps dictionaries, starts a document, and opens it in Word or
+  LibreOffice to be saved straight back. The guides in `docs/skills` are served to agents as
+  skills.
+- **The reference app** with the benchmark letters seeded, an outbox page showing the run-time
+  call, and an Aspire host.
+- **Two routes to PDF**: LibreOffice, and Heliograph's own converter, which is the default. Every
+  benchmark letter passes veraPDF's PDF/UA-1 check by both. A document with no title is pointed
+  out with a warning (`HG1020`) and still compiles. Where the converter stands is in
+  [pdf-engine.md](pdf-engine.md).
 
-Step 3 is done. The SMS and email parts are built, with the same tags, conditions and lists as
-a document. Each benchmark letter has a text message and an email, and one call compiles and
-renders all three parts together. Shared parts wait on a design decision.
+Still to do:
 
-Step 2 is done for the document part, apart from shared parts. The annual statement compiles and
-renders: a table row repeated for each of up to sixty contributions, the heading row repeating
-on each page, and a sentence in place of the table when there are none. Its letterhead and
-footer are written into the template until shared parts are built, which is next.
-
-The decision letter compiles and renders for
-all three samples: whole sections shown or hidden on a yes or no field, one condition inside
-another, money and numbers printed by type, and data for the other outcome left out. A condition
-can also sit inside a sentence.
+- **Shared parts**: a letterhead, footer or signature block swapped by a value. This waits on the
+  maintainer's design decision. Until then the annual statement's letterhead and footer are
+  written into the template.
+- **The evaluation of an agent** writing a template that compiles (step 5).
+- **The whole-system tests** with Playwright, and the DAST and performance workflows (step 5).
+- **Comparing page images automatically.** The PDF converter is measured line by line against
+  LibreOffice and Word, but the LibreOffice route's pages are still checked by eye.
+- **The first release**, `0.1.0` (step 6).
 
 Known limits, each reported by a diagnostic or listed here until it is lifted:
 
@@ -120,8 +129,3 @@ Known limits, each reported by a diagnostic or listed here until it is lifted:
   paragraph and a paragraph lives in a cell. A table, or the content of a cell, can.
 - Supplied text that falls inside a link cannot start a new paragraph there, so a blank line in it
   prints as a blank line.
-
-In step 2.1, the acknowledgement letter compiles against its
-dictionary, renders for both samples, refuses unsafe files, and survives a LibreOffice save,
-checked in CI. A copy saved by Word in Microsoft 365 compiles and renders too. Comparing page images automatically is not built yet; the rendered pages were
-checked by eye.
