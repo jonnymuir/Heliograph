@@ -18,6 +18,7 @@ internal static class TableReader
         return new Table(grid, rows, Twips(style.Property("tblInd"), "w") ?? 0, Margins(style))
         {
             Align = Val(style.Property("jc")) switch { "center" => "center", "right" or "end" => "right", _ => "left" },
+            Fixed = (string?)style.Property("tblLayout")?.Attribute(W + "type") == "fixed",
         };
     }
 

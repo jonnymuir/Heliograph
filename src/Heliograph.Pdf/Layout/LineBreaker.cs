@@ -304,6 +304,10 @@ internal static class LineBreaker
         return probe.Height;
     }
 
+    /// <summary>The widest a paragraph cannot be broken narrower than: its longest word, or picture, and its indents.</summary>
+    public static double Narrowest(Paragraph p) =>
+        Pieces(p, _ => "").Where(q => q.Kind == PieceKind.Word).Select(q => q.Width).DefaultIfEmpty(0).Max() + p.Style.Indent.Left + p.Style.Indent.Right;
+
     private static List<Piece> Pieces(Paragraph p, Func<FieldInline, string> field)
     {
         var pieces = new List<Piece>();
