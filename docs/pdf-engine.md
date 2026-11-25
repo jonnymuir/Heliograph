@@ -333,9 +333,8 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 8. Sections, headers and footers, notes
 
-- Several sections with their own page size, orientation and margins (done, starting a new page
-  or carrying on down the same one; a section that starts on an odd or even page is still
-  refused).
+- Several sections with their own page size, orientation and margins (done, starting a new page,
+  the next odd or even one, or carrying on down the same one).
 - Even-page headers (done).
 - Page-number formats, and section page counts (both done, with the format switches Word offers).
 - Footnotes, tagged as notes (done, in the body); endnotes (done).
