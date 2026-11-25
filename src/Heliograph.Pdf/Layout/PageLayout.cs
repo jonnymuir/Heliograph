@@ -22,7 +22,7 @@ internal static class PageLayout
 
         notes?.Endnotes.Run();
         pages.Finish();
-        foreach (var page in pages.Pages)
+        foreach (var page in pages.Pages.Where(p => !p.Blank))
         {
             Decorate(page, pages.Pages);
         }

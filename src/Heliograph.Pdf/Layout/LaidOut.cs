@@ -65,6 +65,9 @@ internal sealed class LaidOutPage
     public int Number { get; init; }
 
     public bool FirstInSection { get; init; }
+
+    /// <summary>Whether the page is one left blank so that a section starts on an odd or even page: no header or footer is drawn on it.</summary>
+    public bool Blank { get; init; }
 }
 
 /// <summary>Where a line goes: whose text it is, and whether it is an artifact.</summary>
