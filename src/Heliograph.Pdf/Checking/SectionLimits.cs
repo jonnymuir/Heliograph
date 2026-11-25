@@ -7,7 +7,7 @@ namespace Heliograph.Pdf.Checking;
 /// <summary>
 /// A section's page settings the converter lays out: its size, orientation and margins, its headers and footers, a first
 /// page of its own, and page numbers from where it says in figures, letters or Roman numerals, and page breaks in the
-/// body. A continuous section next to text in columns, a page break elsewhere, and anything else on the page, is not yet.
+/// body. A page break elsewhere, and anything else on the page, is not yet.
 /// </summary>
 internal static class SectionLimits
 {
@@ -23,7 +23,6 @@ internal static class SectionLimits
 
     private static string? What(XElement e) => e.Name.LocalName switch
     {
-        "type" => Break(e),
         "pgBorders" => "a border round the page",
         "pgMar" when (double?)e.Attribute(W + "gutter") > 0 => "a gutter beside the margin",
         "lnNumType" => "line numbers in the margin",
@@ -35,17 +34,4 @@ internal static class SectionLimits
     };
 
     private static bool Numbered(string format) => format is "decimal" or "lowerRoman" or "upperRoman" or "lowerLetter" or "upperLetter";
-
-    // How a section starts: on a new page, the next odd or even one, or down the same page, but not next to text in
-    // columns, which Word balances.
-    private static string? Break(XElement type) =>
-        Val(type) == "continuous" && (Columned(type.Parent) || Columned(Before(type.Parent!))) ? "a section break that does not start a new page, next to text in columns" : null;
-
-    // Whether a section's settings set its text in columns.
-    private static bool Columned(XElement? sect) =>
-        sect?.Element(W + "cols") is { } cols && ((int?)cols.Attribute(W + "num") > 1 || cols.Elements(W + "col").Skip(1).Any());
-
-    // The section before this one: the settings of the last paragraph to end a section before it.
-    private static XElement? Before(XElement sect) =>
-        sect.Document?.Descendants(W + "sectPr").TakeWhile(s => s != sect).LastOrDefault();
 }

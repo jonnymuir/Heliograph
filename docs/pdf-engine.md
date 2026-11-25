@@ -92,9 +92,9 @@ This plan is built to find out early and keep finding out.
   an odd or even page has a blank page put before it when the next page's number is the other,
   as Word decides it. As in Word's own PDF, the blank page has nothing on it, not even a header
   or footer, but it is counted in the page numbers. LibreOffice counts it too but leaves it out
-  of its PDF. A continuous break next to text in
-  columns, which Word balances, a border round the page, line numbers, text set in the middle of
-  the page, a gutter, and margins mirrored on facing pages are refused.
+  of its PDF. Columns before a continuous break are balanced. A border round the page, line
+  numbers, text set in the middle of the page, a gutter, and margins mirrored on facing pages are
+  refused.
 - **Page breaks** typed in the text (Ctrl+Enter in Word), and a column break in a single column:
   the rest of the paragraph goes on at the top of the next page; a break that ends its paragraph
   keeps the paragraph mark with it, so what follows starts the next page, as Word and LibreOffice
@@ -119,9 +119,11 @@ This plan is built to find out early and keep finding out.
 - **Columns** in a section, of equal width half an inch apart unless it says, or each with its
   own width and space, with a line between them if it asks: text flows down each column and on
   to the next page, and a paragraph that goes on in a column of another width is broken again
-  there; a column break goes on in the next column and a page break on the next page. Word
-  balances columns only before a continuous section break, which is still refused, so they are
-  not balanced here. Footnotes, endnotes or floating pictures in a letter set in columns are
+  there; a column break goes on in the next column and a page break on the next page. Before a
+  continuous section break the columns of the section's last page are balanced, as Word and
+  LibreOffice balance them: as short as they can be and still hold the text, with the next
+  section going on below the deeper one. A section in columns can also start part way down a
+  page, after a continuous break. Footnotes, endnotes or floating pictures in a letter set in columns are
   refused.
 - **Footnotes** referred to from the body or a table: numbered 1, 2, 3 in the order they are referred to, at
   the foot of the page under the separator, each tagged as a note. As LibreOffice lays out a Word

@@ -83,6 +83,7 @@ internal static class WordProbes
         yield return ("probe-columns", PdfColumnTests.Letter(PdfColumnTests.Three, "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"column\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>", before: true));
         yield return ("probe-continuous-section", PdfContinuousSectionTests.Letter(narrower: true, otherSize: false));
         yield return ("probe-odd-page", PdfSectionTests.OddPageLetter(odd: true, restart: false));
+        yield return ("probe-balanced-columns", PdfColumnTests.Balanced(12));
         yield return ("probe-tables", Letter("Arial", Extras.Tables, Body(Plain("Your fees for the year."), Table(), Plain("Please pay by the end of March."))));
     }
 

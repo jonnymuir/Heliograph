@@ -33,7 +33,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
                     _frame = null;
                     Below(t);
                     _tables.Run(t, root.Add("Table"));
-                    pages.TextFoot = pages.Y;
+                    (pages.TextFoot, pages.Cut) = (pages.Y, 0);
                     break;
             }
         }
@@ -86,6 +86,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
                 pages.TextFoot = pages.Y + line.Height - line.Hang;
                 pages.Y += line.Height;
                 pages.HasContent = true;
+                pages.Cut = 0;
             }
 
             placed += fit;
@@ -179,7 +180,9 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
     {
         if (box is null)
         {
-            pages.Y = Math.Min(pages.Y + p.Style.Spacing.After, pages.BodyBottom);
+            var below = pages.Y + p.Style.Spacing.After;
+            pages.Y = Math.Min(below, pages.BodyBottom);
+            pages.Cut = below - pages.Y;
         }
         else
         {

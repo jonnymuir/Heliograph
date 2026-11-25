@@ -13,9 +13,11 @@ internal static class PageLayout
         var pages = new PageSet(maxPages, cancellation);
         var root = new StructNode("Document", null);
         PageNotes? notes = null;
-        foreach (var section in document.Sections)
+        for (var i = 0; i < document.Sections.Count; i++)
         {
+            var section = document.Sections[i];
             pages.StartSection(section);
+            ColumnBalance.Set(pages, document, section, i + 1 < document.Sections.Count ? document.Sections[i + 1] : null);
             notes ??= new PageNotes(new Footnotes(document, pages), new Endnotes(document, pages, root));
             new BodyFlow(pages, root, notes).Run(section.Body);
         }
