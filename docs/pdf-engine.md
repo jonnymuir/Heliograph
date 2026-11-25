@@ -331,12 +331,14 @@ generated documents through both routes. Add the Word fixtures.
 
 ### 8. Sections, headers and footers, notes
 
-- Several sections with their own page size, orientation and margins (done, each starting a new
-  page).
+- Several sections with their own page size, orientation and margins (done, starting a new page
+  or carrying on down the same one; a section that starts on an odd or even page is still
+  refused).
 - Even-page headers (done).
 - Page-number formats, and section page counts (both done, with the format switches Word offers).
 - Footnotes, tagged as notes (done, in the body); endnotes (done).
-- Columns (done, of equal width, each section starting a new page).
+- Columns (done, of equal width; columns of different widths, and balancing columns above a
+  continuous break, are still refused).
 
 ### 9. Switch over (done early: the maintainer chose to switch while still in alpha)
 
