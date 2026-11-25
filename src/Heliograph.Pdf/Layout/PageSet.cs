@@ -64,13 +64,14 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         }
 
         // The page before is finished, footnotes and all, on its own section's page; then, for a section that starts on an
-        // odd or even page, a blank page of the section before when the next page's number is the other.
+        // odd or even page, a blank page when the next page's number is the other: as Word prints it, with nothing on it,
+        // not even a header or footer, but counted.
         if (_pages.Count > 0)
         {
             Finish();
             if (NeedsBlank(section))
             {
-                Open();
+                Open(blank: true);
                 Finishing?.Invoke(Current, _areaBottom);
             }
         }
@@ -149,7 +150,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         }
     }
 
-    private void Open()
+    private void Open(bool blank = false)
     {
         cancellation.ThrowIfCancellationRequested();
         if (_pages.Count >= maxPages)
@@ -158,7 +159,7 @@ internal sealed class PageSet(int maxPages, CancellationToken cancellation)
         }
 
         _number = _sectionStarts && _section.Numbers.Start is { } start ? start : _number + 1;
-        Current = new LaidOutPage { Section = _section, Number = _number, FirstInSection = _sectionStarts };
+        Current = new LaidOutPage { Section = _section, Number = _number, FirstInSection = _sectionStarts, Blank = blank };
         _pages.Add(Current);
         var area = PageStories.Area(PageStories.For(_section, _sectionStarts, _number), _section.Page);
         (BodyTop, _areaBottom) = (area.Top, area.Bottom);

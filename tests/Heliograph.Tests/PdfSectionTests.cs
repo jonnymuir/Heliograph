@@ -89,11 +89,9 @@ public partial class PdfSectionTests
         var lines = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(Rendered(OddPageLetter(odd, restart))));
 
         lines.First(l => l.Text.StartsWith("Second part", StringComparison.Ordinal)).Page.Should().Be(page);
-        if (page == 3)
-        {
-            // The blank page left before it carries the section before's header and footer, and its number.
-            lines.Where(l => l.Page == 2).Select(l => l.Text).Should().Equal("Membership renewal", "Page 2");
-        }
+        // A page left blank before it has nothing on it, as Word prints it, not even a header or footer; but it is counted.
+        lines.Should().NotContain(l => l.Page == 2 && page == 3);
+        lines.Last().Text.Should().Be(restart ? "Page 1" : $"Page {page}");
     }
 
     [Fact]

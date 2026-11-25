@@ -90,8 +90,9 @@ This plan is built to find out early and keep finding out.
   the new section's margins across it, as Word does it (LibreOffice keeps the page's first
   section's margins); one on a page of another size starts a new page. A section that starts on
   an odd or even page has a blank page put before it when the next page's number is the other,
-  as Word decides it; the blank page carries the section before's header, footer and number.
-  LibreOffice counts that page but leaves it out of its PDF. A continuous break next to text in
+  as Word decides it. As in Word's own PDF, the blank page has nothing on it, not even a header
+  or footer, but it is counted in the page numbers. LibreOffice counts it too but leaves it out
+  of its PDF. A continuous break next to text in
   columns, which Word balances, a border round the page, line numbers, text set in the middle of
   the page, a gutter, and margins mirrored on facing pages are refused.
 - **Page breaks** typed in the text (Ctrl+Enter in Word), and a column break in a single column:
