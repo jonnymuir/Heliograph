@@ -110,7 +110,6 @@ public partial class PdfSectionTests
         PdfValidator.FailuresAsPdfUa(await new HeliographPdfConverter().ConvertAsync(Rendered(Letter()))).Should().BeEmpty();
 
     [Theory]
-    [InlineData("<w:type w:val=\"continuous\"/><w:cols w:num=\"2\"/>", "next to text in columns")]
     [InlineData("<w:pgBorders><w:top w:val=\"single\" w:sz=\"4\" w:space=\"24\" w:color=\"auto\"/></w:pgBorders>", "border round the page")]
     [InlineData("<w:lnNumType w:countBy=\"1\"/>", "line numbers")]
     [InlineData("<w:vAlign w:val=\"center\"/>", "middle")]

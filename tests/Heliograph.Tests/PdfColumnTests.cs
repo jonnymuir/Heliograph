@@ -53,6 +53,30 @@ public class PdfColumnTests
         PdfComparison.FirstDifference(expected, actual, "LibreOffice").Difference.Should().BeNull();
     }
 
+    [ComparedPdfTheory]
+    [InlineData(5)]
+    [InlineData(12)]
+    [InlineData(60)]
+    public async Task Columns_before_a_continuous_break_are_balanced_as_LibreOffice_balances_them(int paragraphs)
+    {
+        var docx = Rendered(Balanced(paragraphs));
+        var expected = PdfLines.Read(await new LibreOfficePdfConverter().ConvertAsync(docx));
+        var actual = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(docx));
+
+        PdfComparison.FirstDifference(expected, actual, "LibreOffice").Difference.Should().BeNull();
+    }
+
+    [PdfLinesFact]
+    public async Task Text_after_balanced_columns_goes_on_below_the_deeper_one()
+    {
+        var lines = PdfLines.Read(await new HeliographPdfConverter().ConvertAsync(Rendered(Balanced(5))));
+        var columns = lines.Where(l => char.IsDigit(l.Text[0])).ToList();
+        var after = lines.Single(l => l.Text.StartsWith("After", StringComparison.Ordinal));
+
+        after.Top.Should().BeGreaterThan(columns.Max(l => l.Top));
+        after.Top.Should().BeLessThan(lines.Single(l => l.Text.StartsWith("Before", StringComparison.Ordinal)).Top + 200, "five short paragraphs in two columns take less than half the room of one");
+    }
+
     [PdfLinesFact]
     public async Task A_line_runs_between_columns_when_the_section_asks()
     {
@@ -96,6 +120,31 @@ public class PdfColumnTests
 
         docx.RawParagraph($"<w:sectPr {W}>{cols}</w:sectPr>");
         return docx.Build();
+    }
+
+    // A paragraph in one column, then paragraphs in two columns between continuous section breaks, then one more in one
+    // column, down the same page.
+    internal static MemoryStream Balanced(int paragraphs)
+    {
+        var docx = Styled();
+        docx.RawParagraph($"<w:p {W}><w:pPr><w:sectPr/></w:pPr><w:r><w:t>Before the columns, {Words}</w:t></w:r></w:p>");
+        for (var i = 1; i < paragraphs; i++)
+        {
+            docx.RawParagraph($"<w:p {W}><w:r><w:t>{i}. {Words}</w:t></w:r></w:p>");
+        }
+
+        docx.RawParagraph($"<w:p {W}><w:pPr><w:sectPr><w:type w:val=\"continuous\"/>{Two}</w:sectPr></w:pPr><w:r><w:t>{paragraphs}. {Words}</w:t></w:r></w:p>");
+        docx.RawParagraph($"<w:p {W}><w:r><w:t>After the columns, {Words}</w:t></w:r></w:p>");
+        docx.RawParagraph($"<w:sectPr {W}><w:type w:val=\"continuous\"/></w:sectPr>");
+        return docx.Build();
+    }
+
+    private static TestDocx Styled()
+    {
+        var styles = $"<w:styles {W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii=\"Arial\" w:hAnsi=\"Arial\"/><w:sz w:val=\"22\"/></w:rPr></w:rPrDefault>"
+            + "<w:pPrDefault><w:pPr><w:spacing w:after=\"160\" w:line=\"259\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>";
+        return new TestDocx().Part("word/styles.xml", styles, "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml")
+            .Relationship("http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles", "styles.xml", external: false);
     }
 
     private static byte[] Rendered(MemoryStream template)
