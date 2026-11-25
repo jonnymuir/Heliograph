@@ -8,7 +8,7 @@ namespace Heliograph.Tests;
 
 /// <summary>
 /// Columns in Heliograph's own PDF converter: text flowing down each column and on to the next page, columns of equal
-/// width or of their own, a column break, a page break, and a section in columns after one that is not, laid out as
+/// width or each of its own, a paragraph broken again where it goes on in a column of another width, a column break, a page break, and a section in columns after one that is not, laid out as
 /// LibreOffice lays them out; a line between the columns when the section asks.
 /// </summary>
 public class PdfColumnTests
@@ -19,12 +19,16 @@ public class PdfColumnTests
 
     private const string Two = "<w:cols w:num=\"2\" w:space=\"720\"/>";
     internal const string Three = "<w:cols w:num=\"3\" w:sep=\"1\" w:space=\"360\"/>";
+    internal const string Uneven = "<w:cols w:num=\"2\" w:space=\"360\" w:equalWidth=\"0\"><w:col w:w=\"3000\" w:space=\"360\"/><w:col w:w=\"6000\"/></w:cols>";
+    private const string Wider = "<w:cols w:num=\"2\" w:space=\"360\" w:equalWidth=\"0\"><w:col w:w=\"6000\" w:space=\"360\"/><w:col w:w=\"3000\"/></w:cols>";
 
     public static TheoryData<string, string, string> Letters => new()
     {
         { "two columns of equal width", Two, "" },
         { "three columns with lines between", Three, "" },
         { "a column break", Two, "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"column\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>" },
+        { "a narrow column, then a wide one", Uneven, "" },
+        { "a wide column, then a narrow one", Wider, "" },
         { "a page break in columns", Two, "<w:p><w:r><w:t>Before the break,</w:t></w:r><w:r><w:br w:type=\"page\"/></w:r><w:r><w:t>and after it.</w:t></w:r></w:p>" },
     };
 
@@ -56,16 +60,6 @@ public class PdfColumnTests
 
         // Three columns across 468 points with 18 between are 144 wide, so the first line is 144 + 9 in from the margin.
         Enumerable.Range(-2, 5).Select(dx => page.At(72 + 144 + 9 + dx, 300)).Should().Contain(c => c.R < 128);
-    }
-
-    [Fact]
-    public void Columns_of_different_widths_are_refused_at_compile()
-    {
-        var uneven = "<w:cols w:num=\"2\" w:space=\"360\" w:equalWidth=\"0\"><w:col w:w=\"3000\" w:space=\"360\"/><w:col w:w=\"5640\"/></w:cols>";
-        var docx = new TestDocx().Paragraph("Dear Ms Example").RawParagraph($"<w:sectPr {W}>{uneven}</w:sectPr>").Build();
-
-        DocumentTemplate.Compile(docx, NoFields, [new HeliographPdfConverter()]).Diagnostics
-            .Should().ContainSingle(d => d.Code == DiagnosticCodes.PdfCannotLayOutColumns).Which.Message.Should().Contain("different widths");
     }
 
     [Fact]
