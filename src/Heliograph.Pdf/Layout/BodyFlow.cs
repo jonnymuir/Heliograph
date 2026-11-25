@@ -62,7 +62,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         Open(box, before);
         FloatPlacer.Place(pages.Current, p, pages.Geometry, pages.Y, owner.Node);
         lines = Wrapped(p, lines);
-        Place(lines, owner, box, s.Flow.WidowControl);
+        Place(p, lines, owner, box);
         Finish(p, box);
         if (lines[^1].PageBreakAfter)
         {
@@ -70,13 +70,15 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
         }
     }
 
-    // A paragraph's lines, as many on each page or column as fit, going on where the last run leaves off.
-    private void Place(List<Line> lines, Owner owner, ParagraphBox? box, bool widowControl)
+    // A paragraph's lines, as many on each page or column as fit, going on where the last run leaves off, broken again for
+    // a column of another width.
+    private void Place(Paragraph p, List<Line> lines, Owner owner, ParagraphBox? box)
     {
+        var widths = new ColumnWidths(p, pages.Geometry.ContentWidth);
         var placed = 0;
         while (placed < lines.Count)
         {
-            var fit = UpToBreak(lines, placed, _fit.Fit(lines, placed, widowControl));
+            var fit = UpToBreak(lines, placed, _fit.Fit(lines, placed, p.Style.Flow.WidowControl));
             foreach (var line in lines.GetRange(placed, fit))
             {
                 LinePlacer.Place(pages.Current, line, pages.Geometry.Left, pages.Y, owner);
@@ -90,6 +92,7 @@ internal sealed class BodyFlow(PageSet pages, StructNode root, PageNotes notes)
             if (placed < lines.Count)
             {
                 Turn(fit > 0 ? lines[placed - 1] : null, box);
+                lines = widths.Next(lines, placed, pages.Geometry.ContentWidth, pages.Field);
             }
         }
     }
